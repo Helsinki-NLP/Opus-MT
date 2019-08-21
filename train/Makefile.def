@@ -1,0 +1,80 @@
+# -*-makefile-*-
+
+# enable e-mail notification by setting EMAIL
+
+WHOAMI = $(shell whoami)
+ifeq ("$(WHOAMI)","tiedeman")
+  EMAIL = jorg.tiedemann@helsinki.fi
+endif
+
+# job-specific settings (overwrite if necessary)
+# HPC_EXTRA: additional SBATCH commands
+
+CPU_MODULES = gcc/6.2.0 mkl
+GPU_MODULES = cuda-env/8 mkl
+# GPU_MODULES = python-env/3.5.3-ml cuda-env/8 mkl
+
+
+
+# GPU       = k80
+GPU         = p100
+NR_GPUS     = 1
+HPC_MEM     = 8g
+HPC_NODES   = 1
+HPC_CORES   = 1
+HPC_QUEUE   = serial
+# HPC_MODULES = nlpl-opus python-env/3.4.1 efmaral moses
+# HPC_MODULES = nlpl-opus moses cuda-env marian python-3.5.3-ml
+HPC_MODULES = ${GPU_MODULES}
+HPC_EXTRA   = 
+WALLTIME    = 72
+
+
+DEVICE   = cuda
+LOADCPU  = module load ${CPU_MODULES}
+LOADGPU  = module load ${GPU_MODULES}
+
+
+ifeq (${shell hostname},dx6-ibs-p2)
+  APPLHOME     = /opt/tools
+  WORKHOME     = ${shell realpath ${PWD}/work}
+  OPUSHOME     = tiedeman@taito.csc.fi:/proj/nlpl/data/OPUS/
+  MOSESHOME    = ${APPLHOME}/mosesdecoder
+  MARIAN       = ${APPLHOME}/marian/build
+  LOADMODS     = echo "nothing to load"
+else ifeq (${shell hostname},dx7-nkiel-4gpu)
+  APPLHOME     = /opt/tools
+  WORKHOME     = ${shell realpath ${PWD}/work}
+  OPUSHOME     = tiedeman@taito.csc.fi:/proj/nlpl/data/OPUS/
+  MOSESHOME    = ${APPLHOME}/mosesdecoder
+  MARIAN       = ${APPLHOME}/marian/build
+  LOADMODS     = echo "nothing to load"
+else ifeq (${shell hostname --domain},bullx)
+  DATAHOME     = ${HOME}/work/wmt19/data/${LANGPAIR}
+  WORKHOME     = ${HOME}/work/joerg/marian
+  APPLHOME     = ${HOME}/projappl
+  OPUSHOME     = ${HOME}/work/nlpl/data/OPUS
+  MOSESHOME    = ${APPLHOME}/mosesdecoder
+  MARIAN       = ${APPLHOME}/marian/build
+  MARIANCPU    = ${APPLHOME}/marian/build
+  # GPU_MODULES  = cuda intel-mkl
+  GPU          = v100
+  # GPU_MODULES  = cuda
+  # LOADMODS     = module load cuda
+  GPU_MODULES  = python-env
+  CPU_MODULES  = python-env
+  LOADMODS     = echo "nothing to load"
+  TMPDIR       = ${WORKHOME}
+else
+  DATAHOME     = /proj/OPUS/WMT19/data/${LANGPAIR}
+  # APPLHOME   = ${USERAPPL}/tools
+  APPLHOME     = /proj/memad/tools
+  WORKHOME     = /wrk/tiedeman/research/marian/${SRC}-${TRG}
+  OPUSHOME     = /proj/nlpl/data/OPUS
+  MOSESHOME    = /proj/nlpl/software/moses/4.0-65c75ff/moses
+  # MARIAN     = /proj/nlpl/software/marian/1.2.0
+  # MARIAN     = /appl/ling/marian
+  MARIAN       = ${HOME}/appl_taito/tools/marian/build-gpu
+  MARIANCPU    = ${HOME}/appl_taito/tools/marian/build-cpu
+  LOADMODS     = ${LOADGPU}
+endif

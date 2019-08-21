@@ -1,0 +1,393 @@
+# -*-makefile-*-
+
+ifndef SRCLANGS
+  SRCLANGS=${SRC}
+endif
+
+ifndef SRCLANGS
+  TRGLANGS=${TRG}
+endif
+
+ifndef THREADS
+  THREADS=${HPC_CORES}
+endif
+
+
+CLEAN_TRAIN_SRC = ${patsubst %,${DATADIR}/raw/%.${LANGPAIR}.clean.${SRC},${TRAINSET}}
+CLEAN_TRAIN_TRG = ${patsubst %.${SRC},%.${TRG},${CLEAN_TRAIN_SRC}}
+
+CLEAN_TUNE_SRC  = ${patsubst %,${DATADIR}/raw/%.${LANGPAIR}.clean.${SRC},${TUNESET}}
+CLEAN_TUNE_TRG  = ${patsubst %.${SRC},%.${TRG},${CLEAN_TUNE_SRC}}
+
+CLEAN_DEV_SRC   = ${patsubst %,${DATADIR}/raw/%.${LANGPAIR}.clean.${SRC},${DEVSET}}
+CLEAN_DEV_TRG   = ${patsubst %.${SRC},%.${TRG},${CLEAN_DEV_SRC}}
+
+CLEAN_TEST_SRC  = ${patsubst %,${DATADIR}/raw/%.${LANGPAIR}.clean.${SRC},${TESTSET}}
+CLEAN_TEST_TRG  = ${patsubst %.${SRC},%.${TRG},${CLEAN_TEST_SRC}}
+
+DATA_SRC = ${sort ${CLEAN_TRAIN_SRC} ${CLEAN_TUNE_SRC} ${CLEAN_DEV_SRC} ${CLEAN_TEST_SRC}}
+DATA_TRG = ${sort ${CLEAN_TRAIN_TRG} ${CLEAN_TUNE_TRG} ${CLEAN_DEV_TRG} ${CLEAN_TEST_TRG}}
+
+
+
+
+clean-data:
+	for s in ${SRCLANGS}; do \
+	  for t in ${TRGLANGS}; do \
+	    ${MAKE} SRC=$$s TRG=$$t clean-data-source; \
+	  done \
+	done
+
+clean-data-source: ${DATA_SRC}
+#	@echo ${LANGPAIR}
+#	@echo ${OPUSCORPORA}
+#	@echo ${DATA_SRC}
+
+
+
+## copy OPUS data
+## (check that the OPUS file really exists! if not, create and empty file)
+
+%.${SRC}.raw:
+	mkdir -p ${dir $@}
+	if [ -e ${OPUSHOME}/${patsubst %.${LANGPAIR}.${SRC}.raw,%,${notdir $@}}/latest/moses/${LANGPAIR}.txt.zip ]; then \
+	  scp ${OPUSHOME}/${patsubst %.${LANGPAIR}.${SRC}.raw,%,${notdir $@}}/latest/moses/${LANGPAIR}.txt.zip $@.zip; \
+	  unzip -d ${dir $@} $@.zip -x README '*.ids' LICENSE; \
+	  mv ${dir $@}${patsubst %.${LANGPAIR}.${SRC}.raw,%,${notdir $@}}*.${LANGPAIR}.${SRC} $@; \
+	  mv ${dir $@}${patsubst %.${LANGPAIR}.${SRC}.raw,%,${notdir $@}}*.${LANGPAIR}.${TRG} ${@:.${SRC}.raw=.${TRG}.raw}; \
+	  rm -f $@.zip; \
+	else \
+	  touch $@; \
+	  touch ${@:.${SRC}.raw=.${TRG}.raw}; \
+	fi
+
+
+%.${TRG}.raw: %.${SRC}.raw
+	@echo "done!"
+
+## clean data
+
+## this is too strict for non-latin languages
+#	grep -i '[a-zäöå0-9]' |\
+
+%.clean.${SRC}: %.${SRC}.tok %.${TRG}.tok
+	mv -f ${word 1,$^} $@.${SRC}
+	mv -f ${word 2,$^} $@.${TRG}
+	$(MOSESSCRIPTS)/training/clean-corpus-n.perl $@ $(SRC) $(TRG) ${@:.${SRC}=} 0 100
+	mv -f $@.${SRC} ${word 1,$^}
+	mv -f $@.${TRG} ${word 2,$^}
+	paste $@ ${@:.${SRC}=.${TRG}} |\
+	perl -CS -pe 'tr[\x{9}\x{A}\x{D}\x{20}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}][]cd;' > $@.tmp
+	cut -f1 $@.tmp > $@
+	cut -f2 $@.tmp > ${@:.${SRC}=.${TRG}}
+	rm -f $@.tmp
+
+%.clean.${TRG}: %.clean.${SRC}
+	@echo "done!"
+
+
+## add training data for each language combination
+${TRAIN_SRC}:
+	mkdir -p ${dir $@}
+	rm -f ${TRAIN_SRC} ${TRAIN_TRG}
+	-for s in ${SRCLANGS}; do \
+	  for t in ${TRGLANGS}; do \
+	    ${MAKE} DATASET=${DATASET} SRC=$$s TRG=$$t add-to-train-data; \
+	  done \
+	done
+
+${TRAIN_TRG}: ${TRAIN_SRC}
+	@echo "done!"
+
+
+add-to-train-data: ${CLEAN_TRAIN_SRC}
+ifneq (${words ${TRGLANGS}},1)
+	echo "more than one target language";
+	cat ${CLEAN_TRAIN_SRC} |\
+	sed "s/^/>>${TRG}<< /" >> ${TRAIN_SRC}
+else
+	echo "only one target language"
+	cat ${CLEAN_TRAIN_SRC} >> ${TRAIN_SRC}
+endif
+	cat ${CLEAN_TRAIN_TRG} >> ${TRAIN_TRG}
+
+
+
+####################
+# development data
+####################
+
+${DEV_SRC}:
+	mkdir -p ${dir $@}
+	rm -f ${DEV_SRC} ${DEV_TRG}
+	-for s in ${SRCLANGS}; do \
+	  for t in ${TRGLANGS}; do \
+	    ${MAKE} SRC=$$s TRG=$$t add-to-dev-data; \
+	  done \
+	done
+	paste ${DEV_SRC} ${DEV_TRG} | shuf > $@.shuffled
+	cut -f1 $@.shuffled | head -${DEVSIZE} > ${DEV_SRC}
+	cut -f2 $@.shuffled | head -${DEVSIZE} > ${DEV_TRG}
+ifeq (${DEVSET},${TESTSET})
+	mkdir ${dir ${TEST_SRC}}
+	cut -f1 $@.shuffled | tail -${TESTSIZE} > ${TEST_SRC}
+	cut -f2 $@.shuffled | tail -${TESTSIZE} > ${TEST_TRG}
+endif
+
+${DEV_TRG}: ${DEV_SRC}
+	@echo "done!"
+
+add-to-dev-data: ${CLEAN_DEV_SRC}
+	echo ${DATADIR}
+ifneq (${words ${TRGLANGS}},1)
+	echo "more than one target language";
+	cat ${CLEAN_DEV_SRC} |\
+	sed "s/^/>>${TRG}<< /" >> ${DEV_SRC}
+else
+	echo "only one target language"
+	cat ${CLEAN_DEV_SRC} >> ${DEV_SRC}
+endif
+	cat ${CLEAN_DEV_TRG} >> ${DEV_TRG}
+
+
+
+####################
+# test data
+####################
+
+${TEST_SRC}: ${DEV_SRC}
+ifneq (${TESTSET},${DEVSET})
+	mkdir -p ${dir $@}
+	rm -f ${TEST_SRC} ${TEST_TRG}
+	-if [ -e ${TESTSET}.${SRC} ]; then \
+	  ${MAKE} CLEAN_TEST_SRC=${TESTSET}.${SRC} \
+		  CLEAN_TEST_TRG=${TESTSET}.${TRG} \
+	  add-to-test-data; \
+	else \
+	  for s in ${SRCLANGS}; do \
+	    for t in ${TRGLANGS}; do \
+	      ${MAKE} SRC=$$s TRG=$$t add-to-test-data; \
+	    done \
+	  done \
+	fi
+	if [ ${TESTSIZE} -lt `cat $@ | wc -l` ]; then \
+	  paste ${TEST_SRC} ${TEST_TRG} | shuf > $@.shuffled; \
+	  cut -f1 $@.shuffled | tail -${TESTSIZE} > ${TEST_SRC}; \
+	  cut -f2 $@.shuffled | tail -${TESTSIZE} > ${TEST_TRG}; \
+	fi
+endif
+
+${TEST_TRG}: ${TEST_SRC}
+	@echo "done!"
+
+add-to-test-data: ${CLEAN_TEST_SRC}
+	echo ${DATADIR}
+ifneq (${words ${TRGLANGS}},1)
+	echo "more than one target language";
+	cat ${CLEAN_TEST_SRC} |\
+	sed "s/^/>>${TRG}<< /" >> ${TEST_SRC}
+else
+	echo "only one target language"
+	cat ${CLEAN_TEST_SRC} >> ${TEST_SRC}
+endif
+	cat ${CLEAN_TEST_TRG} >> ${TEST_TRG}
+
+
+
+
+
+
+
+####################
+# tune data
+####################
+
+${TUNE_SRC}: ${TRAIN_SRC}
+	mkdir -p ${dir $@}
+	rm -f ${TUNE_SRC} ${TUNE_TRG}
+	-for s in ${SRCLANGS}; do \
+	  for t in ${TRGLANGS}; do \
+	    ${MAKE} SRC=$$s TRG=$$t add-to-tune-data; \
+	  done \
+	done
+
+${TUNE_TRG}: ${TUNE_SRC}
+	@echo "done!"
+
+add-to-tune-data: ${CLEAN_TUNE_SRC}
+	echo ${DATADIR}
+ifneq (${words ${TRGLANGS}},1)
+	echo "more than one target language";
+	cat ${CLEAN_TUNE_SRC} |\
+	sed "s/^/>>${TRG}<< /" >> ${TUNE_SRC}
+else
+	echo "only one target language"
+	cat ${CLEAN_TUNE_SRC} >> ${TUNE_SRC}
+endif
+	cat ${CLEAN_TUNE_TRG} >> ${TUNE_TRG}
+
+
+
+
+
+# ##----------------------------------------------
+# ## fiskmo-testset
+# ##----------------------------------------------
+
+
+# ${FISKMO_SV}.src:
+# 	ln -s ${FISKMO_SV} ${FISKMO_SV}.raw
+# 	${MAKE} ${FISKMO_SV}.tok
+# 	mv ${FISKMO_SV}.tok $@
+
+# ${FISKMO_SV}.labels.src: ${FISKMO_SV}.src
+# 	sed "s/^/>>fi<< /" < $< > $@
+
+# ${FISKMO_SV}.trg: ${FISKMO_SV}.src
+# 	ln -s $< $@
+
+# ${FISKMO_FI}.src:
+# 	ln -s ${FISKMO_FI} ${FISKMO_FI}.raw
+# 	${MAKE} ${FISKMO_FI}.tok
+# 	mv ${FISKMO_FI}.tok $@
+
+# ${FISKMO_FI}.labels.src: ${FISKMO_FI}.src
+# 	sed "s/^/>>sv<< /" < $< > $@
+
+# ${FISKMO_FI}.trg: ${FISKMO_FI}.src
+# 	ln -s $< $@
+
+
+
+
+##----------------------------------------------
+## tokenization
+##----------------------------------------------
+
+
+## tokenization for English
+%.en.tok: %.en.raw
+	$(LOAD_MOSES) cat $< |\
+	$(TOKENIZER)/replace-unicode-punctuation.perl |\
+	$(TOKENIZER)/remove-non-printing-char.perl |\
+	$(TOKENIZER)/normalize-punctuation.perl -l en |\
+	$(TOKENIZER)/pre-tokenizer.perl -l en |\
+	sed -e "s/it's/it is/g" \
+		-e "s/It's/It is/g" \
+		-e "s/That's/That is/g" \
+		-e "s/What's/What is/g" \
+		-e "s/She's/She is/g" \
+		-e "s/He's/He is/g" \
+		-e "s/We've/We have/g" \
+		-e "s/We're/We are/g" \
+		-e "s/They're/They are/g" \
+		-e "s/There's/There is/g" \
+		-e "s/What's/What is/g" \
+		-e "s/didn't/did not/g" \
+		-e "s/don't/do not/g" \
+		-e "s/can't/cannot/g" \
+		-e "s/they're/they are/g" \
+		-e "s/that's/that is/g" \
+		-e "s/he's/he is/g" \
+		-e "s/wasn't/was not/g" \
+		-e "s/she's/she is/g" \
+		-e "s/couldn't/could not/g" \
+		-e "s/we're/we are/g" \
+		-e "s/you're/you are/g" \
+		-e "s/we've/we have/g" \
+		-e "s/doesn't/does not/g" \
+		-e "s/weren't/were not/g" \
+		-e "s/isn't/is not/g" \
+		-e "s/haven't/have not/g" \
+		-e "s/hadn't/had not/g" \
+		-e "s/would've/would have/g" \
+		-e "s/wouldn't/would not/g" \
+		-e "s/won't/will not/g" \
+		-e "s/we'll/we will/g" \
+		-e "s/we'd/we would/g" \
+		-e "s/she'd/she would/g" \
+		-e "s/he'll/he will/g" \
+		-e "s/he'd/he would/g" \
+		-e "s/I'm/I am/g" \
+		-e "s/here's/here is/g" \
+		-e "s/I've/I have/g" \
+		-e "s/I'v/I have/g" \
+		-e "s/I'd/I would/g" \
+		-e "s/He'd/He would/g" \
+		-e "s/hasn't/has not/g" |\
+	$(TOKENIZER)/tokenizer.perl -no-escape -threads $(THREADS) -l en |\
+	sed 's/  */ /g;s/^ *//g;s/ *$$//g' > $@
+
+## normalisation for Chinese
+%.zh_tw.tok: %.zh_tw.raw
+	$(LOAD_MOSES) cat $< |\
+	$(TOKENIZER)/replace-unicode-punctuation.perl |\
+	$(TOKENIZER)/remove-non-printing-char.perl |\
+	$(TOKENIZER)/normalize-punctuation.perl |\
+	sed 's/  */ /g;s/^ *//g;s/ *$$//g' > $@
+
+## normalisation for Chinese
+%.zh_cn.tok: %.zh_cn.raw
+	$(LOAD_MOSES) cat $< |\
+	$(TOKENIZER)/replace-unicode-punctuation.perl |\
+	$(TOKENIZER)/remove-non-printing-char.perl |\
+	$(TOKENIZER)/normalize-punctuation.perl |\
+	sed 's/  */ /g;s/^ *//g;s/ *$$//g' > $@
+
+## generic target for tokenization
+%.tok: %.raw
+	$(LOAD_MOSES) cat $< |\
+	$(TOKENIZER)/replace-unicode-punctuation.perl |\
+	$(TOKENIZER)/remove-non-printing-char.perl |\
+	$(TOKENIZER)/normalize-punctuation.perl \
+		-l ${lastword ${subst ., ,$(<:.raw=)}} |\
+	$(TOKENIZER)/tokenizer.perl -no-escape -threads $(THREADS) \
+		-l ${lastword ${subst ., ,$(<:.raw=)}} |\
+	sed 's/  */ /g;s/^ *//g;s/ *$$//g' > $@
+
+
+
+##----------------------------------------------
+## BPE
+##----------------------------------------------
+
+
+BPESRCMODEL = ${TRAIN_SRC}.bpe${SRCBPESIZE:000=}k-model
+BPETRGMODEL = ${TRAIN_TRG}.bpe${TRGBPESIZE:000=}k-model
+
+.PRECIOUS: ${BPESRCMODEL} ${BPETRGMODEL}
+
+## source/target specific bpe
+## - make sure to leave the language flags alone!
+## - make sure that we do not delete the BPE code files
+${BPESRCMODEL}: ${TRAIN_SRC}
+ifeq ($(TRGLANGS),${firstword ${TRGLANGS}})
+	python3 ${SNMTPATH}/learn_bpe.py -s $(SRCBPESIZE) < $< > $@
+else
+	cut -f2- -d ' ' $< > $<.text
+	python3 ${SNMTPATH}/learn_bpe.py -s $(SRCBPESIZE) < $<.text > $@
+	rm -f $<.text
+endif
+
+## no labels on the target language side
+${BPETRGMODEL}: ${TRAIN_TRG}
+	python3 ${SNMTPATH}/learn_bpe.py -s $(TRGBPESIZE) < $< > $@
+
+
+
+%.src.${PRE_SRC}: %.src ${BPESRCMODEL}
+ifeq ($(TRGLANGS),${firstword ${TRGLANGS}})
+	python3 ${SNMTPATH}/apply_bpe.py -c $(word 2,$^) < $< > $@
+else
+	cut -f1 -d ' ' $< > $<.labels
+	cut -f2- -d ' ' $< > $<.text
+	python3 ${SNMTPATH}/apply_bpe.py -c $(word 2,$^) < $<.text > $@.text
+	paste -d ' ' $<.labels $@.text > $@
+	rm -f $<.labels $<.text $@.text
+endif
+
+%.trg.${PRE_TRG}: %.trg ${BPETRGMODEL}
+	python3 ${SNMTPATH}/apply_bpe.py -c $(word 2,$^) < $< > $@
+
+
+
