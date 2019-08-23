@@ -117,7 +117,7 @@ class Translate(WebSocket):
             toLang = langs[1]
             if langs[0] != 'DL':
                 fromLang = langs[0]
-            srxtxt = ' '.join(tokens)
+            srctxt = " ".join(tokens)
 
         if len(args.trglangs) > 1:
             prefix = '>>' + toLang + '<< '
