@@ -97,8 +97,9 @@ class Translate(WebSocket):
 
     def handleMessage(self):
 
+        # print('received: ' + self.data)
         fromLang = None
-        toLang = deftrg
+        toLang = args.deftrg
         prefix = ''
 
         ## check the cach first
@@ -106,21 +107,23 @@ class Translate(WebSocket):
             translation = cache[self.data]
             print('CACHED TRANSLATION: ' + translation)
             self.sendMessage(translation)
+            return
 
         ## check whether the first token specifies the language pair
-        tokens = self.data.split()
+        srctxt = self.data
+        tokens = srctxt.split()
         langs = tokens.pop(0).split('-')
         if len(langs) == 2:
             toLang = langs[1]
             if langs[0] != 'DL':
                 fromLang = langs[0]
-            self.data = ' '.join(tokens)
+            srxtxt = ' '.join(tokens)
 
-        if len(trglangs) > 1:
+        if len(args.trglangs) > 1:
             prefix = '>>' + toLang + '<< '
 
         if not fromLang:
-            isReliable, textBytesFound, details = cld2.detect(self.data, bestEffort=True)
+            isReliable, textBytesFound, details = cld2.detect(srctxt, bestEffort=True)
             fromLang = details[0][1]
             print("language detected = " + fromLang)
 
@@ -136,7 +139,7 @@ class Translate(WebSocket):
 
         langpair = fromLang + toLang
         message = []
-        for s in sentence_splitter[fromLang]([normalizer[fromLang](self.data)]):
+        for s in sentence_splitter[fromLang]([normalizer[fromLang](srctxt)]):
             key = langpair + ' ' + s
             if key in cache:
                 detokenized = cache[key]
@@ -154,7 +157,9 @@ class Translate(WebSocket):
                 print('TRANSLATION: ' + detokenized)
             message.append(detokenized)
             cache[key] = detokenized
-        self.sendMessage(' '.join(message))
+        trgtext = ' '.join(message)
+        self.sendMessage(trgtext)
+        cache[self.data] = trgtext
 
     def handleConnected(self):
         print(self.address, 'connected')
