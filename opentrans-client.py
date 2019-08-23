@@ -13,11 +13,12 @@ if __name__ == "__main__":
     # handle command-line options
     parser = argparse.ArgumentParser()
     parser.add_argument("-b", "--batch-size", type=int, default=1)
+    parser.add_argument("-h", "--host", type=str, default='localhost')
     parser.add_argument("-p", "--port", type=int, default=8080)
     args = parser.parse_args()
 
     # open connection
-    ws = create_connection("ws://86.50.168.81:{}/translate".format(args.port))
+    ws = create_connection("ws://{}:{}/translate".format(args.host,args.port))
 
     count = 0
     batch = ""

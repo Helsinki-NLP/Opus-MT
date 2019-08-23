@@ -3,6 +3,8 @@
 #
 #
 
+import signal
+import sys
 import argparse
 import codecs
 from websocket import create_connection
@@ -17,6 +19,9 @@ from mosestokenizer import *
 
 ## language identifer (if source language is not given)
 import pycld2 as cld2
+
+## for the cache
+from sqlitedict import SqliteDict
 
 
 parser = argparse.ArgumentParser(description='Simple translation server.')
@@ -36,6 +41,8 @@ parser.add_argument('-d','--deftrg','--default-target-language', type=str,
                     help='default target language (for multilingual models)')
 parser.add_argument('--bpe','--bpe-model', type=str, default='opus.de+fr+sv+en.bpe32k-model',
                     help='BPE model for source text segmentation')
+parser.add_argument('-c','--cache', type=str, default='opentrans-cache.db',
+                    help='BPE model for source text segmentation')
 
 
 args = parser.parse_args()
@@ -51,6 +58,18 @@ BPEmodel = 'opus.de+fr+sv+en.bpe32k-model'
 BPEcodes = codecs.open(args.bpe, encoding='utf-8')
 bpe = BPE(BPEcodes)
 
+
+## open the cache DB
+cache = SqliteDict(args.cache, autocommit=True)
+
+
+## add signal handler for SIGINT to properly close 
+## the DB when interrupting
+def signal_handler(sig, frame):
+    cache.close()
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
 
 
 ## pre- and post-processing tools
@@ -80,6 +99,12 @@ class Translate(WebSocket):
         toLang = deftrg
         prefix = ''
 
+        ## check the cach first
+        if self.data in cache:
+            translation = cache[self.data]
+            print('CACHED TRANSLATION: ' + translation)
+            self.sendMessage(translation)
+
         ## check whether the first token specifies the language pair
         tokens = self.data.split()
         langs = tokens.pop(0).split('-')
@@ -107,19 +132,26 @@ class Translate(WebSocket):
             self.sendMessage('ERROR: unsupported target language ' + toLang)
             return
 
+        langpair = fromLang + toLang
         message = []
         for s in sentence_splitter[fromLang]([normalizer[fromLang](self.data)]):
-            # print(s)
-            tokenized = ' '.join(tokenizer[fromLang](s))
-            # print(tokenized)
-            segmented = bpe.process_line(tokenized)
-            # print(prefix + segmented)
-            ws.send(prefix + segmented)
-            translated = ws.recv().replace('@@ ','')
-            # print(translated)
-            detokenized = detokenizer[toLang](translated.split())
-            print('TRANSLATION: ' + detokenized)
+            key = langpair + ' ' + s
+            if key in cache:
+                detokenized = cache[key]
+                print('CACHED TRANSLATION: ' + detokenized)
+            else:
+                # print(s)
+                tokenized = ' '.join(tokenizer[fromLang](s))
+                # print(tokenized)
+                segmented = bpe.process_line(tokenized)
+                # print(prefix + segmented)
+                ws.send(prefix + segmented)
+                translated = ws.recv().replace('@@ ','')
+                # print(translated)
+                detokenized = detokenizer[toLang](translated.split())
+                print('TRANSLATION: ' + detokenized)
             message.append(detokenized)
+            cache[key] = detokenized
         self.sendMessage(' '.join(message))
 
     def handleConnected(self):
