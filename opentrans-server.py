@@ -77,7 +77,7 @@ class Translate(WebSocket):
     def handleMessage(self):
 
         fromLang = None
-        toLang = deftrg
+        toLang = args.deftrg
         prefix = ''
 
         ## check whether the first token specifies the language pair
@@ -89,7 +89,7 @@ class Translate(WebSocket):
                 fromLang = langs[0]
             self.data = ' '.join(tokens)
 
-        if len(trglangs) > 1:
+        if len(args.trglangs) > 1:
             prefix = '>>' + toLang + '<< '
 
         if not fromLang:
