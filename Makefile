@@ -44,7 +44,8 @@ all: install-marian-server install-opentrans-server
 
 .PHONY: install-marian-server install-opentrans-server
 install-marian-server: /etc/init/marian-server.conf
-install-opentrans-server: /etc/init/opentrans-server.conf
+install-opentrans-server: /etc/init.d/opentrans
+# install-opentrans-server: /etc/init/opentrans-server.conf
 
 
 /etc/init/marian-server.conf:
@@ -62,6 +63,22 @@ install-opentrans-server: /etc/init/opentrans-server.conf
 	service ${notdir $(@:.conf=)} start || true
 
 
+## service via sysvinit
+/etc/init.d/opentrans: ${OPENTRANS_SERVER} ${APPLYBPE} ${BPEMODEL}
+	sed 	-e 's#%%SERVICENAME%%#opentrans-server#' \
+		-e 's#%%APPSHORTDESCR%%#opentrans-server#' \
+		-e 's#%%APPLONGDESCR%%#translation service#' \
+		-e 's#%%APPBIN%%#$<#' \
+		-e 's#%%APPARGS%%#-c ${OPENTRANS_CACHE} --bpe ${BPEMODEL}#' \
+	< service-template > ${notdir $@}
+	${INSTALL_BIN} ${notdir $@} $@
+	rm -f ${notdir $@}
+	update-rc.d ${notdir $@} defaults
+	rm -f ${notdir $@}
+	service ${notdir $@} start || true
+
+
+## service via Ubuntu upstart (does not seem to work)
 /etc/init/opentrans-server.conf: ${OPENTRANS_SERVER} ${APPLYBPE} ${BPEMODEL}
 	mkdir -p ${dir ${OPENTRANS_CACHE}}
 	mkdir -p ${LOGDIR}/opentrans
@@ -78,9 +95,6 @@ install-opentrans-server: /etc/init/opentrans-server.conf
 	rm -f ${notdir $@}
 	service ${notdir $(@:.conf=)} start || true
 
-
-# 	@echo "exec python3 ${HOME}/OpusTrans/test2.py -c ${OPENTRANS_CACHE} --bpe ${BPEMODEL} > ${LOGDIR}/opentrans/server.out 2> ${LOGDIR}/opentrans/server.err" >> ${notdir $@}
-# 	@echo "exec python3 ${HOME}/OpusTrans/test2.py > ${LOGDIR}/opentrans/server.out 2> ${LOGDIR}/opentrans/server.err" >> ${notdir $@}
 
 
 ${BINDIR}/%: %
