@@ -25,7 +25,6 @@ import pycld2 as cld2
 ## --> assumes that translations from the server don't change
 from sqlitedict import SqliteDict
 
-
 parser = argparse.ArgumentParser(description='Simple translation server.')
 parser.add_argument('-p','--port', type=int, default=8080,
                    help='socket the server will listen on')
