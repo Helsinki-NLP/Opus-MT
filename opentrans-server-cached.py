@@ -21,6 +21,8 @@ from mosestokenizer import *
 import pycld2 as cld2
 
 ## for the cache
+## --> unlimited size
+## --> assumes that translations from the server don't change
 from sqlitedict import SqliteDict
 
 
