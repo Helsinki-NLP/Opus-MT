@@ -50,8 +50,8 @@ else ifeq (${shell hostname},dx7-nkiel-4gpu)
   MARIAN       = ${APPLHOME}/marian/build
   LOADMODS     = echo "nothing to load"
 else ifeq (${shell hostname --domain},bullx)
-  DATAHOME     = ${HOME}/work/wmt19/data/${LANGPAIR}
-  WORKHOME     = ${HOME}/work/joerg/marian
+  DATAHOME     = ${HOME}/work/opentrans/data/${LANGPAIR}
+  WORKHOME     = ${HOME}/work/joerg/opentrans
   APPLHOME     = ${HOME}/projappl
   OPUSHOME     = ${HOME}/work/nlpl/data/OPUS
   MOSESHOME    = ${APPLHOME}/mosesdecoder

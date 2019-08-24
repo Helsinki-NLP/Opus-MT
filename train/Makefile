@@ -126,7 +126,7 @@ OPUSCORPORA  = ${patsubst %/latest/moses/${LANGPAIR}.txt.zip,%,\
 
 ## train/dev/test data
 
-TRAINSET = $(filter-out ${DEVSET} ${TESTSET},${OPUSCORPORA})
+TRAINSET = $(filter-out WMT-News ${DEVSET} ${TESTSET},${OPUSCORPORA})
 DEVSET   = Tatoeba
 TESTSET  = ${DEVSET}
 TUNESET  = OpenSubtitles
@@ -234,29 +234,7 @@ all-evalfiskmo:
 #	${MAKE} SRCLANGS=sv TRGLANGS=fi SRC=sv TRG=fi TRAINSET=fiskmo TRAINSIZE=1000000 evalfiskmo
 
 
-nowmt:
-	${MAKE} SRCLANGS=en TRGLANGS=fi traindata-nowmt
-	${MAKE} HPC_CORES=1 SRCLANGS=en TRGLANGS=fi train-nowmt.submit
-	${MAKE} SRCLANGS=fi TRGLANGS=en traindata-nowmt
-	${MAKE} HPC_CORES=1 SRCLANGS=fi TRGLANGS=en train-nowmt.submit
-	${MAKE} SRCLANGS="de fr sv en" TRGLANGS="et hu fi" traindata-nowmt
-	${MAKE} HPC_CORES=1 SRCLANGS="de fr sv en" TRGLANGS="et hu fi" train-nowmt.submit
-	${MAKE} TRGLANGS="de fr sv en" SRCLANGS="et hu fi" traindata-nowmt
-	${MAKE} HPC_CORES=1 TRGLANGS="de fr sv en" SRCLANGS="et hu fi" train-nowmt.submit
 
-nowmt-eval:
-	${MAKE} SRCLANGS=en TRGLANGS=fi SRC=en TRG=fi TESTSET=newstest2017.en-fi DATASET=opus-wmt eval
-	${MAKE} SRCLANGS=fi TRGLANGS=en SRC=fi TRG=en TESTSET=newstest2017.en-fi DATASET=opus-wmt eval
-	${MAKE} SRCLANGS=en TRGLANGS=fi SRC=en TRG=fi TESTSET=newstest2018.en-fi DATASET=opus-wmt eval
-	${MAKE} SRCLANGS=fi TRGLANGS=en SRC=fi TRG=en TESTSET=newstest2018.en-fi DATASET=opus-wmt eval
-
-
-
-
-## models that exclude WMT-News data
-## --> make it possible to compare scores
-%-nowmt:
-	${MAKE} TESTSET=WMT-News DATASET=opus-wmt ${@:-nowmt=}
 
 ## run things with individual data sets only
 %-fiskmo:
@@ -272,63 +250,56 @@ nowmt-eval:
 
 %-fizh:
 	${MAKE} DEVSET=wikimedia TESTSET=wikimedia \
-		SRCLANGS="fi" TRGLANGS="zh_CN zh_TW zh_HK zh_cn zh_tw zh" ${@:-fizh=}
+		SRCLANGS="fi" TRGLANGS="zh_cn zh_tw zh" ${@:-fizh=}
 
 %-zhfi:
 	${MAKE} DEVSET=wikimedia TESTSET=wikimedia \
-		TRGLANGS="fi" SRCLANGS="zh_CN zh_TW zh_HK zh_cn zh_tw zh" ${@:-zhfi=}
+		TRGLANGS="fi" SRCLANGS="zh_cn zh_tw zh" ${@:-zhfi=}
 
-
-nordic1:
-	${MAKE} TRGLANGS="da fo is no nb nn sv" SRCLANGS="fi et hu" traindata devdata
-	${MAKE} HPC_CORES=1 TRGLANGS="da fo is no nb nn sv" SRCLANGS="fi et hu" train.submit
-	${MAKE} SRCLANGS="da fo is no nb nn sv" TRGLANGS="fi et hu" traindata devdata
-	${MAKE} HPC_CORES=1 SRCLANGS="da fo is no nb nn sv" TRGLANGS="fi et hu" train.submit
-
-european1:
-	${MAKE} SRCLANGS="fr ca es gl it la pt ro" TRGLANGS="en de nl fy af da fo is no nb nn sv" traindata devdata
-	${MAKE} HPC_CORES=1 SRCLANGS="fr ca es gl it la pt ro" TRGLANGS="en de nl fy af da fo is no nb nn sv" train.submit
-	${MAKE} TRGLANGS="fr ca es gl it la pt ro" SRCLANGS="en de nl fy af da fo is no nb nn sv" traindata devdata
-	${MAKE} HPC_CORES=1 TRGLANGS="fr ca es gl it la pt ro" SRCLANGS="en de nl fy af da fo is no nb nn sv" train.submit
 
 
 ## a batch of interesting models ....
 
-prepare-all:
-	${MAKE} SRCLANGS="da no nb nn sv" TRGLANGS=fi traindata devdata
-	${MAKE} TRGLANGS="da no nb nn sv" SRCLANGS=fi traindata devdata
-	${MAKE} SRCLANGS=sv TRGLANGS=fi traindata devdata
-	${MAKE} TRGLANGS=sv SRCLANGS=fi traindata devdata
-	${MAKE} SRCLANGS=en TRGLANGS=fi traindata devdata
-	${MAKE} TRGLANGS=en SRCLANGS=fi traindata devdata
-	${MAKE} SRCLANGS=de TRGLANGS=fi traindata devdata
-	${MAKE} TRGLANGS=de SRCLANGS=fi traindata devdata
-	${MAKE} SRCLANGS=fr TRGLANGS=fi traindata devdata
-	${MAKE} TRGLANGS=fr SRCLANGS=fi traindata devdata
-	${MAKE} SRCLANGS="de da en no nb nn nl sv" TRGLANGS=fi traindata devdata
-	${MAKE} TRGLANGS="de da en no nb nn nl sv" SRCLANGS=fi traindata devdata
-	${MAKE} SRCLANGS="es it fr pt" TRGLANGS=fi traindata devdata
-	${MAKE} TRGLANGS="es it fr pt" SRCLANGS=fi traindata devdata
-	${MAKE} SRCLANGS="da no nb nn sv" TRGLANGS="fi et" traindata devdata
-	${MAKE} TRGLANGS="da no nb nn sv" SRCLANGS="fi et" traindata devdata
+## some models with Finnish as source or target
+## make sure that we don't use WMT testsets for fi-en/en-fi
+all-finnish:
+	for l in en sv de fr nl zh; do \
+	  ${MAKE} SRCLANGS=$$l TRGLANGS=fi traindata; \
+	  ${MAKE} SRCLANGS=$$l TRGLANGS=fi HPC_CORES=1 train.submit-multigpu; \
+	  ${MAKE} TRGLANGS=$$l SRCLANGS=fi traindata; \
+	  ${MAKE} TRGLANGS=$$l SRCLANGS=fi HPC_CORES=1 train.submit-multigpu; \
+	done
 
-train-all:
-	${MAKE} SRCLANGS="da no nb nn sv" TRGLANGS=fi train.submit
-	${MAKE} TRGLANGS="da no nb nn sv" SRCLANGS=fi train.submit
-	${MAKE} SRCLANGS=sv TRGLANGS=fi train.submit
-	${MAKE} TRGLANGS=sv SRCLANGS=fi train.submit
-	${MAKE} SRCLANGS=en TRGLANGS=fi train.submit
-	${MAKE} TRGLANGS=en SRCLANGS=fi train.submit
-	${MAKE} SRCLANGS=de TRGLANGS=fi train.submit
-	${MAKE} TRGLANGS=de SRCLANGS=fi train.submit
-	${MAKE} SRCLANGS=fr TRGLANGS=fi train.submit
-	${MAKE} TRGLANGS=fr SRCLANGS=fi train.submit
-	${MAKE} SRCLANGS="de da en no nb nn nl sv" TRGLANGS=fi train.submit
-	${MAKE} TRGLANGS="de da en no nb nn nl sv" SRCLANGS=fi train.submit
-	${MAKE} SRCLANGS="es it fr pt" TRGLANGS=fi train.submit
-	${MAKE} TRGLANGS="es it fr pt" SRCLANGS=fi train.submit
-	${MAKE} SRCLANGS="da no nb nn sv" TRGLANGS="fi et" train.submit
-	${MAKE} TRGLANGS="da no nb nn sv" SRCLANGS="fi et" train.submit
+
+nordic:
+	${MAKE} SRCLANGS="da fo is no nb nn sv" TRGLANGS="fi et hu" traindata
+	${MAKE} SRCLANGS="da fo is no nb nn sv" TRGLANGS="fi et hu" HPC_CORES=1 train.submit-multigpu
+	${MAKE} TRGLANGS="da fo is no nb nn sv" SRCLANGS="fi et hu" traindata
+	${MAKE} TRGLANGS="da fo is no nb nn sv" SRCLANGS="fi et hu" HPC_CORES=1 train.submit-multigpu
+
+romance:
+	${MAKE} SRCLANGS="es ca ga oc it la fr ro pt_br pt" TRGLANGS="fi et hu" traindata
+	${MAKE} SRCLANGS="es ca ga oc it la fr ro pt_br pt" TRGLANGS="fi et hu" HPC_CORES=1 train.submit-multigpu
+	${MAKE} TRGLANGS="es ca ga oc it la fr ro pt_br pt" SRCLANGS="fi et hu" traindata
+	${MAKE} TRGLANGS="es ca ga oc it la fr ro pt_br pt" SRCLANGS="fi et hu" HPC_CORES=1 train.submit-multigpu
+
+germanic:
+	${MAKE} SRCLANGS="de nl af fy" TRGLANGS="fi et hu" traindata
+	${MAKE} SRCLANGS="de nl af fy" TRGLANGS="fi et hu" HPC_CORES=1 train.submit-multigpu
+	${MAKE} TRGLANGS="de nl af fy" SRCLANGS="fi et hu" traindata
+	${MAKE} TRGLANGS="de nl af fy" SRCLANGS="fi et hu" HPC_CORES=1 train.submit-multigpu
+
+
+germanic-romance:
+	${MAKE} SRCLANGS="fr ca es gl it la oc pt_br pt ro" \
+		TRGLANGS="en de nl fy af da fo is no nb nn sv" traindata
+	${MAKE} HPC_CORES=1 SRCLANGS="fr ca es gl it la oc pt_br pt ro" \
+		TRGLANGS="en de nl fy af da fo is no nb nn sv" train.submit-multigpu
+	${MAKE} TRGLANGS="fr ca es gl it la oc pt_br pt ro" \
+		SRCLANGS="en de nl fy af da fo is no nb nn sv" traindata devdata
+	${MAKE} HPC_CORES=1 TRGLANGS="fr ca es gl it la oc pt_br pt ro" \
+		SRCLANGS="en de nl fy af da fo is no nb nn sv" train.submit-multigpu
+
 
 
 ALLLANGPAIRS = ${notdir ${shell ls work | grep -- '-'}}
@@ -341,23 +312,6 @@ eval-all:
 	  fi \
 	done
 
-
-#	${MAKE} SRCLANGS="da no nb nn sv" TRGLANGS=fi eval
-#	${MAKE} TRGLANGS="da no nb nn sv" SRCLANGS=fi eval
-#	${MAKE} SRCLANGS=sv TRGLANGS=fi eval
-#	${MAKE} TRGLANGS=sv SRCLANGS=fi eval
-#	${MAKE} SRCLANGS=en TRGLANGS=fi eval
-#	${MAKE} TRGLANGS=en SRCLANGS=fi eval
-#	${MAKE} SRCLANGS=de TRGLANGS=fi eval
-#	${MAKE} TRGLANGS=de SRCLANGS=fi eval
-#	${MAKE} SRCLANGS=fr TRGLANGS=fi eval
-#	${MAKE} TRGLANGS=fr SRCLANGS=fi eval
-#	${MAKE} SRCLANGS="de da en no nb nn nl sv" TRGLANGS=fi eval
-#	${MAKE} TRGLANGS="de da en no nb nn nl sv" SRCLANGS=fi eval
-#	${MAKE} SRCLANGS="es it fr pt" TRGLANGS=fi eval
-#	${MAKE} TRGLANGS="es it fr pt" SRCLANGS=fi eval
-#	${MAKE} SRCLANGS="da no nb nn sv" TRGLANGS="fi et" eval
-#	${MAKE} TRGLANGS="da no nb nn sv" SRCLANGS="fi et" eval
 
 
 

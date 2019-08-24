@@ -229,94 +229,10 @@ endif
 
 
 
-
-# ##----------------------------------------------
-# ## fiskmo-testset
-# ##----------------------------------------------
-
-
-# ${FISKMO_SV}.src:
-# 	ln -s ${FISKMO_SV} ${FISKMO_SV}.raw
-# 	${MAKE} ${FISKMO_SV}.tok
-# 	mv ${FISKMO_SV}.tok $@
-
-# ${FISKMO_SV}.labels.src: ${FISKMO_SV}.src
-# 	sed "s/^/>>fi<< /" < $< > $@
-
-# ${FISKMO_SV}.trg: ${FISKMO_SV}.src
-# 	ln -s $< $@
-
-# ${FISKMO_FI}.src:
-# 	ln -s ${FISKMO_FI} ${FISKMO_FI}.raw
-# 	${MAKE} ${FISKMO_FI}.tok
-# 	mv ${FISKMO_FI}.tok $@
-
-# ${FISKMO_FI}.labels.src: ${FISKMO_FI}.src
-# 	sed "s/^/>>sv<< /" < $< > $@
-
-# ${FISKMO_FI}.trg: ${FISKMO_FI}.src
-# 	ln -s $< $@
-
-
-
-
 ##----------------------------------------------
 ## tokenization
 ##----------------------------------------------
 
-
-## tokenization for English
-%.en.tok: %.en.raw
-	$(LOAD_MOSES) cat $< |\
-	$(TOKENIZER)/replace-unicode-punctuation.perl |\
-	$(TOKENIZER)/remove-non-printing-char.perl |\
-	$(TOKENIZER)/normalize-punctuation.perl -l en |\
-	$(TOKENIZER)/pre-tokenizer.perl -l en |\
-	sed -e "s/it's/it is/g" \
-		-e "s/It's/It is/g" \
-		-e "s/That's/That is/g" \
-		-e "s/What's/What is/g" \
-		-e "s/She's/She is/g" \
-		-e "s/He's/He is/g" \
-		-e "s/We've/We have/g" \
-		-e "s/We're/We are/g" \
-		-e "s/They're/They are/g" \
-		-e "s/There's/There is/g" \
-		-e "s/What's/What is/g" \
-		-e "s/didn't/did not/g" \
-		-e "s/don't/do not/g" \
-		-e "s/can't/cannot/g" \
-		-e "s/they're/they are/g" \
-		-e "s/that's/that is/g" \
-		-e "s/he's/he is/g" \
-		-e "s/wasn't/was not/g" \
-		-e "s/she's/she is/g" \
-		-e "s/couldn't/could not/g" \
-		-e "s/we're/we are/g" \
-		-e "s/you're/you are/g" \
-		-e "s/we've/we have/g" \
-		-e "s/doesn't/does not/g" \
-		-e "s/weren't/were not/g" \
-		-e "s/isn't/is not/g" \
-		-e "s/haven't/have not/g" \
-		-e "s/hadn't/had not/g" \
-		-e "s/would've/would have/g" \
-		-e "s/wouldn't/would not/g" \
-		-e "s/won't/will not/g" \
-		-e "s/we'll/we will/g" \
-		-e "s/we'd/we would/g" \
-		-e "s/she'd/she would/g" \
-		-e "s/he'll/he will/g" \
-		-e "s/he'd/he would/g" \
-		-e "s/I'm/I am/g" \
-		-e "s/here's/here is/g" \
-		-e "s/I've/I have/g" \
-		-e "s/I'v/I have/g" \
-		-e "s/I'd/I would/g" \
-		-e "s/He'd/He would/g" \
-		-e "s/hasn't/has not/g" |\
-	$(TOKENIZER)/tokenizer.perl -no-escape -threads $(THREADS) -l en |\
-	sed 's/  */ /g;s/^ *//g;s/ *$$//g' > $@
 
 ## normalisation for Chinese
 %.zh_tw.tok: %.zh_tw.raw
@@ -326,8 +242,14 @@ endif
 	$(TOKENIZER)/normalize-punctuation.perl |\
 	sed 's/  */ /g;s/^ *//g;s/ *$$//g' > $@
 
-## normalisation for Chinese
 %.zh_cn.tok: %.zh_cn.raw
+	$(LOAD_MOSES) cat $< |\
+	$(TOKENIZER)/replace-unicode-punctuation.perl |\
+	$(TOKENIZER)/remove-non-printing-char.perl |\
+	$(TOKENIZER)/normalize-punctuation.perl |\
+	sed 's/  */ /g;s/^ *//g;s/ *$$//g' > $@
+
+%.zh.tok: %.zh.raw
 	$(LOAD_MOSES) cat $< |\
 	$(TOKENIZER)/replace-unicode-punctuation.perl |\
 	$(TOKENIZER)/remove-non-printing-char.perl |\
@@ -341,9 +263,86 @@ endif
 	$(TOKENIZER)/remove-non-printing-char.perl |\
 	$(TOKENIZER)/normalize-punctuation.perl \
 		-l ${lastword ${subst ., ,$(<:.raw=)}} |\
-	$(TOKENIZER)/tokenizer.perl -no-escape -threads $(THREADS) \
+	$(TOKENIZER)/tokenizer.perl -a -threads $(THREADS) \
 		-l ${lastword ${subst ., ,$(<:.raw=)}} |\
 	sed 's/  */ /g;s/^ *//g;s/ *$$//g' > $@
+
+
+
+
+
+############## OLD ##########################################
+## without aggressive tokenisation of hyphens
+## and without HTML escaping
+## no special treatment of contracted forms in English
+##
+## NEW: (above) make compatible with python wrapper of 
+##      the mosestokenizer tools
+#############################################################
+
+# ## tokenization for English
+# %.en.tok: %.en.raw
+# 	$(LOAD_MOSES) cat $< |\
+# 	$(TOKENIZER)/replace-unicode-punctuation.perl |\
+# 	$(TOKENIZER)/remove-non-printing-char.perl |\
+# 	$(TOKENIZER)/normalize-punctuation.perl -l en |\
+# 	$(TOKENIZER)/pre-tokenizer.perl -l en |\
+# 	sed -e "s/it's/it is/g" \
+# 		-e "s/It's/It is/g" \
+# 		-e "s/That's/That is/g" \
+# 		-e "s/What's/What is/g" \
+# 		-e "s/She's/She is/g" \
+# 		-e "s/He's/He is/g" \
+# 		-e "s/We've/We have/g" \
+# 		-e "s/We're/We are/g" \
+# 		-e "s/They're/They are/g" \
+# 		-e "s/There's/There is/g" \
+# 		-e "s/What's/What is/g" \
+# 		-e "s/didn't/did not/g" \
+# 		-e "s/don't/do not/g" \
+# 		-e "s/can't/cannot/g" \
+# 		-e "s/they're/they are/g" \
+# 		-e "s/that's/that is/g" \
+# 		-e "s/he's/he is/g" \
+# 		-e "s/wasn't/was not/g" \
+# 		-e "s/she's/she is/g" \
+# 		-e "s/couldn't/could not/g" \
+# 		-e "s/we're/we are/g" \
+# 		-e "s/you're/you are/g" \
+# 		-e "s/we've/we have/g" \
+# 		-e "s/doesn't/does not/g" \
+# 		-e "s/weren't/were not/g" \
+# 		-e "s/isn't/is not/g" \
+# 		-e "s/haven't/have not/g" \
+# 		-e "s/hadn't/had not/g" \
+# 		-e "s/would've/would have/g" \
+# 		-e "s/wouldn't/would not/g" \
+# 		-e "s/won't/will not/g" \
+# 		-e "s/we'll/we will/g" \
+# 		-e "s/we'd/we would/g" \
+# 		-e "s/she'd/she would/g" \
+# 		-e "s/he'll/he will/g" \
+# 		-e "s/he'd/he would/g" \
+# 		-e "s/I'm/I am/g" \
+# 		-e "s/here's/here is/g" \
+# 		-e "s/I've/I have/g" \
+# 		-e "s/I'v/I have/g" \
+# 		-e "s/I'd/I would/g" \
+# 		-e "s/He'd/He would/g" \
+# 		-e "s/hasn't/has not/g" |\
+# 	$(TOKENIZER)/tokenizer.perl -no-escape -threads $(THREADS) -l en |\
+# 	sed 's/  */ /g;s/^ *//g;s/ *$$//g' > $@
+
+# ## generic target for tokenization
+# %.tok: %.raw
+# 	$(LOAD_MOSES) cat $< |\
+# 	$(TOKENIZER)/replace-unicode-punctuation.perl |\
+# 	$(TOKENIZER)/remove-non-printing-char.perl |\
+# 	$(TOKENIZER)/normalize-punctuation.perl \
+# 		-l ${lastword ${subst ., ,$(<:.raw=)}} |\
+# 	$(TOKENIZER)/tokenizer.perl -no-escape -threads $(THREADS) \
+# 		-l ${lastword ${subst ., ,$(<:.raw=)}} |\
+# 	sed 's/  */ /g;s/^ *//g;s/ *$$//g' > $@
 
 
 
