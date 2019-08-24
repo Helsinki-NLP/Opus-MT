@@ -11,15 +11,19 @@ LOGDIR   = /var/log
 
 
 ## model parameters
+DATASET    = opus
+SRC_LANGS  = de+fr+sv+en
+TRG_LANGS  = et+hu+fi
+
 MODEL_HOME = /media/letsmt/nmt/models
-LANG_PAIR  = de+fr+sv+en-et+hu+fi
-NMT_MODEL  = ${MODEL_HOME}/${LANG_PAIR}/opus-wmt.bpe32k-bpe32k.enfi.transformer.model1.npz.best-perplexity.npz
-NMT_VOCAB  = ${MODEL_HOME}/${LANG_PAIR}/opus-wmt.bpe32k-bpe32k.enfi.vocab.yml
-BPEMODEL   = ${SHAREDIR}/opentrans/opus.de+fr+sv+en.bpe32k-model
+LANG_PAIR  = ${SRC_LANGS}-${TRG_LANGS}
+NMT_MODEL  = ${MODEL_HOME}/${LANG_PAIR}/${DATASET}.bpe32k-bpe32k.enfi.transformer.model1.npz.best-perplexity.npz
+NMT_VOCAB  = ${MODEL_HOME}/${LANG_PAIR}/${DATASET}.bpe32k-bpe32k.enfi.vocab.yml
+BPEMODEL   = ${SHAREDIR}/opustrans/${DATASET}.${SRC_LANGS}.bpe32k-model
 APPLYBPE   = ${BINDIR}/apply_bpe.py
 
-OPENTRANS_SERVER = ${BINDIR}/opentrans-server-cached.py
-OPENTRANS_CACHE  = ${CACHEDIR}/opentrans/opus.de+fr+sv+en.cache.db
+OPUSTRANS_SERVER = ${BINDIR}/opustrans-server-cached.py
+OPUSTRANS_CACHE  = ${CACHEDIR}/opustrans/${DATASET}.${LANGPAIR}.cache.db
 
 
 ## marian NMT build directory and binaries
@@ -40,15 +44,15 @@ INSTALL_DATA = ${INSTALL} -m 644
 
 
 .PHONY: all
-all: install-marian-server install-opentrans-server
+all: install-marian-server install-opustrans-server
 
-.PHONY: install-marian-server install-opentrans-server
-install-marian-server: /etc/init/marian-server.conf
-install-opentrans-server: /etc/init.d/opentrans
-# install-opentrans-server: /etc/init/opentrans-server.conf
+.PHONY: install-marian-server install-opustrans-server
+install-marian-server: /etc/init/marian-${DATASET}-${LANGPAIR}.conf
+install-opustrans-server: /etc/init.d/opustrans-${DATASET}-${LANGPAIR}
+# install-opustrans-server: /etc/init/opustrans-${DATASET}-${LANGPAIR}.conf
 
 
-/etc/init/marian-server.conf:
+/etc/init/marian-${DATASET}-${LANGPAIR}.conf:
 	@echo 'description     "MarianNMT Server"'      > ${notdir $@}
 	@echo ''                                       >> ${notdir $@}
 	@echo 'start on filesystem or runlevel [2345]' >> ${notdir $@}
@@ -64,12 +68,12 @@ install-opentrans-server: /etc/init.d/opentrans
 
 
 ## service via sysvinit
-/etc/init.d/opentrans: ${OPENTRANS_SERVER} ${APPLYBPE} ${BPEMODEL}
-	sed 	-e 's#%%SERVICENAME%%#opentrans-server#' \
-		-e 's#%%APPSHORTDESCR%%#opentrans-server#' \
+/etc/init.d/opustrans-${DATASET}-${LANGPAIR}: ${OPUSTRANS_SERVER} ${APPLYBPE} ${BPEMODEL}
+	sed 	-e 's#%%SERVICENAME%%#opustrans-server#' \
+		-e 's#%%APPSHORTDESCR%%#opustrans-server#' \
 		-e 's#%%APPLONGDESCR%%#translation service#' \
 		-e 's#%%APPBIN%%#$<#' \
-		-e 's#%%APPARGS%%#-c ${OPENTRANS_CACHE} --bpe ${BPEMODEL}#' \
+		-e 's#%%APPARGS%%#-c ${OPUSTRANS_CACHE} --bpe ${BPEMODEL}#' \
 	< service-template > ${notdir $@}
 	${INSTALL_BIN} ${notdir $@} $@
 	rm -f ${notdir $@}
@@ -79,10 +83,10 @@ install-opentrans-server: /etc/init.d/opentrans
 
 
 ## service via Ubuntu upstart (does not seem to work)
-/etc/init/opentrans-server.conf: ${OPENTRANS_SERVER} ${APPLYBPE} ${BPEMODEL}
-	mkdir -p ${dir ${OPENTRANS_CACHE}}
-	mkdir -p ${LOGDIR}/opentrans
-	@echo 'description     "OpenTrans Server"'      > ${notdir $@}
+/etc/init/opustrans-${DATASET}-${LANGPAIR}.conf: ${OPUSTRANS_SERVER} ${APPLYBPE} ${BPEMODEL}
+	mkdir -p ${dir ${OPUSTRANS_CACHE}}
+	mkdir -p ${LOGDIR}/opustrans
+	@echo 'description     "OpusTrans Server"'      > ${notdir $@}
 	@echo ''                                       >> ${notdir $@}
 	@echo 'start on filesystem or runlevel [2345]' >> ${notdir $@}
 	@echo 'stop on shutdown'                       >> ${notdir $@}
@@ -90,7 +94,7 @@ install-opentrans-server: /etc/init.d/opentrans
 	@echo 'respawn'                                >> ${notdir $@}
 	@echo 'respawn limit 3 12'                     >> ${notdir $@}
 	@echo ''                                       >> ${notdir $@}
-	@echo "exec $< -c ${OPENTRANS_CACHE} --bpe ${BPEMODEL} > ${LOGDIR}/opentrans/server.out 2> ${LOGDIR}/opentrans/server.err" >> ${notdir $@}
+	@echo "exec $< -c ${OPUSTRANS_CACHE} --bpe ${BPEMODEL} > ${LOGDIR}/opustrans/server.out 2> ${LOGDIR}/opustrans/server.err" >> ${notdir $@}
 	${INSTALL_DATA} -b -S .old ${notdir $@} $@
 	rm -f ${notdir $@}
 	service ${notdir $(@:.conf=)} start || true
@@ -100,6 +104,6 @@ install-opentrans-server: /etc/init.d/opentrans
 ${BINDIR}/%: %
 	${INSTALL_BIN} $< $@
 
-${SHAREDIR}/opentrans/%: %
+${SHAREDIR}/opustrans/%: %
 	mkdir -p ${dir $@}
 	${INSTALL_DATA} $< $@
