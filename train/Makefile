@@ -270,6 +270,20 @@ all-finnish:
 	  ${MAKE} TRGLANGS=$$l SRCLANGS=fi HPC_CORES=1 train.submit-multigpu; \
 	done
 
+memad:
+	for l in en sv de fr nl; do \
+	  ${MAKE} SRCLANGS=$$l TRGLANGS=fi traindata; \
+	  ${MAKE} SRCLANGS=$$l TRGLANGS=fi HPC_CORES=1 train.submit-multigpu; \
+	  ${MAKE} TRGLANGS=$$l SRCLANGS=fi traindata; \
+	  ${MAKE} TRGLANGS=$$l SRCLANGS=fi HPC_CORES=1 train.submit-multigpu; \
+	done
+#	${MAKE} SRCLANGS="en fr de nl da fo is no nb nn sv et fi" \
+#		TRGLANGS="en fr de nl da fo is no nb nn sv et fi" traindata
+#	${MAKE} SRCLANGS="en fr de nl da fo is no nb nn sv et fi" \
+#		TRGLANGS="en fr de nl da fo is no nb nn sv et fi" \
+#		HPC_CORES=1 train.submit-multigpu
+
+
 
 nordic:
 	${MAKE} SRCLANGS="da fo is no nb nn sv" TRGLANGS="fi et hu" traindata

@@ -65,6 +65,7 @@ else ifeq (${shell hostname --domain},bullx)
   CPU_MODULES  = python-env
   LOADMODS     = echo "nothing to load"
   TMPDIR       = ${WORKHOME}
+  HPC_QUEUE    = small
 else
   DATAHOME     = /proj/OPUS/WMT19/data/${LANGPAIR}
   # APPLHOME   = ${USERAPPL}/tools
