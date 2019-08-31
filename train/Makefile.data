@@ -13,17 +13,17 @@ ifndef THREADS
 endif
 
 
-CLEAN_TRAIN_SRC = ${patsubst %,${DATADIR}/raw/%.${LANGPAIR}.clean.${SRC},${TRAINSET}}
-CLEAN_TRAIN_TRG = ${patsubst %.${SRC},%.${TRG},${CLEAN_TRAIN_SRC}}
+CLEAN_TRAIN_SRC = ${patsubst %,${DATADIR}/raw/%.${LANGPAIR}.clean.${SRC}.gz,${TRAINSET}}
+CLEAN_TRAIN_TRG = ${patsubst %.${SRC}.gz,%.${TRG}.gz,${CLEAN_TRAIN_SRC}}
 
-CLEAN_TUNE_SRC  = ${patsubst %,${DATADIR}/raw/%.${LANGPAIR}.clean.${SRC},${TUNESET}}
-CLEAN_TUNE_TRG  = ${patsubst %.${SRC},%.${TRG},${CLEAN_TUNE_SRC}}
+CLEAN_TUNE_SRC  = ${patsubst %,${DATADIR}/raw/%.${LANGPAIR}.clean.${SRC}.gz,${TUNESET}}
+CLEAN_TUNE_TRG  = ${patsubst %.${SRC}.gz,%.${TRG}.gz,${CLEAN_TUNE_SRC}}
 
-CLEAN_DEV_SRC   = ${patsubst %,${DATADIR}/raw/%.${LANGPAIR}.clean.${SRC},${DEVSET}}
-CLEAN_DEV_TRG   = ${patsubst %.${SRC},%.${TRG},${CLEAN_DEV_SRC}}
+CLEAN_DEV_SRC   = ${patsubst %,${DATADIR}/raw/%.${LANGPAIR}.clean.${SRC}.gz,${DEVSET}}
+CLEAN_DEV_TRG   = ${patsubst %.${SRC}.gz,%.${TRG}.gz,${CLEAN_DEV_SRC}}
 
-CLEAN_TEST_SRC  = ${patsubst %,${DATADIR}/raw/%.${LANGPAIR}.clean.${SRC},${TESTSET}}
-CLEAN_TEST_TRG  = ${patsubst %.${SRC},%.${TRG},${CLEAN_TEST_SRC}}
+CLEAN_TEST_SRC  = ${patsubst %,${DATADIR}/raw/%.${LANGPAIR}.clean.${SRC}.gz,${TESTSET}}
+CLEAN_TEST_TRG  = ${patsubst %.${SRC}.gz,%.${TRG}.gz,${CLEAN_TEST_SRC}}
 
 DATA_SRC = ${sort ${CLEAN_TRAIN_SRC} ${CLEAN_TUNE_SRC} ${CLEAN_DEV_SRC} ${CLEAN_TEST_SRC}}
 DATA_TRG = ${sort ${CLEAN_TRAIN_TRG} ${CLEAN_TUNE_TRG} ${CLEAN_DEV_TRG} ${CLEAN_TEST_TRG}}
@@ -52,10 +52,10 @@ clean-data-source: ${DATA_SRC}
 	mkdir -p ${dir $@}
 	if [ -e ${OPUSHOME}/${patsubst %.${LANGPAIR}.${SRC}.raw,%,${notdir $@}}/latest/moses/${LANGPAIR}.txt.zip ]; then \
 	  scp ${OPUSHOME}/${patsubst %.${LANGPAIR}.${SRC}.raw,%,${notdir $@}}/latest/moses/${LANGPAIR}.txt.zip $@.zip; \
-	  unzip -d ${dir $@} $@.zip -x README '*.ids' LICENSE; \
+	  unzip -d ${dir $@} $@.zip -x README LICENSE; \
 	  mv ${dir $@}${patsubst %.${LANGPAIR}.${SRC}.raw,%,${notdir $@}}*.${LANGPAIR}.${SRC} $@; \
 	  mv ${dir $@}${patsubst %.${LANGPAIR}.${SRC}.raw,%,${notdir $@}}*.${LANGPAIR}.${TRG} ${@:.${SRC}.raw=.${TRG}.raw}; \
-	  rm -f $@.zip; \
+	  rm -f $@.zip ${@:.${SRC}.raw=.xml}; \
 	else \
 	  touch $@; \
 	  touch ${@:.${SRC}.raw=.${TRG}.raw}; \
@@ -70,19 +70,19 @@ clean-data-source: ${DATA_SRC}
 ## this is too strict for non-latin languages
 #	grep -i '[a-zäöå0-9]' |\
 
-%.clean.${SRC}: %.${SRC}.tok %.${TRG}.tok
+%.clean.${SRC}.gz: %.${SRC}.tok %.${TRG}.tok
 	mv -f ${word 1,$^} $@.${SRC}
 	mv -f ${word 2,$^} $@.${TRG}
-	$(MOSESSCRIPTS)/training/clean-corpus-n.perl $@ $(SRC) $(TRG) ${@:.${SRC}=} 0 100
+	$(MOSESSCRIPTS)/training/clean-corpus-n.perl $@ $(SRC) $(TRG) ${@:.${SRC}.gz=} 0 100
 	mv -f $@.${SRC} ${word 1,$^}
 	mv -f $@.${TRG} ${word 2,$^}
-	paste $@ ${@:.${SRC}=.${TRG}} |\
+	paste ${@:.gz=} ${@:.${SRC}.gz=.${TRG}} |\
 	perl -CS -pe 'tr[\x{9}\x{A}\x{D}\x{20}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}][]cd;' > $@.tmp
-	cut -f1 $@.tmp > $@
-	cut -f2 $@.tmp > ${@:.${SRC}=.${TRG}}
+	cut -f1 $@.tmp | gzip -c > $@
+	cut -f2 $@.tmp | gzip -c > ${@:.${SRC}.gz=.${TRG}.gz}
 	rm -f $@.tmp
 
-%.clean.${TRG}: %.clean.${SRC}
+%.clean.${TRG}.gz: %.clean.${SRC}.gz
 	@echo "done!"
 
 
@@ -103,13 +103,13 @@ ${TRAIN_TRG}: ${TRAIN_SRC}
 add-to-train-data: ${CLEAN_TRAIN_SRC}
 ifneq (${words ${TRGLANGS}},1)
 	echo "more than one target language";
-	cat ${CLEAN_TRAIN_SRC} |\
+	zcat ${CLEAN_TRAIN_SRC} |\
 	sed "s/^/>>${TRG}<< /" >> ${TRAIN_SRC}
 else
 	echo "only one target language"
-	cat ${CLEAN_TRAIN_SRC} >> ${TRAIN_SRC}
+	zcat ${CLEAN_TRAIN_SRC} >> ${TRAIN_SRC}
 endif
-	cat ${CLEAN_TRAIN_TRG} >> ${TRAIN_TRG}
+	zcat ${CLEAN_TRAIN_TRG} >> ${TRAIN_TRG}
 
 
 
@@ -141,13 +141,13 @@ add-to-dev-data: ${CLEAN_DEV_SRC}
 	echo ${DATADIR}
 ifneq (${words ${TRGLANGS}},1)
 	echo "more than one target language";
-	cat ${CLEAN_DEV_SRC} |\
+	zcat ${CLEAN_DEV_SRC} |\
 	sed "s/^/>>${TRG}<< /" >> ${DEV_SRC}
 else
 	echo "only one target language"
-	cat ${CLEAN_DEV_SRC} >> ${DEV_SRC}
+	zcat ${CLEAN_DEV_SRC} >> ${DEV_SRC}
 endif
-	cat ${CLEAN_DEV_TRG} >> ${DEV_TRG}
+	zcat ${CLEAN_DEV_TRG} >> ${DEV_TRG}
 
 
 
@@ -159,9 +159,9 @@ ${TEST_SRC}: ${DEV_SRC}
 ifneq (${TESTSET},${DEVSET})
 	mkdir -p ${dir $@}
 	rm -f ${TEST_SRC} ${TEST_TRG}
-	-if [ -e ${TESTSET}.${SRC} ]; then \
-	  ${MAKE} CLEAN_TEST_SRC=${TESTSET}.${SRC} \
-		  CLEAN_TEST_TRG=${TESTSET}.${TRG} \
+	-if [ -e ${TESTSET}.${SRC}.gz ]; then \
+	  ${MAKE} CLEAN_TEST_SRC=${TESTSET}.${SRC}.gz \
+		  CLEAN_TEST_TRG=${TESTSET}.${TRG}.gz \
 	  add-to-test-data; \
 	else \
 	  for s in ${SRCLANGS}; do \
@@ -184,13 +184,13 @@ add-to-test-data: ${CLEAN_TEST_SRC}
 	echo ${DATADIR}
 ifneq (${words ${TRGLANGS}},1)
 	echo "more than one target language";
-	cat ${CLEAN_TEST_SRC} |\
+	zcat ${CLEAN_TEST_SRC} |\
 	sed "s/^/>>${TRG}<< /" >> ${TEST_SRC}
 else
 	echo "only one target language"
-	cat ${CLEAN_TEST_SRC} >> ${TEST_SRC}
+	zcat ${CLEAN_TEST_SRC} >> ${TEST_SRC}
 endif
-	cat ${CLEAN_TEST_TRG} >> ${TEST_TRG}
+	zcat ${CLEAN_TEST_TRG} >> ${TEST_TRG}
 
 
 
@@ -218,13 +218,13 @@ add-to-tune-data: ${CLEAN_TUNE_SRC}
 	echo ${DATADIR}
 ifneq (${words ${TRGLANGS}},1)
 	echo "more than one target language";
-	cat ${CLEAN_TUNE_SRC} |\
+	zcat ${CLEAN_TUNE_SRC} |\
 	sed "s/^/>>${TRG}<< /" >> ${TUNE_SRC}
 else
 	echo "only one target language"
-	cat ${CLEAN_TUNE_SRC} >> ${TUNE_SRC}
+	zcat ${CLEAN_TUNE_SRC} >> ${TUNE_SRC}
 endif
-	cat ${CLEAN_TUNE_TRG} >> ${TUNE_TRG}
+	zcat ${CLEAN_TUNE_TRG} >> ${TUNE_TRG}
 
 
 
@@ -355,11 +355,12 @@ BPESRCMODEL = ${TRAIN_SRC}.bpe${SRCBPESIZE:000=}k-model
 BPETRGMODEL = ${TRAIN_TRG}.bpe${TRGBPESIZE:000=}k-model
 
 .PRECIOUS: ${BPESRCMODEL} ${BPETRGMODEL}
+.INTERMEDIATE: ${TRAIN_SRC} ${TRAIN_TRG}
 
 ## source/target specific bpe
 ## - make sure to leave the language flags alone!
 ## - make sure that we do not delete the BPE code files
-${BPESRCMODEL}: ${TRAIN_SRC}
+${BPESRCMODEL}: %.bpe${SRCBPESIZE:000=}k-model: %
 ifeq ($(TRGLANGS),${firstword ${TRGLANGS}})
 	python3 ${SNMTPATH}/learn_bpe.py -s $(SRCBPESIZE) < $< > $@
 else
@@ -369,7 +370,7 @@ else
 endif
 
 ## no labels on the target language side
-${BPETRGMODEL}: ${TRAIN_TRG}
+${BPETRGMODEL}: %.bpe${SRCBPESIZE:000=}k-model: %
 	python3 ${SNMTPATH}/learn_bpe.py -s $(TRGBPESIZE) < $< > $@
 
 
@@ -389,4 +390,8 @@ endif
 	python3 ${SNMTPATH}/apply_bpe.py -c $(word 2,$^) < $< > $@
 
 
+%.trg.${PRE_TRG}.gz: %.trg.${PRE_TRG}
+	gzip -f $<
 
+%.src.${PRE_SRC}.gz: %.src.${PRE_SRC}
+	gzip -f $<

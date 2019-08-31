@@ -201,8 +201,8 @@ TEST_TRG  = ${WORKDIR}/test/${TESTSET}.trg
 
 ## fiskmo benchmark for sv-fi
 
-FISKMO_SV = ${PWD}/fiskmo_testset.sv
-FISKMO_FI = ${PWD}/fiskmo_testset.fi
+FISKMO_SV = ${PWD}/fiskmo_testset.sv.gz
+FISKMO_FI = ${PWD}/fiskmo_testset.fi.gz
 
 
 ## benchmark with the fiskmo testset and the current model
@@ -271,10 +271,37 @@ all-finnish:
 	done
 
 memad:
-	for l in en sv de fr nl; do \
-	  ${MAKE} SRCLANGS=$$l TRGLANGS=fi traindata; \
+	for s in en; do \
+	  for t in de fr nl; do \
+	    if [ "$$s" != "$$t" ]; then \
+	      ${MAKE} SRCLANGS=$$s TRGLANGS=$$t traindata devdata; \
+	      ${MAKE} SRCLANGS=$$s TRGLANGS=$$t HPC_CORES=1 train.submit-multigpu; \
+	    fi \
+	  done \
+	done
+	for s in sv; do \
+	  for t in de fr nl; do \
+	    if [ "$$s" != "$$t" ]; then \
+	      ${MAKE} SRCLANGS=$$s TRGLANGS=$$t traindata devdata; \
+	      ${MAKE} SRCLANGS=$$s TRGLANGS=$$t HPC_CORES=1 train.submit-multigpu; \
+	    fi \
+	  done \
+	done
+	for s in de fr nl; do \
+	  for t in en sv de fr nl; do \
+	    if [ "$$s" != "$$t" ]; then \
+	      ${MAKE} SRCLANGS=$$s TRGLANGS=$$t traindata devdata; \
+	      ${MAKE} SRCLANGS=$$s TRGLANGS=$$t HPC_CORES=1 train.submit-multigpu; \
+	    fi \
+	  done \
+	done
+
+
+memad-fi:
+	for l in en sv de fr; do \
+	  ${MAKE} SRCLANGS=$$l TRGLANGS=fi traindata devdata; \
 	  ${MAKE} SRCLANGS=$$l TRGLANGS=fi HPC_CORES=1 train.submit-multigpu; \
-	  ${MAKE} TRGLANGS=$$l SRCLANGS=fi traindata; \
+	  ${MAKE} TRGLANGS=$$l SRCLANGS=fi traindata devdata; \
 	  ${MAKE} TRGLANGS=$$l SRCLANGS=fi HPC_CORES=1 train.submit-multigpu; \
 	done
 #	${MAKE} SRCLANGS="en fr de nl da fo is no nb nn sv et fi" \
@@ -334,14 +361,15 @@ eval-all:
 ##==========================
 
 .PHONY: data
-data:		${TRAIN_SRC}.${PRE_SRC} ${TRAIN_TRG}.${PRE_TRG} \
+data:		${TRAIN_SRC}.${PRE_SRC}.gz ${TRAIN_TRG}.${PRE_TRG}.gz \
 		${DEV_SRC}.${PRE_SRC} ${DEV_TRG}.${PRE_TRG} \
 		${TUNE_SRC}.${PRE_SRC} ${TUNE_TRG}.${PRE_TRG} \
 		${TEST_SRC}.${PRE_SRC} ${TEST_TRG}
 
-traindata: 	${TRAIN_SRC}.${PRE_SRC} ${TRAIN_TRG}.${PRE_TRG}
+traindata: 	${TRAIN_SRC}.${PRE_SRC}.gz ${TRAIN_TRG}.${PRE_TRG}.gz
 tunedata: 	${TUNE_SRC}.${PRE_SRC} ${TUNE_TRG}.${PRE_TRG}
 devdata:	${DEV_SRC}.${PRE_SRC} ${DEV_TRG}.${PRE_TRG}
+	echo $^
 testdata:	${TEST_SRC}.${PRE_SRC} ${TEST_TRG}
 
 MULTEVALHOME = ${APPLHOME}/multeval
@@ -482,25 +510,27 @@ endif
 
 ## reduce training data size if necessary
 ifdef TRAINSIZE
-${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE}: ${TRAIN_SRC}.${PRE_SRC}
-	head -${TRAINSIZE} $< > $@
+${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE}.gz: ${TRAIN_SRC}.${PRE_SRC}.gz
+	zcat $< | head -${TRAINSIZE} | gzip -c > $@
 
-${TRAIN_TRG}.${PRE_TRG}${TRAINSIZE}: ${TRAIN_TRG}.${PRE_TRG}
-	head -${TRAINSIZE} $< > $@
+${TRAIN_TRG}.${PRE_TRG}${TRAINSIZE}.gz: ${TRAIN_TRG}.${PRE_TRG}.gz
+	zcat $< | head -${TRAINSIZE} | gzip -c > $@
 endif
 
 
 ## make vocabulary
 vocab: ${WORKDIR}/${MODEL}.vocab.yml
 
-${WORKDIR}/${MODEL}.vocab.yml: ${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE} ${TRAIN_TRG}.${PRE_TRG}${TRAINSIZE}
+${WORKDIR}/${MODEL}.vocab.yml: 	${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE}.gz \
+				${TRAIN_TRG}.${PRE_TRG}${TRAINSIZE}.gz
 	mkdir -p ${dir $@}
-	${LOADMODS} && cat $^ | ${MARIAN}/marian-vocab --max-size ${VOCABSIZE} > $@
+	${LOADMODS} && zcat $^ | ${MARIAN}/marian-vocab --max-size ${VOCABSIZE} > $@
 
 
 ## train transformer model
 ${WORKDIR}/${MODEL}.transformer.model${NR}.done: \
-		${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE} ${TRAIN_TRG}.${PRE_TRG}${TRAINSIZE} \
+		${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE}.gz \
+		${TRAIN_TRG}.${PRE_TRG}${TRAINSIZE}.gz \
 		${DEV_SRC}.${PRE_SRC} ${DEV_TRG}.${PRE_TRG} \
 		${WORKDIR}/${MODEL}.vocab.yml
 	mkdir -p ${dir $@}
@@ -516,7 +546,7 @@ ${WORKDIR}/${MODEL}.transformer.model${NR}.done: \
 	--save-freq ${MARIAN_SAVE_FREQ} \
 	--disp-freq ${MARIAN_DISP_FREQ} \
         --valid-sets ${word 3,$^} ${word 4,$^} \
-        --valid-metrics cross-entropy ce-mean-words perplexity \
+        --valid-metrics perplexity \
         --valid-mini-batch 16 \
         --beam-size 12 --normalize 1 \
         --log $(@:.model${NR}.done=.train${NR}.log) --valid-log $(@:.model${NR}.done=.valid${NR}.log) \
@@ -601,11 +631,13 @@ ifdef EMAIL
 endif
 	echo '#SBATCH -n 1' >> $@
 	echo '#SBATCH -N 1' >> $@
-ifeq (${shell hostname --domain},bullx)
-	echo '#SBATCH --account=project_2001569' >> $@
-endif
 	echo '#SBATCH -p gpu' >> $@
+ifeq (${shell hostname --domain},bullx)
+	echo '#SBATCH --account=${CSCPROJECT}' >> $@
+	echo '#SBATCH --gres=gpu:${GPU}:${NR_GPUS},nvme:300' >> $@
+else
 	echo '#SBATCH --gres=gpu:${GPU}:${NR_GPUS}' >> $@
+endif
 	echo '#SBATCH -t ${WALLTIME}:00:00' >> $@
 	echo 'module use -a /proj/nlpl/modules' >> $@
 	for m in ${GPU_MODULES}; do \
@@ -618,6 +650,7 @@ endif
 	echo 'srun ${MAKE} ${MAKEARGS} ${@:.submit=}' >> $@
 	echo 'echo "Finishing at `date`"' >> $@
 	sbatch $@
+	mkdir -p ${WORKDIR}
 	mv $@ ${WORKDIR}/$@
 
 # 	echo 'srun ${MAKE} NR=${NR} MODELTYPE=${MODELTYPE} DATASET=${DATASET} SRC=${SRC} TRG=${TRG} PRE_SRC=${PRE_SRC} PRE_TRG=${PRE_TRG} ${MAKEARGS} ${@:.submit=}' >> $@
@@ -637,7 +670,7 @@ ifdef EMAIL
 	echo '#SBATCH --mail-user=${EMAIL}' >> $@
 endif
 ifeq (${shell hostname --domain},bullx)
-	echo '#SBATCH --account=project_2001569' >> $@
+	echo '#SBATCH --account=${CSCPROJECT}' >> $@
 endif
 	echo '#SBATCH -n ${HPC_CORES}' >> $@
 	echo '#SBATCH -N ${HPC_NODES}' >> $@
@@ -655,6 +688,7 @@ endif
 	echo '${MAKE} -j ${HPC_CORES} ${MAKEARGS} ${@:.submitcpu=}' >> $@
 	echo 'echo "Finishing at `date`"' >> $@
 	sbatch $@
+	mkdir -p ${WORKDIR}
 	mv $@ ${WORKDIR}/$@
 
 

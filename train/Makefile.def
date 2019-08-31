@@ -50,6 +50,7 @@ else ifeq (${shell hostname},dx7-nkiel-4gpu)
   MARIAN       = ${APPLHOME}/marian/build
   LOADMODS     = echo "nothing to load"
 else ifeq (${shell hostname --domain},bullx)
+  CSCPROJECT   = project_2001569
   DATAHOME     = ${HOME}/work/opentrans/data/${LANGPAIR}
   WORKHOME     = ${HOME}/work/joerg/opentrans
   APPLHOME     = ${HOME}/projappl
@@ -64,8 +65,8 @@ else ifeq (${shell hostname --domain},bullx)
   GPU_MODULES  = python-env
   CPU_MODULES  = python-env
   LOADMODS     = echo "nothing to load"
-  TMPDIR       = ${WORKHOME}
   HPC_QUEUE    = small
+  TMPDIR       = $$LOCAL_SCRATCH
 else
   DATAHOME     = /proj/OPUS/WMT19/data/${LANGPAIR}
   # APPLHOME   = ${USERAPPL}/tools
