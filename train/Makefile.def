@@ -34,6 +34,7 @@ DEVICE   = cuda
 LOADCPU  = module load ${CPU_MODULES}
 LOADGPU  = module load ${GPU_MODULES}
 
+MARIAN_WORKSPACE = 13000
 
 ifeq (${shell hostname},dx6-ibs-p2)
   APPLHOME     = /opt/tools
@@ -42,6 +43,7 @@ ifeq (${shell hostname},dx6-ibs-p2)
   MOSESHOME    = ${APPLHOME}/mosesdecoder
   MARIAN       = ${APPLHOME}/marian/build
   LOADMODS     = echo "nothing to load"
+  MARIAN_WORKSPACE = 10000
 else ifeq (${shell hostname},dx7-nkiel-4gpu)
   APPLHOME     = /opt/tools
   WORKHOME     = ${shell realpath ${PWD}/work}
@@ -49,6 +51,7 @@ else ifeq (${shell hostname},dx7-nkiel-4gpu)
   MOSESHOME    = ${APPLHOME}/mosesdecoder
   MARIAN       = ${APPLHOME}/marian/build
   LOADMODS     = echo "nothing to load"
+  MARIAN_WORKSPACE = 10000
 else ifeq (${shell hostname --domain},bullx)
   CSCPROJECT   = project_2001569
   DATAHOME     = ${HOME}/work/opentrans/data/${LANGPAIR}
@@ -66,7 +69,7 @@ else ifeq (${shell hostname --domain},bullx)
   CPU_MODULES  = python-env
   LOADMODS     = echo "nothing to load"
   HPC_QUEUE    = small
-  TMPDIR       = $$LOCAL_SCRATCH
+  MARIAN_WORKSPACE = 30000
 else
   DATAHOME     = /proj/OPUS/WMT19/data/${LANGPAIR}
   # APPLHOME   = ${USERAPPL}/tools
@@ -79,4 +82,24 @@ else
   MARIAN       = ${HOME}/appl_taito/tools/marian/build-gpu
   MARIANCPU    = ${HOME}/appl_taito/tools/marian/build-cpu
   LOADMODS     = ${LOADGPU}
+endif
+
+
+ifdef LOCAL_SCRATCH
+  TMPDIR       = ${LOCAL_SCRATCH}
+endif
+
+
+
+# sorted languages and langpair used to match resources in OPUS
+SORTLANGS = $(sort ${SRC} ${TRG})
+LANGPAIR  = ${firstword ${SORTLANGS}}-${lastword ${SORTLANGS}}
+
+## for same language pairs: add numeric extension
+ifeq (${SRC},$(TRG))
+  SRCEXT = ${SRC}1
+  TRGEXT = ${SRC}2
+else
+  SRCEXT = ${SRC}
+  TRGEXT = ${TRG}
 endif

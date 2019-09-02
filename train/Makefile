@@ -106,15 +106,12 @@ SRCLANGS = sv
 TRGLANGS = fi
 
 ifndef SRC
-  SRC = ${lastword ${SRCLANGS}}
+  SRC := ${lastword ${SRCLANGS}}
 endif
 ifndef TRG
-  TRG = ${lastword ${TRGLANGS}}
+  TRG := ${lastword ${TRGLANGS}}
 endif
 
-# sorted languages and langpair used to match resources in OPUS
-SORTLANGS = $(sort ${SRC} ${TRG})
-LANGPAIR  = ${firstword ${SORTLANGS}}-${lastword ${SORTLANGS}}
 
 include Makefile.def
 
@@ -187,6 +184,11 @@ DATADIR = ${WORKHOME}/data
 ## data sets
 TRAIN_SRC = ${WORKDIR}/train/${DATASET}.src
 TRAIN_TRG = ${WORKDIR}/train/${DATASET}.trg
+
+## training data in local space
+LOCAL_TRAIN_SRC = ${TMPDIR}/train/${DATASET}.src
+LOCAL_TRAIN_TRG = ${TMPDIR}/train/${DATASET}.trg
+
 
 TUNE_SRC  = ${WORKDIR}/tune/${TUNESET}.src
 TUNE_TRG  = ${WORKDIR}/tune/${TUNESET}.trg
@@ -262,33 +264,10 @@ all-evalfiskmo:
 
 ## some models with Finnish as source or target
 ## make sure that we don't use WMT testsets for fi-en/en-fi
-all-finnish:
-	for l in en sv de fr nl zh; do \
-	  ${MAKE} SRCLANGS=$$l TRGLANGS=fi traindata; \
-	  ${MAKE} SRCLANGS=$$l TRGLANGS=fi HPC_CORES=1 train.submit-multigpu; \
-	  ${MAKE} TRGLANGS=$$l SRCLANGS=fi traindata; \
-	  ${MAKE} TRGLANGS=$$l SRCLANGS=fi HPC_CORES=1 train.submit-multigpu; \
-	done
 
 memad:
-	for s in en; do \
-	  for t in de fr nl; do \
-	    if [ "$$s" != "$$t" ]; then \
-	      ${MAKE} SRCLANGS=$$s TRGLANGS=$$t traindata devdata; \
-	      ${MAKE} SRCLANGS=$$s TRGLANGS=$$t HPC_CORES=1 train.submit-multigpu; \
-	    fi \
-	  done \
-	done
-	for s in sv; do \
-	  for t in de fr nl; do \
-	    if [ "$$s" != "$$t" ]; then \
-	      ${MAKE} SRCLANGS=$$s TRGLANGS=$$t traindata devdata; \
-	      ${MAKE} SRCLANGS=$$s TRGLANGS=$$t HPC_CORES=1 train.submit-multigpu; \
-	    fi \
-	  done \
-	done
-	for s in de fr nl; do \
-	  for t in en sv de fr nl; do \
+	for s in fi en sv de fr nl; do \
+	  for t in fi en sv de fr nl; do \
 	    if [ "$$s" != "$$t" ]; then \
 	      ${MAKE} SRCLANGS=$$s TRGLANGS=$$t traindata devdata; \
 	      ${MAKE} SRCLANGS=$$s TRGLANGS=$$t HPC_CORES=1 train.submit-multigpu; \
@@ -296,6 +275,13 @@ memad:
 	  done \
 	done
 
+memad-multi:
+	for s in "en fr" "fi et" "de nl af fy da fo is no nb nn sv" "ca es ga it pt_br pt"; do \
+	  for t in "en fr" "fi et" "de nl af fy da fo is no nb nn sv" "ca es ga it pt_br pt"; do \
+	      ${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" traindata devdata; \
+	      ${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" HPC_CORES=1 train.submit-multigpu; \
+	  done \
+	done
 
 memad-fi:
 	for l in en sv de fr; do \
@@ -383,14 +369,15 @@ include Makefile.data
 
 ## parameters for running Marian NMT
 
-MARIAN_GPUS          = 0
-MARIAN_EXTRA         = 
-# MARIAN_VALID_FREQ    = 2500
-MARIAN_VALID_FREQ    = 10000
-MARIAN_SAVE_FREQ     = ${MARIAN_VALID_FREQ}
-MARIAN_DISP_FREQ     = ${MARIAN_VALID_FREQ}
-MARIAN_DECODER_GPU   = -b 12 -n1 -d ${MARIAN_GPUS} --mini-batch 8 --maxi-batch 32 --maxi-batch-sort src
-MARIAN_DECODER_CPU   = -b 12 -n1 --cpu-threads ${HPC_CORES} --mini-batch 8 --maxi-batch 32 --maxi-batch-sort src
+MARIAN_GPUS           = 0
+MARIAN_EXTRA          = 
+MARIAN_VALID_FREQ     = 10000
+MARIAN_SAVE_FREQ      = ${MARIAN_VALID_FREQ}
+MARIAN_DISP_FREQ      = ${MARIAN_VALID_FREQ}
+MARIAN_EARLY_STOPPING = 10
+
+MARIAN_DECODER_GPU    = -b 12 -n1 -d ${MARIAN_GPUS} --mini-batch 8 --maxi-batch 32 --maxi-batch-sort src
+MARIAN_DECODER_CPU    = -b 12 -n1 --cpu-threads ${HPC_CORES} --mini-batch 8 --maxi-batch 32 --maxi-batch-sort src
 MARIAN_DECODER_FLAGS = ${MARIAN_DECODER_GPU}
 
 ifneq ("$(wildcard ${TRAIN_WEIGHTS})","")
@@ -540,8 +527,10 @@ ${WORKDIR}/${MODEL}.transformer.model${NR}.done: \
         --train-sets ${word 1,$^} ${word 2,$^} ${MARIAN_TRAIN_WEIGHTS} \
         --max-length 500 \
         --vocabs ${word 5,$^} ${word 5,$^} \
-        --mini-batch-fit -w 13000 --maxi-batch 500 \
-        --early-stopping 20 \
+        --mini-batch-fit \
+	-w ${MARIAN_WORKSPACE} \
+	--maxi-batch 500 \
+        --early-stopping ${MARIAN_EARLY_STOPPING} \
         --valid-freq ${MARIAN_VALID_FREQ} \
 	--save-freq ${MARIAN_SAVE_FREQ} \
 	--disp-freq ${MARIAN_DISP_FREQ} \
@@ -671,6 +660,7 @@ ifdef EMAIL
 endif
 ifeq (${shell hostname --domain},bullx)
 	echo '#SBATCH --account=${CSCPROJECT}' >> $@
+	echo '#SBATCH --gres=nvme:500' >> $@
 endif
 	echo '#SBATCH -n ${HPC_CORES}' >> $@
 	echo '#SBATCH -N ${HPC_NODES}' >> $@

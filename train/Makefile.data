@@ -13,22 +13,26 @@ ifndef THREADS
 endif
 
 
-CLEAN_TRAIN_SRC = ${patsubst %,${DATADIR}/raw/%.${LANGPAIR}.clean.${SRC}.gz,${TRAINSET}}
-CLEAN_TRAIN_TRG = ${patsubst %.${SRC}.gz,%.${TRG}.gz,${CLEAN_TRAIN_SRC}}
 
-CLEAN_TUNE_SRC  = ${patsubst %,${DATADIR}/raw/%.${LANGPAIR}.clean.${SRC}.gz,${TUNESET}}
-CLEAN_TUNE_TRG  = ${patsubst %.${SRC}.gz,%.${TRG}.gz,${CLEAN_TUNE_SRC}}
+CLEAN_TRAIN_SRC = ${patsubst %,${DATADIR}/raw/%.${LANGPAIR}.clean.${SRCEXT}.gz,${TRAINSET}}
+CLEAN_TRAIN_TRG = ${patsubst %.${SRCEXT}.gz,%.${TRGEXT}.gz,${CLEAN_TRAIN_SRC}}
 
-CLEAN_DEV_SRC   = ${patsubst %,${DATADIR}/raw/%.${LANGPAIR}.clean.${SRC}.gz,${DEVSET}}
-CLEAN_DEV_TRG   = ${patsubst %.${SRC}.gz,%.${TRG}.gz,${CLEAN_DEV_SRC}}
+CLEAN_TUNE_SRC  = ${patsubst %,${DATADIR}/raw/%.${LANGPAIR}.clean.${SRCEXT}.gz,${TUNESET}}
+CLEAN_TUNE_TRG  = ${patsubst %.${SRCEXT}.gz,%.${TRGEXT}.gz,${CLEAN_TUNE_SRC}}
 
-CLEAN_TEST_SRC  = ${patsubst %,${DATADIR}/raw/%.${LANGPAIR}.clean.${SRC}.gz,${TESTSET}}
-CLEAN_TEST_TRG  = ${patsubst %.${SRC}.gz,%.${TRG}.gz,${CLEAN_TEST_SRC}}
+CLEAN_DEV_SRC   = ${patsubst %,${DATADIR}/raw/%.${LANGPAIR}.clean.${SRCEXT}.gz,${DEVSET}}
+CLEAN_DEV_TRG   = ${patsubst %.${SRCEXT}.gz,%.${TRGEXT}.gz,${CLEAN_DEV_SRC}}
 
-DATA_SRC = ${sort ${CLEAN_TRAIN_SRC} ${CLEAN_TUNE_SRC} ${CLEAN_DEV_SRC} ${CLEAN_TEST_SRC}}
-DATA_TRG = ${sort ${CLEAN_TRAIN_TRG} ${CLEAN_TUNE_TRG} ${CLEAN_DEV_TRG} ${CLEAN_TEST_TRG}}
+CLEAN_TEST_SRC  = ${patsubst %,${DATADIR}/raw/%.${LANGPAIR}.clean.${SRCEXT}.gz,${TESTSET}}
+CLEAN_TEST_TRG  = ${patsubst %.${SRCEXT}.gz,%.${TRGEXT}.gz,${CLEAN_TEST_SRC}}
+
+DATA_SRC := ${sort ${CLEAN_TRAIN_SRC} ${CLEAN_TUNE_SRC} ${CLEAN_DEV_SRC} ${CLEAN_TEST_SRC}}
+DATA_TRG := ${sort ${CLEAN_TRAIN_TRG} ${CLEAN_TUNE_TRG} ${CLEAN_DEV_TRG} ${CLEAN_TEST_TRG}}
 
 
+ttt:
+	echo ${CLEAN_TRAIN_SRC}
+	echo ${CLEAN_TRAIN_TRG}
 
 
 clean-data:
@@ -48,21 +52,21 @@ clean-data-source: ${DATA_SRC}
 ## copy OPUS data
 ## (check that the OPUS file really exists! if not, create and empty file)
 
-%.${SRC}.raw:
+%.${SRCEXT}.raw:
 	mkdir -p ${dir $@}
-	if [ -e ${OPUSHOME}/${patsubst %.${LANGPAIR}.${SRC}.raw,%,${notdir $@}}/latest/moses/${LANGPAIR}.txt.zip ]; then \
-	  scp ${OPUSHOME}/${patsubst %.${LANGPAIR}.${SRC}.raw,%,${notdir $@}}/latest/moses/${LANGPAIR}.txt.zip $@.zip; \
+	if [ -e ${OPUSHOME}/${patsubst %.${LANGPAIR}.${SRCEXT}.raw,%,${notdir $@}}/latest/moses/${LANGPAIR}.txt.zip ]; then \
+	  scp ${OPUSHOME}/${patsubst %.${LANGPAIR}.${SRCEXT}.raw,%,${notdir $@}}/latest/moses/${LANGPAIR}.txt.zip $@.zip; \
 	  unzip -d ${dir $@} $@.zip -x README LICENSE; \
-	  mv ${dir $@}${patsubst %.${LANGPAIR}.${SRC}.raw,%,${notdir $@}}*.${LANGPAIR}.${SRC} $@; \
-	  mv ${dir $@}${patsubst %.${LANGPAIR}.${SRC}.raw,%,${notdir $@}}*.${LANGPAIR}.${TRG} ${@:.${SRC}.raw=.${TRG}.raw}; \
-	  rm -f $@.zip ${@:.${SRC}.raw=.xml}; \
+	  mv ${dir $@}${patsubst %.${LANGPAIR}.${SRCEXT}.raw,%,${notdir $@}}*.${LANGPAIR}.${SRCEXT} $@; \
+	  mv ${dir $@}${patsubst %.${LANGPAIR}.${SRCEXT}.raw,%,${notdir $@}}*.${LANGPAIR}.${TRGEXT} ${@:.${SRCEXT}.raw=.${TRGEXT}.raw}; \
+	  rm -f $@.zip ${@:.${SRCEXT}.raw=.xml} ${@:.${SRCEXT}.raw=.ids} ${dir $@}/README ${dir $@}/LICENSE; \
 	else \
 	  touch $@; \
-	  touch ${@:.${SRC}.raw=.${TRG}.raw}; \
+	  touch ${@:.${SRCEXT}.raw=.${TRGEXT}.raw}; \
 	fi
 
 
-%.${TRG}.raw: %.${SRC}.raw
+%.${TRGEXT}.raw: %.${SRCEXT}.raw
 	@echo "done!"
 
 ## clean data
@@ -70,46 +74,76 @@ clean-data-source: ${DATA_SRC}
 ## this is too strict for non-latin languages
 #	grep -i '[a-zäöå0-9]' |\
 
-%.clean.${SRC}.gz: %.${SRC}.tok %.${TRG}.tok
-	mv -f ${word 1,$^} $@.${SRC}
-	mv -f ${word 2,$^} $@.${TRG}
-	$(MOSESSCRIPTS)/training/clean-corpus-n.perl $@ $(SRC) $(TRG) ${@:.${SRC}.gz=} 0 100
-	mv -f $@.${SRC} ${word 1,$^}
-	mv -f $@.${TRG} ${word 2,$^}
-	paste ${@:.gz=} ${@:.${SRC}.gz=.${TRG}} |\
+%.clean.${SRCEXT}.gz: %.${SRCEXT}.tok %.${TRGEXT}.tok
+	rm -f $@.${SRCEXT} $@.${TRGEXT}
+	ln -s ${word 1,$^} $@.${SRCEXT}
+	ln -s ${word 2,$^} $@.${TRGEXT}
+	$(MOSESSCRIPTS)/training/clean-corpus-n.perl $@ $(SRCEXT) $(TRGEXT) ${@:.${SRCEXT}.gz=} 0 100
+	rm -f $@.${SRCEXT} $@.${TRGEXT}
+	paste ${@:.gz=} ${@:.${SRCEXT}.gz=.${TRGEXT}} |\
 	perl -CS -pe 'tr[\x{9}\x{A}\x{D}\x{20}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}][]cd;' > $@.tmp
 	cut -f1 $@.tmp | gzip -c > $@
-	cut -f2 $@.tmp | gzip -c > ${@:.${SRC}.gz=.${TRG}.gz}
+	cut -f2 $@.tmp | gzip -c > ${@:.${SRCEXT}.gz=.${TRGEXT}.gz}
 	rm -f $@.tmp
 
-%.clean.${TRG}.gz: %.clean.${SRC}.gz
+
+%.clean.${TRGEXT}.gz: %.clean.${SRCEXT}.gz
 	@echo "done!"
 
 
+# ## add training data for each language combination
+# ${TRAIN_SRC}:
+# 	mkdir -p ${dir $@}
+# 	rm -f ${TRAIN_SRC} ${TRAIN_TRG}
+# 	-for s in ${SRCLANGS}; do \
+# 	  for t in ${TRGLANGS}; do \
+# 	    ${MAKE} DATASET=${DATASET} SRC=$$s TRG=$$t add-to-train-data; \
+# 	  done \
+# 	done
+
+# ${TRAIN_TRG}: ${TRAIN_SRC}
+# 	@echo "done!"
+
+
+# add-to-train-data: ${CLEAN_TRAIN_SRC}
+# ifneq (${words ${TRGLANGS}},1)
+# 	echo "more than one target language";
+# 	zcat ${CLEAN_TRAIN_SRC} |\
+# 	sed "s/^/>>${TRG}<< /" >> ${TRAIN_SRC}
+# else
+# 	echo "only one target language"
+# 	zcat ${CLEAN_TRAIN_SRC} >> ${TRAIN_SRC}
+# endif
+# 	zcat ${CLEAN_TRAIN_TRG} >> ${TRAIN_TRG}
+
+
+
 ## add training data for each language combination
-${TRAIN_SRC}:
+## and put it together in local space
+${LOCAL_TRAIN_SRC}:
 	mkdir -p ${dir $@}
 	rm -f ${TRAIN_SRC} ${TRAIN_TRG}
 	-for s in ${SRCLANGS}; do \
 	  for t in ${TRGLANGS}; do \
-	    ${MAKE} DATASET=${DATASET} SRC=$$s TRG=$$t add-to-train-data; \
+	    ${MAKE} DATASET=${DATASET} SRC:=$$s TRG:=$$t add-to-local-train-data; \
 	  done \
 	done
 
-${TRAIN_TRG}: ${TRAIN_SRC}
+${LOCAL_TRAIN_TRG}: ${LOCAL_TRAIN_SRC}
 	@echo "done!"
 
 
-add-to-train-data: ${CLEAN_TRAIN_SRC}
+add-to-local-train-data: ${CLEAN_TRAIN_SRC}
 ifneq (${words ${TRGLANGS}},1)
 	echo "more than one target language";
 	zcat ${CLEAN_TRAIN_SRC} |\
-	sed "s/^/>>${TRG}<< /" >> ${TRAIN_SRC}
+	sed "s/^/>>${TRG}<< /" >> ${LOCAL_TRAIN_SRC}
 else
 	echo "only one target language"
-	zcat ${CLEAN_TRAIN_SRC} >> ${TRAIN_SRC}
+	zcat ${CLEAN_TRAIN_SRC} >> ${LOCAL_TRAIN_SRC}
 endif
-	zcat ${CLEAN_TRAIN_TRG} >> ${TRAIN_TRG}
+	zcat ${CLEAN_TRAIN_TRG} >> ${LOCAL_TRAIN_TRG}
+
 
 
 
@@ -142,7 +176,7 @@ add-to-dev-data: ${CLEAN_DEV_SRC}
 ifneq (${words ${TRGLANGS}},1)
 	echo "more than one target language";
 	zcat ${CLEAN_DEV_SRC} |\
-	sed "s/^/>>${TRG}<< /" >> ${DEV_SRC}
+	sed "s/^/>>${TRGABEL}<< /" >> ${DEV_SRC}
 else
 	echo "only one target language"
 	zcat ${CLEAN_DEV_SRC} >> ${DEV_SRC}
@@ -262,9 +296,9 @@ endif
 	$(TOKENIZER)/replace-unicode-punctuation.perl |\
 	$(TOKENIZER)/remove-non-printing-char.perl |\
 	$(TOKENIZER)/normalize-punctuation.perl \
-		-l ${lastword ${subst ., ,$(<:.raw=)}} |\
+		-l ${lastword ${subst 1,,${subst 2,,${subst ., ,$(<:.raw=)}}}} |\
 	$(TOKENIZER)/tokenizer.perl -a -threads $(THREADS) \
-		-l ${lastword ${subst ., ,$(<:.raw=)}} |\
+		-l ${lastword ${subst 1,,${subst 2,,${subst ., ,$(<:.raw=)}}}} |\
 	sed 's/  */ /g;s/^ *//g;s/ *$$//g' > $@
 
 
@@ -360,7 +394,8 @@ BPETRGMODEL = ${TRAIN_TRG}.bpe${TRGBPESIZE:000=}k-model
 ## source/target specific bpe
 ## - make sure to leave the language flags alone!
 ## - make sure that we do not delete the BPE code files
-${BPESRCMODEL}: %.bpe${SRCBPESIZE:000=}k-model: %
+${BPESRCMODEL}: ${WORKDIR}/%.bpe${SRCBPESIZE:000=}k-model: ${TMPDIR}/%
+	mkdir -p ${dir $@}
 ifeq ($(TRGLANGS),${firstword ${TRGLANGS}})
 	python3 ${SNMTPATH}/learn_bpe.py -s $(SRCBPESIZE) < $< > $@
 else
@@ -370,7 +405,8 @@ else
 endif
 
 ## no labels on the target language side
-${BPETRGMODEL}: %.bpe${SRCBPESIZE:000=}k-model: %
+${BPETRGMODEL}: ${WORKDIR}/%.bpe${SRCBPESIZE:000=}k-model: ${TMPDIR}/%
+	mkdir -p ${dir $@}
 	python3 ${SNMTPATH}/learn_bpe.py -s $(TRGBPESIZE) < $< > $@
 
 
@@ -390,8 +426,17 @@ endif
 	python3 ${SNMTPATH}/apply_bpe.py -c $(word 2,$^) < $< > $@
 
 
-%.trg.${PRE_TRG}.gz: %.trg.${PRE_TRG}
+
+# %.trg.${PRE_TRG}.gz: %.trg.${PRE_TRG}
+# 	gzip -f $<
+
+# %.src.${PRE_SRC}.gz: %.src.${PRE_SRC}
+# 	gzip -f $<
+
+
+## get it from local space and compress ...
+${WORKDIR}/%.trg.${PRE_TRG}.gz: ${TMPDIR}/%.trg.${PRE_TRG}
 	gzip -f $<
 
-%.src.${PRE_SRC}.gz: %.src.${PRE_SRC}
+${WORKDIR}/%.src.${PRE_SRC}.gz: ${TMPDIR}/%.src.${PRE_SRC}
 	gzip -f $<
