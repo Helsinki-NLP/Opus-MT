@@ -355,8 +355,10 @@ data:		${TRAIN_SRC}.${PRE_SRC}.gz ${TRAIN_TRG}.${PRE_TRG}.gz \
 traindata: 	${TRAIN_SRC}.${PRE_SRC}.gz ${TRAIN_TRG}.${PRE_TRG}.gz
 tunedata: 	${TUNE_SRC}.${PRE_SRC} ${TUNE_TRG}.${PRE_TRG}
 devdata:	${DEV_SRC}.${PRE_SRC} ${DEV_TRG}.${PRE_TRG}
-	echo $^
 testdata:	${TEST_SRC}.${PRE_SRC} ${TEST_TRG}
+
+devdata-raw:	${DEV_SRC} ${DEV_TRG}
+
 
 MULTEVALHOME = ${APPLHOME}/multeval
 MOSESSCRIPTS = ${MOSESHOME}/scripts

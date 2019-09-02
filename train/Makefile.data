@@ -30,11 +30,6 @@ DATA_SRC := ${sort ${CLEAN_TRAIN_SRC} ${CLEAN_TUNE_SRC} ${CLEAN_DEV_SRC} ${CLEAN
 DATA_TRG := ${sort ${CLEAN_TRAIN_TRG} ${CLEAN_TUNE_TRG} ${CLEAN_DEV_TRG} ${CLEAN_TEST_TRG}}
 
 
-ttt:
-	echo ${CLEAN_TRAIN_SRC}
-	echo ${CLEAN_TRAIN_TRG}
-
-
 clean-data:
 	for s in ${SRCLANGS}; do \
 	  for t in ${TRGLANGS}; do \
@@ -82,6 +77,7 @@ clean-data-source: ${DATA_SRC}
 	rm -f $@.${SRCEXT} $@.${TRGEXT}
 	paste ${@:.gz=} ${@:.${SRCEXT}.gz=.${TRGEXT}} |\
 	perl -CS -pe 'tr[\x{9}\x{A}\x{D}\x{20}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}][]cd;' > $@.tmp
+	rm -f ${@:.gz=} ${@:.${SRCEXT}.gz=.${TRGEXT}}
 	cut -f1 $@.tmp | gzip -c > $@
 	cut -f2 $@.tmp | gzip -c > ${@:.${SRCEXT}.gz=.${TRGEXT}.gz}
 	rm -f $@.tmp
@@ -122,7 +118,7 @@ clean-data-source: ${DATA_SRC}
 ## and put it together in local space
 ${LOCAL_TRAIN_SRC}:
 	mkdir -p ${dir $@}
-	rm -f ${TRAIN_SRC} ${TRAIN_TRG}
+	rm -f ${LOCAL_TRAIN_SRC} ${LOCAL_TRAIN_TRG}
 	-for s in ${SRCLANGS}; do \
 	  for t in ${TRGLANGS}; do \
 	    ${MAKE} DATASET=${DATASET} SRC:=$$s TRG:=$$t add-to-local-train-data; \
@@ -150,8 +146,12 @@ endif
 ####################
 # development data
 ####################
+#
+# make it depending on training data
+# --> in case we need more data for development
+#     we can take it from training data
 
-${DEV_SRC}:
+${DEV_SRC}: ${TRAIN_SRC}.${PRE_SRC}.gz ${TRAIN_TRG}.${PRE_TRG}.gz
 	mkdir -p ${dir $@}
 	rm -f ${DEV_SRC} ${DEV_TRG}
 	-for s in ${SRCLANGS}; do \
@@ -160,16 +160,40 @@ ${DEV_SRC}:
 	  done \
 	done
 	paste ${DEV_SRC} ${DEV_TRG} | shuf > $@.shuffled
+	if [[ `echo $@.shuffled | wc -l` < ${DEVSIZE} ]]; then \
+	  echo "Need more devdata - take some from traindata!"; \
+	  echo ".......... (1) extract top $$((${DEVSIZE} + ${TESTSIZE})) lines"; \
+	  zcat ${TRAIN_SRC}.${PRE_SRC}.gz | \
+		head -$$((${DEVSIZE} + ${TESTSIZE})) | \
+		sed 's/\@\@ //g' > $@.extra.${SRC}; \
+	  zcat ${TRAIN_TRG}.${PRE_TRG}.gz | \
+		head -$$((${DEVSIZE} + ${TESTSIZE})) | \
+		sed 's/\@\@ //g' > $@.extra.${TRG}; \
+	  echo ".......... (2) remaining lines for training"; \
+	  zcat ${TRAIN_SRC}.${PRE_SRC}.gz | \
+		tail -n +$$((${DEVSIZE} + ${TESTSIZE} + 1)) | \
+		sed 's/\@\@ //g' | gzip -c > $@.remaining.${SRC}.gz; \
+	  zcat ${TRAIN_TRG}.${PRE_TRG}.gz | \
+		tail -n +$$((${DEVSIZE} + ${TESTSIZE} + 1)) | \
+		sed 's/\@\@ //g' | gzip -c > $@.remaining.${TRG}.gz; \
+	  mv -f $@.remaining.${SRC}.gz ${TRAIN_SRC}.${PRE_SRC}.gz; \
+	  mv -f $@.remaining.${TRG}.gz ${TRAIN_TRG}.${PRE_TRG}.gz; \
+	  echo ".......... (3) append to devdata"; \
+	  paste $@.extra.${SRC} $@.extra.${TRG} >> $@.shuffled; \
+	  rm -f $@.extra.${SRC} $@.extra.${TRG}; \
+	fi
 	cut -f1 $@.shuffled | head -${DEVSIZE} > ${DEV_SRC}
 	cut -f2 $@.shuffled | head -${DEVSIZE} > ${DEV_TRG}
 ifeq (${DEVSET},${TESTSET})
-	mkdir ${dir ${TEST_SRC}}
+	mkdir -p ${dir ${TEST_SRC}}
 	cut -f1 $@.shuffled | tail -${TESTSIZE} > ${TEST_SRC}
 	cut -f2 $@.shuffled | tail -${TESTSIZE} > ${TEST_TRG}
 endif
 
+
 ${DEV_TRG}: ${DEV_SRC}
 	@echo "done!"
+
 
 add-to-dev-data: ${CLEAN_DEV_SRC}
 	echo ${DATADIR}
@@ -389,7 +413,7 @@ BPESRCMODEL = ${TRAIN_SRC}.bpe${SRCBPESIZE:000=}k-model
 BPETRGMODEL = ${TRAIN_TRG}.bpe${TRGBPESIZE:000=}k-model
 
 .PRECIOUS: ${BPESRCMODEL} ${BPETRGMODEL}
-.INTERMEDIATE: ${TRAIN_SRC} ${TRAIN_TRG}
+.INTERMEDIATE: ${LOCAL_TRAIN_SRC} ${LOCAL_TRAIN_TRG}
 
 ## source/target specific bpe
 ## - make sure to leave the language flags alone!
@@ -405,7 +429,7 @@ else
 endif
 
 ## no labels on the target language side
-${BPETRGMODEL}: ${WORKDIR}/%.bpe${SRCBPESIZE:000=}k-model: ${TMPDIR}/%
+${BPETRGMODEL}: ${WORKDIR}/%.bpe${TRGBPESIZE:000=}k-model: ${TMPDIR}/%
 	mkdir -p ${dir $@}
 	python3 ${SNMTPATH}/learn_bpe.py -s $(TRGBPESIZE) < $< > $@
 

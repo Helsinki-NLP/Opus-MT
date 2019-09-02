@@ -55,9 +55,9 @@ else ifeq (${shell hostname},dx7-nkiel-4gpu)
 else ifeq (${shell hostname --domain},bullx)
   CSCPROJECT   = project_2001569
   DATAHOME     = ${HOME}/work/opentrans/data/${LANGPAIR}
-  WORKHOME     = ${HOME}/work/joerg/opentrans
+  WORKHOME     = /scratch/${CSCPROJECT}/joerg/opentrans
   APPLHOME     = ${HOME}/projappl
-  OPUSHOME     = ${HOME}/work/nlpl/data/OPUS
+  OPUSHOME     = /scratch/project_2001569/nlpl/data/OPUS
   MOSESHOME    = ${APPLHOME}/mosesdecoder
   MARIAN       = ${APPLHOME}/marian/build
   MARIANCPU    = ${APPLHOME}/marian/build
