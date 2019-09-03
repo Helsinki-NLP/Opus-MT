@@ -460,7 +460,7 @@ endif
 
 ## get it from local space and compress ...
 ${WORKDIR}/%.trg.${PRE_TRG}.gz: ${TMPDIR}/%.trg.${PRE_TRG}
-	gzip -f $<
+	gzip -c < $< > $@
 
 ${WORKDIR}/%.src.${PRE_SRC}.gz: ${TMPDIR}/%.src.${PRE_SRC}
-	gzip -f $<
+	gzip -c < $< > $@
