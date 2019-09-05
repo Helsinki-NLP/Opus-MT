@@ -130,6 +130,7 @@ ${LOCAL_TRAIN_TRG}: ${LOCAL_TRAIN_SRC}
 
 
 add-to-local-train-data: ${CLEAN_TRAIN_SRC}
+ifneq (${CLEAN_TRAIN_SRC},)
 ifneq (${words ${TRGLANGS}},1)
 	echo "more than one target language";
 	zcat ${CLEAN_TRAIN_SRC} |\
@@ -139,7 +140,7 @@ else
 	zcat ${CLEAN_TRAIN_SRC} >> ${LOCAL_TRAIN_SRC}
 endif
 	zcat ${CLEAN_TRAIN_TRG} >> ${LOCAL_TRAIN_TRG}
-
+endif
 
 
 
@@ -196,17 +197,17 @@ ${DEV_TRG}: ${DEV_SRC}
 
 
 add-to-dev-data: ${CLEAN_DEV_SRC}
-	echo ${DATADIR}
+ifneq (${CLEAN_DEV_SRC},)
 ifneq (${words ${TRGLANGS}},1)
 	echo "more than one target language";
 	zcat ${CLEAN_DEV_SRC} |\
-	sed "s/^/>>${TRGABEL}<< /" >> ${DEV_SRC}
+	sed "s/^/>>${TRG}<< /" >> ${DEV_SRC}
 else
 	echo "only one target language"
 	zcat ${CLEAN_DEV_SRC} >> ${DEV_SRC}
 endif
 	zcat ${CLEAN_DEV_TRG} >> ${DEV_TRG}
-
+endif
 
 
 ####################
@@ -239,7 +240,7 @@ ${TEST_TRG}: ${TEST_SRC}
 	@echo "done!"
 
 add-to-test-data: ${CLEAN_TEST_SRC}
-	echo ${DATADIR}
+ifneq (${CLEAN_TEST_SRC},)
 ifneq (${words ${TRGLANGS}},1)
 	echo "more than one target language";
 	zcat ${CLEAN_TEST_SRC} |\
@@ -249,7 +250,7 @@ else
 	zcat ${CLEAN_TEST_SRC} >> ${TEST_SRC}
 endif
 	zcat ${CLEAN_TEST_TRG} >> ${TEST_TRG}
-
+endif
 
 
 
@@ -273,7 +274,7 @@ ${TUNE_TRG}: ${TUNE_SRC}
 	@echo "done!"
 
 add-to-tune-data: ${CLEAN_TUNE_SRC}
-	echo ${DATADIR}
+ifneq (${CLEAN_TUNE_SRC},)
 ifneq (${words ${TRGLANGS}},1)
 	echo "more than one target language";
 	zcat ${CLEAN_TUNE_SRC} |\
@@ -283,7 +284,7 @@ else
 	zcat ${CLEAN_TUNE_SRC} >> ${TUNE_SRC}
 endif
 	zcat ${CLEAN_TUNE_TRG} >> ${TUNE_TRG}
-
+endif
 
 
 

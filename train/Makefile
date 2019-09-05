@@ -106,7 +106,7 @@ SRCLANGS = sv
 TRGLANGS = fi
 
 ifndef SRC
-  SRC := ${lastword ${SRCLANGS}}
+  SRC := ${firstword ${SRCLANGS}}
 endif
 ifndef TRG
   TRG := ${lastword ${TRGLANGS}}
@@ -177,7 +177,8 @@ MODE = train
 ## TRAIN   = training data file base name (data should be in DATADIR)
 
 SPACE   = $(empty) $(empty)
-WORKDIR = ${WORKHOME}/${subst ${SPACE},+,$(SRCLANGS)}-${subst ${SPACE},+,$(TRGLANGS)}
+LANGSTR = ${subst ${SPACE},+,$(SRCLANGS)}-${subst ${SPACE},+,$(TRGLANGS)}
+WORKDIR = ${WORKHOME}/${LANGSTR}
 DATADIR = ${WORKHOME}/data
 
 
@@ -198,6 +199,37 @@ DEV_TRG   = ${WORKDIR}/val/${DEVSET}.trg
 
 TEST_SRC  = ${WORKDIR}/test/${TESTSET}.src
 TEST_TRG  = ${WORKDIR}/test/${TESTSET}.trg
+
+
+MODEL_BASENAME = ${MODEL}.${MODELTYPE}.model${NR}
+MODEL_FINAL    = ${WORKDIR}/${MODEL_BASENAME}.npz.best-perplexity.npz
+MODEL_VOCAB    = ${WORKDIR}/${MODEL}.vocab.yml
+MODEL_DECODER  = ${MODEL_FINAL}.decoder.yml
+
+
+## make a distribution package
+
+DIST_PACKAGE = ${WORKHOME}/models/${LANGSTR}/${DATASET}-${shell date +%F}.zip
+
+.PHONY: dist
+dist: ${DIST_PACKAGE}
+
+${DIST_PACKAGE}: ${MODEL_FINAL}
+	touch ${WORKDIR}/source.tcmodel
+	cp ${BPESRCMODEL} ${WORKDIR}/source.bpe
+	sed -e 's# - /.*/\([^/]*\)$$#\1#' \
+	    -e 's/beam-size: [0-9]*$$/beam-size: 6/' \
+	    -e 's/mini-batch: [0-9]*$$/mini-batch: 1/' \
+	    -e 's/maxi-batch: [0-9]*$$/maxi-batch: 1/' \
+	    -e 's/relative-paths: false/relative-paths: true/' \
+	< ${MODEL_DECODER} > ${WORKDIR}/decoder.yml
+	cd ${WORKDIR} && zip ${notdir $@} \
+		${notdir ${MODEL_FINAL}} \
+		${notdir ${MODEL_VOCAB}} \
+		source.tcmodel source.bpe decoder.yml
+	mkdir -p ${dir $@}
+	mv -f ${WORKDIR}/${notdir $@} $@
+	rm -f ${WORKDIR}/decoder.yml ${WORKDIR}/source.bpe ${WORKDIR}/source.tcmodel
 
 
 
@@ -446,8 +478,6 @@ finetune:
 #------------------------------------------------------------------------
 # train, translate and evaluate
 #------------------------------------------------------------------------
-
-
 
 
 ## other model types
