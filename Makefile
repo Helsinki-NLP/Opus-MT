@@ -92,8 +92,9 @@ ${NMT_MODEL}:
 		-e 's#%%APPSHORTDESCR%%#opusMT-server#' \
 		-e 's#%%APPLONGDESCR%%#translation service#' \
 		-e 's#%%APPBIN%%#$<#' \
-		-e 's#%%APPARGS%%#-c ${OPUSMT_CACHE} --bpe ${BPEMODEL}#' \
+		-e 's#%%APPARGS%%#-c ${OPUSMT_CACHE} --bpe ${BPEMODEL} -s ${subst +, ,${SRC_LANGS}} -t ${subst +, ,${TRG_LANGS}}#' \
 	< service-template > ${notdir $@}
+	mkdir -p ${dir ${OPUSMT_CACHE}}
 	${INSTALL_BIN} ${notdir $@} $@
 	rm -f ${notdir $@}
 	update-rc.d ${notdir $@} defaults
