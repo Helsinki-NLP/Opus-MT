@@ -233,6 +233,18 @@ ${DIST_PACKAGE}: ${MODEL_FINAL}
 
 
 
+ALLLANGPAIRS = ${shell ls ${WORKHOME} | grep -- '-'}
+
+eval-all:
+	for l in ${ALLLANGPAIRS}; do \
+	  if  [ `ls ${WORKHOME}/$$l/${DATASET}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.*.npz | wc -l` -gt 0 ]; then \
+	    ${MAKE} SRCLANGS="`echo $$l | cut -f1 -d'-' | sed 's/\\+/ /g'`" \
+		    TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" eval; \
+	  fi \
+	done
+
+
+
 ## fiskmo benchmark for sv-fi
 
 FISKMO_SV = ${PWD}/fiskmo_testset.sv.gz
@@ -242,7 +254,24 @@ FISKMO_FI = ${PWD}/fiskmo_testset.fi.gz
 ## benchmark with the fiskmo testset and the current model
 
 evalfiskmo:
-	${MAKE} TESTSET=fiskmo_testset eval
+	if [ "${filter sv,${SRCLANGS}}" == "sv" ]; then \
+	  ${MAKE} SRC=sv TRG=fi TESTSET=fiskmo_testset eval; \
+	fi
+	if [ "${filter sv,${TRGLANGS}}" == "sv" ]; then \
+	  ${MAKE} TRG=fi SRC=sv TESTSET=fiskmo_testset eval; \
+	fi
+
+
+## benchmark with en-fi news data
+
+evalnews:
+	if [ "${filter en,${SRCLANGS}}" == "en" ]; then \
+	  ${MAKE} SRC=en TRG=fi TESTSET=fiskmo_testset eval; \
+	fi
+	if [ "${filter en,${TRGLANGS}}" == "en" ]; then \
+	  ${MAKE} TRG=fi SRC=en TESTSET=fiskmo_testset eval; \
+	fi
+
 
 all-evalfiskmo: 
 	${MAKE} SRCLANGS=sv TRGLANGS=fi SRC=sv TRG=fi evalfiskmo
@@ -282,16 +311,6 @@ all-evalfiskmo:
 
 
 
-%-fizh:
-	${MAKE} DEVSET=wikimedia TESTSET=wikimedia \
-		SRCLANGS="fi" TRGLANGS="zh_cn zh_tw zh" ${@:-fizh=}
-
-%-zhfi:
-	${MAKE} DEVSET=wikimedia TESTSET=wikimedia \
-		TRGLANGS="fi" SRCLANGS="zh_cn zh_tw zh" ${@:-zhfi=}
-
-
-
 ## a batch of interesting models ....
 
 ## some models with Finnish as source or target
@@ -308,6 +327,10 @@ memad:
 	done
 
 memad-multi:
+	${MAKE} SRCLANGS="da fo is no nb nn sv" TRGLANGS="fi et" traindata devdata
+	${MAKE} SRCLANGS="da fo is no nb nn sv" TRGLANGS="fi et" train.submit-multigpu
+	${MAKE} TRGLANGS="da fo is no nb nn sv" SRCLANGS="fi et" traindata devdata
+	${MAKE} TRGLANGS="da fo is no nb nn sv" SRCLANGS="fi et" train.submit-multigpu
 	for s in "en fr" "fi et" "de nl af fy da fo is no nb nn sv" "ca es ga it pt_br pt"; do \
 	  for t in "en fr" "fi et" "de nl af fy da fo is no nb nn sv" "ca es ga it pt_br pt"; do \
 	      ${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" traindata devdata; \
@@ -361,17 +384,6 @@ germanic-romance:
 
 
 
-ALLLANGPAIRS = ${notdir ${shell ls work | grep -- '-'}}
-
-eval-all:
-	for l in ${ALLLANGPAIRS}; do \
-	  if  [ `ls ${WORKHOME}/$$l/${DATASET}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.*.npz | wc -l` -gt 0 ]; then \
-	    ${MAKE} SRCLANGS="`echo $$l | cut -f1 -d'-' | sed 's/\\+/ /g'`" \
-		    TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" eval; \
-	  fi \
-	done
-
-
 
 
 ##==========================
@@ -420,14 +432,14 @@ endif
 
 
 
-ENSEMBLE = ${wildcard ${WORKDIR}/${MODEL}.${MODELTYPE}.model*.npz.best-cross-entropy.npz}
+ENSEMBLE = ${wildcard ${WORKDIR}/${MODEL}.${MODELTYPE}.model*.npz.best-perplexity.npz}
 
 ## work with fine-tuned data
 .PHONY: finetune
 finetune:
 	if [ ! -e ${WORKDIR}/${MODEL}-tuned.${MODELTYPE}.model${NR}.npz ]; then \
-	  if [ -e ${WORKDIR}/${MODEL}.${MODELTYPE}.model${NR}.npz.best-cross-entropy.npz ]; then \
-	    cp ${WORKDIR}/${MODEL}.${MODELTYPE}.model${NR}.npz.best-cross-entropy.npz \
+	  if [ -e ${WORKDIR}/${MODEL}.${MODELTYPE}.model${NR}.npz.best-perplexity.npz ]; then \
+	    cp ${WORKDIR}/${MODEL}.${MODELTYPE}.model${NR}.npz.best-perplexity.npz \
 		${WORKDIR}/${MODEL}-tuned.${MODELTYPE}.model${NR}.npz; \
 	    if [ -e ${WORKDIR}/${MODEL}.vocab.yml ]; then \
 	      if [ ! -e ${WORKDIR}/${MODEL}-tuned.vocab.yml ]; then \
@@ -501,8 +513,8 @@ eval-ensemble: ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.ensemble.${SRC}.
 
 ## resume training on an existing model
 resume:
-	if [ -e ${WORKDIR}/${MODEL}.${MODELTYPE}.model${NR}.npz.best-cross-entropy.npz ]; then \
-	  cp ${WORKDIR}/${MODEL}.${MODELTYPE}.model${NR}.npz.best-cross-entropy.npz \
+	if [ -e ${WORKDIR}/${MODEL}.${MODELTYPE}.model${NR}.npz.best-perplexity.npz ]; then \
+	  cp ${WORKDIR}/${MODEL}.${MODELTYPE}.model${NR}.npz.best-perplexity.npz \
 	     ${WORKDIR}/${MODEL}.${MODELTYPE}.model${NR}.npz; \
 	fi
 	sleep 1
@@ -616,7 +628,7 @@ ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}: ${TEST_SRC}.${PR
 	mkdir -p ${dir $@}
 	grep . $< > $@.input
 	${LOADMODS} && ${MARIAN}/marian-decoder -i $@.input \
-		-c ${word 2,$^}.best-cross-entropy.npz.decoder.yml \
+		-c ${word 2,$^}.best-perplexity.npz.decoder.yml \
 		-d ${MARIAN_GPUS} \
 		${MARIAN_DECODER_FLAGS} \
 	| sed 's/\@\@ //g' > $@
@@ -624,11 +636,12 @@ ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}: ${TEST_SRC}.${PR
 
 %.eval: % ${TEST_TRG}
 	grep . ${TEST_TRG} > $@.ref
+	grep . $< | sed 's/ \@\-\@ /-/g' > $@.sys
 	cd ${MULTEVALHOME} && ./multeval.sh eval \
 		--refs $@.ref \
-		--hyps-baseline $< \
+		--hyps-baseline $@.sys \
 		--meteor.language ${TRG} > $@
-	rm -f $@.ref
+	rm -f $@.ref $@.sys
 
 
 
