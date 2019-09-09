@@ -47,7 +47,6 @@ if not args.deftrg:
 
 
 ## BPE model for pre-processing
-BPEmodel = 'opus.de+fr+sv+en.bpe32k-model'
 BPEcodes = codecs.open(args.bpe, encoding='utf-8')
 bpe = BPE(BPEcodes)
 
