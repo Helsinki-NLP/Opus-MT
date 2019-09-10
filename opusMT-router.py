@@ -24,24 +24,32 @@ import pycld2 as cld2
 parser = argparse.ArgumentParser(description='Simple translation server.')
 parser.add_argument('-p','--port', type=int, default=8080,
                    help='socket the server will listen on')
+parser.add_argument('-c','--config', type=str, default="opusMT-servers.json",
+                   help='MT server configurations')
 parser.add_argument('-d','--deftrg','--default-target-language', type=str, default='en',
                     help='default target language (for multilingual models)')
 
 args = parser.parse_args()
 
 
-with open('opusMT-servers.json', 'r') as f:
-        opusMT_servers = json.load(f)
+with open(args.config, 'r') as f:
+    opusMT_servers = json.load(f)
 
 
 ## create a list of web socket connections
 ## (TODO: does that scale well?)
 ws = dict()
-for s in opusMT_servers:
-    for t in opusMT_servers[s]:
-        langpair = s + t
-        print("open connection for " + langpair)
-        ws[langpair] = create_connection("ws://{}:{}/translate".format(opusMT_servers[s][t]["host"], opusMT_servers[s][t]["port"]))
+opusMT = dict()
+
+for h in opusMT_servers:
+    print("open connection to server " + h)
+    ws[h] = create_connection("ws://" + h)
+    srclangs = opusMT_servers[h]["source-languages"].split('+')
+    trglangs = opusMT_servers[h]["target-languages"].split('+')
+    for s in srclangs:
+        for t in trglangs:
+            print(" - serving " + s + t)
+            opusMT[s+t] = h
 
 
 class Translate(WebSocket):
@@ -69,13 +77,15 @@ class Translate(WebSocket):
             print("language detected = " + fromLang)
 
         langpair = fromLang + toLang
-        if not langpair in ws:
+        if not langpair in opusMT:
             print('unsupported language pair ' + langpair)
             self.sendMessage('ERROR: unsupported language pair ' + langpair)
             return
 
-        ws[langpair].send(langpair + ' ' + srctxt) 
-        translated = ws[langpair].recv()
+        server = opusMT[langpair]
+        ws[server].send(langpair + ' ' + srctxt)
+        print('translate ' + langpair + ' at ' + server)
+        translated = ws[server].recv()
         self.sendMessage(translated)
 
     def handleConnected(self):
