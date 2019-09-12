@@ -1,5 +1,8 @@
 #!/bin/sh
 
+## to enable logging of the output of this script uncomment:
+# exec 1>/tmp/init.log 2>&1
+
 ### BEGIN INIT INFO
 # Provides:          %%SERVICENAME%%
 # Required-Start:    $local_fs $network $syslog
@@ -10,7 +13,7 @@
 # Description:       %%APPLONGDESCR%%
 ### END INIT INFO
 
-NAME="opentrans"
+NAME="%%SERVICENAME%%"
 PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin"
 APPDIR="/"
 APPBIN="%%APPBIN%%"
@@ -25,6 +28,8 @@ set -e
 start() {
   printf "Starting '$NAME'... "
   start-stop-daemon --start --chuid "$USER:$GROUP" --background --make-pidfile --pidfile /var/run/$NAME.pid --chdir "$APPDIR" --exec "$APPBIN" -- $APPARGS || true
+  ## with logfiles
+  # start-stop-daemon --start --chuid "$USER:$GROUP" --background --make-pidfile --pidfile /var/run/$NAME.pid --chdir "$APPDIR" --startas /bin/bash -- -c "exec $APPBIN $APPARGS > /var/log/%%SERVICENAME%%.log 2>&1" || true
   printf "done\n"
 }
 

@@ -65,7 +65,6 @@ enfi-server:
 		OPUSMT_PORT=20000 \
 	opusMT-server
 
-
 .PHONY: opusMT-server opusMT-router
 opusMT-server: install-marian-server install-opusMT-server
 opusMT-router: install-opusMT-router

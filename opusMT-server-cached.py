@@ -165,5 +165,6 @@ class Translate(WebSocket):
     def handleClose(self):
         print(self.address, 'closed')
 
+print("listen on socket " + str(args.port))
 server = SimpleWebSocketServer('', args.port, Translate)
 server.serveforever()
