@@ -59,6 +59,13 @@ INSTALL_DATA = ${INSTALL} -m 644
 .PHONY: all
 all: opusMT-server opusMT-router
 
+enfi-server:
+	${MAKE} SRC_LANGS=en TRG_LANGS=fi \
+		MARIAN_PORT=10000 \
+		OPUSMT_PORT=20000 \
+	opusMT-server
+
+
 .PHONY: opusMT-server opusMT-router
 opusMT-server: install-marian-server install-opusMT-server
 opusMT-router: install-opusMT-router
@@ -114,7 +121,7 @@ ${NMT_MODEL}:
 
 ## opusMT service via sysvinit
 /etc/init.d/opusMT-${DATASET}-${LANGPAIR}: ${OPUSMT_SERVER} ${APPLYBPE} ${BPEMODEL}
-	sed 	-e 's#%%SERVICENAME%%#opusMT-server#' \
+	sed 	-e 's#%%SERVICENAME%%#opusMT-server-${DATASET}-${LANGPAIR}#' \
 		-e 's#%%APPSHORTDESCR%%#opusMT-server#' \
 		-e 's#%%APPLONGDESCR%%#translation service#' \
 		-e 's#%%APPBIN%%#$<#' \
@@ -129,7 +136,7 @@ ${NMT_MODEL}:
 
 ## opusMT service via sysvinit
 /etc/init.d/marian-${DATASET}-${LANGPAIR}: ${NMT_MODEL}
-	sed 	-e 's#%%SERVICENAME%%#marian-server#' \
+	sed 	-e 's#%%SERVICENAME%%#marian-server-${DATASET}-${LANGPAIR}#' \
 		-e 's#%%APPSHORTDESCR%%#marian-server#' \
 		-e 's#%%APPLONGDESCR%%#translation service#' \
 		-e 's#%%APPBIN%%#${MARIAN_SERVER}#' \
