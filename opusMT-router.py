@@ -49,7 +49,7 @@ for h in opusMT_servers:
     for s in srclangs:
         for t in trglangs:
             print(" - serving " + s + t)
-            opusMT[s+t] = h
+            opusMT[s+'-'+t] = h
 
 
 class Translate(WebSocket):
@@ -76,7 +76,7 @@ class Translate(WebSocket):
             fromLang = details[0][1]
             print("language detected = " + fromLang)
 
-        langpair = fromLang + toLang
+        langpair = fromLang + '-' + toLang
         if not langpair in opusMT:
             print('unsupported language pair ' + langpair)
             self.sendMessage('ERROR: unsupported language pair ' + langpair)
