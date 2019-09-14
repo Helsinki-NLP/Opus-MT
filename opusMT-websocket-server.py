@@ -8,7 +8,8 @@ import sys
 import argparse
 import codecs
 import json
-from websocket import create_connection
+import socket
+# from websocket import create_connection
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 
 
@@ -43,7 +44,10 @@ opusMT = dict()
 
 for h in opusMT_servers:
     print("open connection to server " + h)
-    ws[h] = create_connection("ws://" + h)
+    ws[h] = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    HOST, PORT = h.split(':')
+    ws[h].connect((HOST, int(PORT)))
+    # ws[h] = create_connection("ws://" + h) ## OLD: websocket connection
     srclangs = opusMT_servers[h]["source-languages"].split('+')
     trglangs = opusMT_servers[h]["target-languages"].split('+')
     for s in srclangs:
@@ -83,9 +87,19 @@ class Translate(WebSocket):
             return
 
         server = opusMT[langpair]
-        ws[server].send(langpair + ' ' + srctxt)
-        print('translate ' + langpair + ' at ' + server)
-        translated = ws[server].recv()
+
+        data = {'text': srctext, 'source': fromLang, 'target': toLang}
+        message = json.dumps(data, sort_keys=True, indent=4)
+        print("sending to " + server + ":" + message)
+        ws[server].sendall(bytes(message, "utf-8"))
+        translated = str(ws[server].recv(1024), "utf-8")
+
+        ## OLD: websocket connection
+        ##
+        # print('translate ' + langpair + ' at ' + server)
+        # ws[server].send(langpair + ' ' + srctxt)
+        # translated = ws[server].recv()
+
         self.sendMessage(translated)
 
     def handleConnected(self):

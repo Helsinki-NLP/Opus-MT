@@ -1,44 +1,47 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-from __future__ import print_function, unicode_literals, division
 
+import socket
 import sys
-import time
+import json
 import argparse
 
-from websocket import create_connection
+# handle command-line options
+parser = argparse.ArgumentParser()
+parser.add_argument("-b", "--batch-size", type=int, default=1)
+parser.add_argument("-s", "--host", type=str, default='86.50.168.81')
+parser.add_argument("-p", "--port", type=int, default=8080)
+args = parser.parse_args()
 
+HOST, PORT = args.host, args.port
 
-if __name__ == "__main__":
-    # handle command-line options
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-b", "--batch-size", type=int, default=1)
-    parser.add_argument("-s", "--host", type=str, default='86.50.168.81')
-    parser.add_argument("-p", "--port", type=int, default=8080)
-    args = parser.parse_args()
+# Create a socket (SOCK_STREAM means a TCP socket)
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    # open connection
-    ws = create_connection("ws://{}:{}/translate".format(args.host,args.port))
+try:
+        # Connect to server and send data
+        sock.connect((HOST, PORT))
+        for line in sys.stdin:
+                fromLang = None
+                toLang = None
 
-    count = 0
-    batch = ""
-    for line in sys.stdin:
-        count += 1
-        batch += line.decode('utf-8') if sys.version_info < (3, 0) else line
-        if count == args.batch_size:
-            # translate the batch
-            ws.send(batch)
-            result = ws.recv()
-            print(result.rstrip())
+                # check whether first token indiciates language pair
+                tokens = line.split()
+                langs = tokens.pop(0).split('-')
+                if len(langs) == 2:
+                        toLang = langs[1]
+                        if langs[0] != 'DL':
+                                fromLang = langs[0]
+                                line = " ".join(tokens)
+                                
+                data = {'text': line, 'source': fromLang, 'target': toLang}
+                message = json.dumps(data, sort_keys=True, indent=4)
+                print("sending " + message)
+                sock.sendall(bytes(message, "utf-8"))
 
-            count = 0
-            batch = ""
+                # Receive data from the server and shut down
+                received = str(sock.recv(1024), "utf-8")
+                print(received)
+finally:
+        sock.close()
 
-    if count:
-        # translate the remaining sentences
-        ws.send(batch)
-        result = ws.recv()
-        print(result.rstrip())
-
-    # close connection
-    ws.close()

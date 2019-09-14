@@ -1,14 +1,16 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 #-*-python-*-
 #
 #
 
+import time
 import signal
 import sys
 import argparse
 import codecs
+import json
+import socketserver
 from websocket import create_connection
-from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 
 
 ## pre-processing: 
@@ -55,11 +57,13 @@ if not args.deftrg:
 
 
 ## BPE model for pre-processing
+print("load BPE codes")
 BPEcodes = codecs.open(args.bpe, encoding='utf-8')
 bpe = BPE(BPEcodes)
 
 
 ## open the cache DB
+print("open cache")
 cache = SqliteDict(args.cache, autocommit=True)
 
 
@@ -78,6 +82,7 @@ sentence_splitter = {}
 normalizer = {}
 detokenizer = {}
 
+print("start pre- and post-processing tools")
 for l in args.srclangs:
     sentence_splitter[l] = MosesSentenceSplitter(l)
     normalizer[l] = MosesPunctuationNormalizer(l)
@@ -88,56 +93,77 @@ for l in args.trglangs:
 
 
 # open connection
+print("open connection to " + args.mthost)
 ws = create_connection("ws://{}:{}/translate".format(args.mthost, args.mtport))
 
 
-class Translate(WebSocket):
+class MyTCPHandler(socketserver.BaseRequestHandler):
+    """
+    The RequestHandler class for our server.
 
-    def handleMessage(self):
+    It is instantiated once per connection to the server, and must
+    override the handle() method to implement communication to the
+    client.
+    """
 
-        # print('received: ' + self.data)
+    def handle(self):
+        # self.rfile is a file-like object created by the handler;
+        # we can now use e.g. readline() instead of raw recv() calls
+        self.data = self.request.recv(1024).strip().decode('utf-8')
+        
+        print("{} wrote:".format(self.client_address[0]))
+        print(self.data)
+
+        ## TODO: verify proper JSON input
+        data = json.loads(self.data)
         fromLang = None
         toLang = args.deftrg
+
+        if 'source' in data:
+            if data['source'] != 'detect':
+                fromLang = data['source']
+        if 'target' in data:
+            if data['target']:
+                toLang = data['target']
+
         prefix = ''
 
-        ## check the cach first
+        ## check the cache first
         if self.data in cache:
             translation = cache[self.data]
             print('CACHED TRANSLATION: ' + translation)
-            self.sendMessage(translation)
+            data = {'result': translation, 'origin': 'cache'}
+            self.request.sendall(bytes(json.dumps(data, sort_keys=True, indent=4), "utf-8"))
+            # self.request.sendall(bytes(translation, "utf-8"))
             return
-
-        ## check whether the first token specifies the language pair
-        srctxt = self.data
-        tokens = srctxt.split()
-        langs = tokens.pop(0).split('-')
-        if len(langs) == 2:
-            toLang = langs[1]
-            if langs[0] != 'DL':
-                fromLang = langs[0]
-            srctxt = " ".join(tokens)
 
         if len(args.trglangs) > 1:
             prefix = '>>' + toLang + '<< '
 
         if not fromLang:
-            isReliable, textBytesFound, details = cld2.detect(srctxt, bestEffort=True)
+            isReliable, textBytesFound, details = cld2.detect(data['text'], bestEffort=True)
             fromLang = details[0][1]
             print("language detected = " + fromLang)
 
         if not fromLang in args.srclangs:
             print('unsupported source language ' + fromLang)
-            self.sendMessage('ERROR: unsupported source language ' + fromLang)
+            data = {'error': 'unsupported source language ' + fromLang,
+                    'source': fromLang, 'target': toLang}
+            self.request.sendall(bytes(json.dumps(data, sort_keys=True, indent=4), "utf-8"))
+            # self.request.sendall(bytes('ERROR: unsupported source language ' + fromLang, "utf-8"))
             return
 
         if not toLang in args.trglangs:
             print('unsupported target language ' + toLang)
-            self.sendMessage('ERROR: unsupported target language ' + toLang)
+            data = {'error': 'unsupported target language ' + toLang,
+                    'source': fromLang, 'target': toLang}
+            self.request.sendall(bytes(json.dumps(data, sort_keys=True, indent=4), "utf-8"))
+            # self.request.sendall(bytes('ERROR: unsupported target language ' + toLang, "utf-8"))
             return
 
         langpair = fromLang + toLang
         message = []
-        for s in sentence_splitter[fromLang]([normalizer[fromLang](srctxt)]):
+        for s in sentence_splitter[fromLang]([normalizer[fromLang](data['text'])]):
             key = langpair + ' ' + s
             if key in cache:
                 detokenized = cache[key]
@@ -156,15 +182,20 @@ class Translate(WebSocket):
             message.append(detokenized)
             cache[key] = detokenized
         trgtext = ' '.join(message)
-        self.sendMessage(trgtext)
+        data = {'result': trgtext, 'source': fromLang, 'target': toLang,
+                'origin': "ws://{}:{}/translate".format(args.mthost, args.mtport)}
+        self.request.sendall(bytes(json.dumps(data, sort_keys=True, indent=4), "utf-8"))
+        # self.request.sendall(bytes(trgtext, "utf-8"))
         cache[self.data] = trgtext
 
-    def handleConnected(self):
-        print(self.address, 'connected')
 
-    def handleClose(self):
-        print(self.address, 'closed')
 
-print("listen on socket " + str(args.port))
-server = SimpleWebSocketServer('', args.port, Translate)
-server.serveforever()
+if __name__ == "__main__":
+    HOST, PORT = "localhost", args.port
+
+    # Create the server, binding to localhost on port 9999
+    server = socketserver.TCPServer((HOST, PORT), MyTCPHandler)
+
+    # Activate the server; this will keep running until you
+    # interrupt the program with Ctrl-C
+    server.serve_forever()
