@@ -1,14 +1,10 @@
 {
     "192.168.1.13:22222" : {
-	"source-languages" : "fi",
-	"target-languages" : "sv"
+	"source-languages" : "en",
+	"target-languages" : "fi"
     },
     "192.168.1.18:22222" : {
 	"source-languages" : "fi",
 	"target-languages" : "en"
-    },
-        "192.168.1.18:20000" : {
-	"source-languages" : "en",
-	"target-languages" : "fi"
     }
 }
