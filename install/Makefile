@@ -16,7 +16,7 @@ all: ${PREFIX}/bin/marian-server
 prereqs:
 	sudo apt-get -q update
 	sudo apt-get -q upgrade g++
-	sudo apt-get -q install automake autogen libtool cmake
+	sudo apt-get -q install automake autogen libtool cmake unzip
 	sudo apt-get -q install libboost-all-dev libblas-dev libopenblas-dev libz-dev libssl-dev
 	sudo apt-get -q install python3-dev python3-pip python3-setuptools python3-websocket
 	sudo pip3 install SimpleWebSocketServer

@@ -3,8 +3,6 @@
 #
 #
 
-import signal
-import sys
 import argparse
 import codecs
 from websocket import create_connection
@@ -20,10 +18,6 @@ from mosestokenizer import *
 ## language identifer (if source language is not given)
 import pycld2 as cld2
 
-## for the cache
-## --> unlimited size
-## --> assumes that translations from the server don't change
-from sqlitedict import SqliteDict
 
 parser = argparse.ArgumentParser(description='Simple translation server.')
 parser.add_argument('-p','--port', type=int, default=8080,
@@ -42,8 +36,6 @@ parser.add_argument('-d','--deftrg','--default-target-language', type=str,
                     help='default target language (for multilingual models)')
 parser.add_argument('--bpe','--bpe-model', type=str, default='opus.de+fr+sv+en.bpe32k-model',
                     help='BPE model for source text segmentation')
-parser.add_argument('-c','--cache', type=str, default='opentrans-cache.db',
-                    help='BPE model for source text segmentation')
 
 
 args = parser.parse_args()
@@ -55,22 +47,9 @@ if not args.deftrg:
 
 
 ## BPE model for pre-processing
-BPEmodel = 'opus.de+fr+sv+en.bpe32k-model'
 BPEcodes = codecs.open(args.bpe, encoding='utf-8')
 bpe = BPE(BPEcodes)
 
-
-## open the cache DB
-cache = SqliteDict(args.cache, autocommit=True)
-
-
-## add signal handler for SIGINT to properly close 
-## the DB when interrupting
-def signal_handler(sig, frame):
-    cache.close()
-    sys.exit(0)
-
-signal.signal(signal.SIGINT, signal_handler)
 
 
 ## pre- and post-processing tools
@@ -96,33 +75,24 @@ class Translate(WebSocket):
 
     def handleMessage(self):
 
-        # print('received: ' + self.data)
         fromLang = None
         toLang = args.deftrg
         prefix = ''
 
-        ## check the cach first
-        if self.data in cache:
-            translation = cache[self.data]
-            print('CACHED TRANSLATION: ' + translation)
-            self.sendMessage(translation)
-            return
-
         ## check whether the first token specifies the language pair
-        srctxt = self.data
-        tokens = srctxt.split()
+        tokens = self.data.split()
         langs = tokens.pop(0).split('-')
         if len(langs) == 2:
             toLang = langs[1]
             if langs[0] != 'DL':
                 fromLang = langs[0]
-            srctxt = " ".join(tokens)
+            self.data = ' '.join(tokens)
 
         if len(args.trglangs) > 1:
             prefix = '>>' + toLang + '<< '
 
         if not fromLang:
-            isReliable, textBytesFound, details = cld2.detect(srctxt, bestEffort=True)
+            isReliable, textBytesFound, details = cld2.detect(self.data, bestEffort=True)
             fromLang = details[0][1]
             print("language detected = " + fromLang)
 
@@ -136,29 +106,20 @@ class Translate(WebSocket):
             self.sendMessage('ERROR: unsupported target language ' + toLang)
             return
 
-        langpair = fromLang + toLang
         message = []
-        for s in sentence_splitter[fromLang]([normalizer[fromLang](srctxt)]):
-            key = langpair + ' ' + s
-            if key in cache:
-                detokenized = cache[key]
-                print('CACHED TRANSLATION: ' + detokenized)
-            else:
-                # print(s)
-                tokenized = ' '.join(tokenizer[fromLang](s))
-                # print(tokenized)
-                segmented = bpe.process_line(tokenized)
-                # print(prefix + segmented)
-                ws.send(prefix + segmented)
-                translated = ws.recv().replace('@@ ','')
-                # print(translated)
-                detokenized = detokenizer[toLang](translated.split())
-                print('TRANSLATION: ' + detokenized)
+        for s in sentence_splitter[fromLang]([normalizer[fromLang](self.data)]):
+            # print(s)
+            tokenized = ' '.join(tokenizer[fromLang](s))
+            # print(tokenized)
+            segmented = bpe.process_line(tokenized)
+            # print(prefix + segmented)
+            ws.send(prefix + segmented)
+            translated = ws.recv().replace('@@ ','')
+            # print(translated)
+            detokenized = detokenizer[toLang](translated.split())
+            print('TRANSLATION: ' + detokenized)
             message.append(detokenized)
-            cache[key] = detokenized
-        trgtext = ' '.join(message)
-        self.sendMessage(trgtext)
-        cache[self.data] = trgtext
+        self.sendMessage(' '.join(message))
 
     def handleConnected(self):
         print(self.address, 'connected')
