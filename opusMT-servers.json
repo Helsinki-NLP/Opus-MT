@@ -6,5 +6,13 @@
     "192.168.1.18:20001" : {
 	"source-languages" : "fi",
 	"target-languages" : "en"
+    },
+    "192.168.1.13:20002" : {
+	"source-languages" : "sv",
+	"target-languages" : "fi"
+    },
+    "192.168.1.13:20003" : {
+	"source-languages" : "fi",
+	"target-languages" : "sv"
     }
 }

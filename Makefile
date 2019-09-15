@@ -136,7 +136,7 @@ ${NMT_MODEL}:
 	rm -f ${notdir $@}
 	update-rc.d ${notdir $@} defaults 80
 	rm -f ${notdir $@}
-	systemctl daemon-reload
+#	systemctl daemon-reload
 	service ${notdir $@} restart
 
 
@@ -153,7 +153,7 @@ ${NMT_MODEL}:
 	rm -f ${notdir $@}
 	update-rc.d ${notdir $@} defaults 60
 	rm -f ${notdir $@}
-	systemctl daemon-reload
+#	systemctl daemon-reload
 	service ${notdir $@} restart
 
 
@@ -169,7 +169,7 @@ ${NMT_MODEL}:
 	rm -f ${notdir $@}
 	update-rc.d ${notdir $@} defaults 20
 	rm -f ${notdir $@}
-	systemctl daemon-reload
+#	systemctl daemon-reload
 	service ${notdir $@} restart
 	sleep 2
 
