@@ -161,7 +161,7 @@ ${DEV_SRC}: ${TRAIN_SRC}.${PRE_SRC}.gz ${TRAIN_TRG}.${PRE_TRG}.gz
 	  done \
 	done
 	paste ${DEV_SRC} ${DEV_TRG} | shuf > $@.shuffled
-	if [[ `echo $@.shuffled | wc -l` < ${DEVSIZE} ]]; then \
+	if (( `cat $@.shuffled | wc -l` < ${DEVSIZE} )); then \
 	  echo "Need more devdata - take some from traindata!"; \
 	  echo ".......... (1) extract top $$((${DEVSIZE} + ${TESTSIZE})) lines"; \
 	  zcat ${TRAIN_SRC}.${PRE_SRC}.gz | \
@@ -190,6 +190,7 @@ ifeq (${DEVSET},${TESTSET})
 	cut -f1 $@.shuffled | tail -${TESTSIZE} > ${TEST_SRC}
 	cut -f2 $@.shuffled | tail -${TESTSIZE} > ${TEST_TRG}
 endif
+	gzip -f $@.shuffled
 
 
 ${DEV_TRG}: ${DEV_SRC}

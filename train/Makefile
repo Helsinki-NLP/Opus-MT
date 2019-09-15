@@ -316,6 +316,47 @@ all-evalfiskmo:
 ## some models with Finnish as source or target
 ## make sure that we don't use WMT testsets for fi-en/en-fi
 
+
+iso639 = aa ab ae af ak am an ar as av ay az ba be bg bh bi bm bn bo br bs ca ce ch cn co cr cs cu cv cy da de dv dz ee el en eo es et eu fa ff fi fj fo fr fy ga gd gl gn gr gu gv ha hb he hi ho hr ht hu hy hz ia id ie ig ik io is it iu ja jp jv ka kg ki kj kk kl km kn ko kr ks ku kv kw ky la lb lg li ln lo lt lu lv me mg mh mi mk ml mn mo mr ms mt my na nb nd ne ng nl nn no nr nv ny oc oj om or os pa pi pl po ps pt qu rm rn ro ru rw ry sa sc sd se sg sh si sk sl sm sn so sq sr ss st su sv sw ta tc te tg th ti tk tl tn to tr ts tt tw ty ua ug uk ur uz ve vi vo wa wo xh yi yo za zh zu
+
+all2en:
+	for s in ${iso639}; do \
+	  if [ "$$s" != "en" ]; then \
+	      ${MAKE} SRCLANGS=$$s TRGLANGS='en' traindata devdata; \
+	      if [ `zcat ${WORKHOME}/$$s-en/train/*.src.${PRE_SRC}.gz | wc -l` -gt 1000000 ]; then \
+		echo "$$s-en bigger than 1 million"; \
+		${MAKE} SRCLANGS=$$s TRGLANGS='en' HPC_CORES=1 train.submit-multigpu; \
+	      elif [ `zcat ${WORKHOME}/$$s-en/train/*.src.${PRE_SRC}.gz | wc -l` -gt 100000 ]; then \
+		echo "$$s-en bigger than 100k"; \
+		${MAKE} SRCLANGS=$$s TRGLANGS='en' \
+			MARIAN_VALID_FREQ=2500 \
+			MARIAN_EARLY_STOPPING=5 \
+			HPC_CORES=1 train.submit; \
+	      else \
+		echo "$$s-en too small"; \
+	      fi \
+	  fi \
+	done
+	for s in ${iso639}; do \
+	  if [ "$$s" != "en" ]; then \
+	      ${MAKE} TRGLANGS=$$s SRCLANGS='en' traindata devdata; \
+	      if [ `zcat ${WORKHOME}/en-$$s/train/*.src.${PRE_SRC}.gz | wc -l` -gt 1000000 ]; then \
+		echo "en-$$s bigger than 1 million"; \
+		${MAKE} TRGLANGS=$$s SRCLANGS='en' HPC_CORES=1 train.submit-multigpu; \
+	      elif [ `zcat ${WORKHOME}/en-$$s/train/*.src.${PRE_SRC}.gz | wc -l` -gt 100000 ]; then \
+		echo "en-$$s bigger than 100k"; \
+		${MAKE} TRGLANGS=$$s SRCLANGS='en' \
+			MARIAN_VALID_FREQ=2500 \
+			MARIAN_EARLY_STOPPING=5 \
+			HPC_CORES=1 train.submit; \
+	      else \
+		echo "en-$$s too small"; \
+	      fi \
+	  fi \
+	done
+
+
+
 memad:
 	for s in fi en sv de fr nl; do \
 	  for t in fi en sv de fr nl; do \
