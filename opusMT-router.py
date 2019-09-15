@@ -8,16 +8,9 @@ import sys
 import argparse
 import codecs
 import json
-import socket
-# from websocket import create_connection
+# import socket
+from websocket import create_connection
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
-
-
-## pre-processing: 
-## - moses-script wrapper classes
-## - BPE-based segmentation from subword-nmt
-from apply_bpe import BPE
-from mosestokenizer import *
 
 ## language identifer (if source language is not given)
 import pycld2 as cld2
@@ -27,8 +20,11 @@ parser.add_argument('-p','--port', type=int, default=8080,
                    help='socket the server will listen on')
 parser.add_argument('-c','--config', type=str, default="opusMT-servers.json",
                    help='MT server configurations')
-parser.add_argument('-d','--deftrg','--default-target-language', type=str, default='en',
-                    help='default target language (for multilingual models)')
+parser.add_argument('-t','--deftrg','--default-target-language', type=str, default='en',
+                    help='default target language')
+parser.add_argument('-s','--defsrc','--default-source-language', type=str, default='fi',
+                    help='default source language')
+
 
 args = parser.parse_args()
 
@@ -44,16 +40,14 @@ opusMT = dict()
 
 for h in opusMT_servers:
     print("open connection to server " + h)
-    ws[h] = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    HOST, PORT = h.split(':')
-    ws[h].connect((HOST, int(PORT)))
-    # ws[h] = create_connection("ws://" + h) ## OLD: websocket connection
+    ws[h] = create_connection("ws://" + h)
     srclangs = opusMT_servers[h]["source-languages"].split('+')
     trglangs = opusMT_servers[h]["target-languages"].split('+')
     for s in srclangs:
         for t in trglangs:
             print(" - serving " + s + t)
             opusMT[s+'-'+t] = h
+
 
 
 class Translate(WebSocket):
@@ -71,7 +65,7 @@ class Translate(WebSocket):
         langs = tokens.pop(0).split('-')
         if len(langs) == 2:
             toLang = langs[1]
-            if langs[0] != 'DL':
+            if langs[0] != 'DL' and langs[0] != 'detect':
                 fromLang = langs[0]
             srctxt = " ".join(tokens)
 
@@ -79,6 +73,8 @@ class Translate(WebSocket):
             isReliable, textBytesFound, details = cld2.detect(srctxt, bestEffort=True)
             fromLang = details[0][1]
             print("language detected = " + fromLang)
+            if fromLang == toLang and toLang != args.defsrc:
+                toLang = args.defsrc
 
         langpair = fromLang + '-' + toLang
         if not langpair in opusMT:
@@ -88,19 +84,24 @@ class Translate(WebSocket):
 
         server = opusMT[langpair]
 
-        data = {'text': srctext, 'source': fromLang, 'target': toLang}
-        message = json.dumps(data, sort_keys=True, indent=4)
-        print("sending to " + server + ":" + message)
-        ws[server].sendall(bytes(message, "utf-8"))
-        translated = str(ws[server].recv(1024), "utf-8")
+        record = {'text': srctxt, 'source': fromLang, 'target': toLang}
+        message = json.dumps(record, sort_keys=True, indent=4)
+        # print("sending to " + server + ":" + message)
+        ws[server].send(message)
+        translated = ws[server].recv()
+        # ws[server].sendall(bytes(message, "utf-8"))
+        # translated = str(ws[server].recv(1024), "utf-8")
 
-        ## OLD: websocket connection
-        ##
-        # print('translate ' + langpair + ' at ' + server)
-        # ws[server].send(langpair + ' ' + srctxt)
-        # translated = ws[server].recv()
-
-        self.sendMessage(translated)
+        # print(translated, flush=True)
+        try:
+            result = json.loads(translated)
+            result['server'] = server
+            result['source'] = fromLang
+            result['target'] = toLang
+            self.sendMessage(json.dumps(result, sort_keys=True, indent=4))
+        except ValueError as error:
+            print("invalid json: %s" % error)
+            self.sendMessage(json.dumps({'result': 'ERROR: {}'.format(error)}, sort_keys=True, indent=4))
 
     def handleConnected(self):
         print(self.address, 'connected')

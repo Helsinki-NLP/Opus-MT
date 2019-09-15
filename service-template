@@ -27,9 +27,9 @@ set -e
 
 start() {
   printf "Starting '$NAME'... "
-  # start-stop-daemon --start --chuid "$USER:$GROUP" --background --make-pidfile --pidfile /var/run/$NAME.pid --chdir "$APPDIR" --exec "$APPBIN" -- $APPARGS || true
+  LANG="en_US.UTF-8" start-stop-daemon --start --chuid "$USER:$GROUP" --background --make-pidfile --pidfile /var/run/$NAME.pid --chdir "$APPDIR" --exec "$APPBIN" -- $APPARGS || true
   ## with logfiles
-  start-stop-daemon --start --chuid "$USER:$GROUP" --background --make-pidfile --pidfile /var/run/$NAME.pid --chdir "$APPDIR" --startas /bin/bash -- -c "exec $APPBIN $APPARGS > /var/log/%%SERVICENAME%%.log 2>&1" || true
+  # LANG="en_US.UTF-8" start-stop-daemon --start --chuid "$USER:$GROUP" --background --make-pidfile --pidfile /var/run/$NAME.pid --chdir "$APPDIR" --startas /bin/bash -- -c "exec $APPBIN $APPARGS > /var/log/%%SERVICENAME%%.log 2>&1" || true
   printf "done\n"
 }
 

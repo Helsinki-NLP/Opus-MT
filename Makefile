@@ -36,7 +36,7 @@ APPLYBPE   = ${BINDIR}/apply_bpe.py
 
 ## server code
 MARIAN_SERVER = ${BINDIR}/marian-server
-OPUSMT_ROUTER = ${BINDIR}/opusMT-websocket-server.py
+OPUSMT_ROUTER = ${BINDIR}/opusMT-router.py
 OPUSMT_SERVER = ${BINDIR}/opusMT-server-cached.py
 OPUSMT_CACHE  = ${CACHEDIR}/opusMT/${DATASET}.${LANGPAIR}.cache.db
 OPUSMT_CONFIG = ${SHAREDIR}/opusMT/opusMT-servers.json
@@ -46,10 +46,11 @@ OPUSMT_DEV_SERVER = ${BINDIR}/opusMT-server-cached-dev.py
 ## server port and marian NMT parameters
 ## (beam size 2 and normalisation 1)
 ROUTER_PORT = 8080
-OPUSMT_PORT = 22222
-MARIAN_PORT = 11111
+OPUSMT_PORT = 20000
+MARIAN_PORT = 10000
 MARIAN_PARA = -b2 -n1
-DEFAULT_TARGET_LANG = en
+DEFAULT_SOURCE_LANG = ${firstword ${subst +, ,${SRC_LANGS}}}
+DEFAULT_TARGET_LANG = ${lastword ${subst +, ,${TRG_LANGS}}}
 
 
 ## installation tools
@@ -59,43 +60,32 @@ INSTALL_DATA = ${INSTALL} -m 644
 
 
 .PHONY: all
-all: opusMT-server opusMT-websocket-server
+all: opusMT-server opusMT-router
+
 
 enfi-server:
-	${MAKE} SRC_LANGS=en TRG_LANGS=fi \
-		MARIAN_PORT=10000 \
-		OPUSMT_PORT=20000 \
-	opusMT-server
+	${MAKE} SRC_LANGS=en TRG_LANGS=fi MARIAN_PORT=10000 OPUSMT_PORT=20000 opusMT-server
+
+fien-server:
+	${MAKE} SRC_LANGS=fi TRG_LANGS=en MARIAN_PORT=10001 OPUSMT_PORT=20001 opusMT-server
 
 svfi-server:
-	${MAKE} SRC_LANGS=sv TRG_LANGS=fi \
-		MARIAN_PORT=10001 \
-		OPUSMT_PORT=20001 \
-	opusMT-server
+	${MAKE} SRC_LANGS=sv TRG_LANGS=fi MARIAN_PORT=10002 OPUSMT_PORT=20002 opusMT-server
+
+fisv-server:
+	${MAKE} SRC_LANGS=fi TRG_LANGS=sv MARIAN_PORT=10003 OPUSMT_PORT=20003 opusMT-server
 
 defi-server:
-	${MAKE} SRC_LANGS=de TRG_LANGS=fi \
-		MARIAN_PORT=10002 \
-		OPUSMT_PORT=20002 \
-	opusMT-server
+	${MAKE} SRC_LANGS=de TRG_LANGS=fi MARIAN_PORT=10004 OPUSMT_PORT=20004 opusMT-server
 
-
-svfi-dev:
-	${MAKE} SRC_LANGS=sv TRG_LANGS=fi \
-		MARIAN_PORT=10001 \
-		OPUSMT_PORT=20001 \
-	remove-opusMT-service
-	systemctl daemon-reload
-	${MAKE} SRC_LANGS=sv TRG_LANGS=fi \
-		MARIAN_PORT=10001 \
-		OPUSMT_PORT=20001 \
-	opusMT-devserver
+fide-server:
+	${MAKE} SRC_LANGS=fi TRG_LANGS=de MARIAN_PORT=10005 OPUSMT_PORT=20005 opusMT-server
 
 
 
-.PHONY: opusMT-server opusMT-websocket-server
+.PHONY: opusMT-server opusMT-router
 opusMT-server: install-marian-server install-opusMT-server
-opusMT-websocket-server: install-opusMT-websocket-server
+opusMT-router: install-opusMT-router
 
 opusMT-devserver: /etc/init.d/opusMT-dev-${DATASET}-${LANGPAIR}
 
@@ -103,7 +93,7 @@ opusMT-devserver: /etc/init.d/opusMT-dev-${DATASET}-${LANGPAIR}
 .PHONY: install-marian-server install-opusMT-server
 install-marian-server: /etc/init.d/marian-${DATASET}-${LANGPAIR}
 install-opusMT-server: /etc/init.d/opusMT-${DATASET}-${LANGPAIR}
-install-opusMT-websocket-server: /etc/init.d/opusMT
+install-opusMT-router: /etc/init.d/opusMT
 
 # install-marian-server: /etc/init/marian-${DATASET}-${LANGPAIR}.conf
 # install-opusMT-server: /etc/init/opusMT-${DATASET}-${LANGPAIR}.conf
@@ -139,14 +129,15 @@ ${NMT_MODEL}:
 		-e 's#%%APPSHORTDESCR%%#opusMT#' \
 		-e 's#%%APPLONGDESCR%%#translation service#' \
 		-e 's#%%APPBIN%%#$<#' \
-		-e 's#%%APPARGS%%#-p ${ROUTER_PORT} -c ${OPUSMT_CONFIG} -d ${DEFAULT_TARGET_LANG}#' \
+		-e 's#%%APPARGS%%#-p ${ROUTER_PORT} -c ${OPUSMT_CONFIG} -s ${DEFAULT_SOURCE_LANG} -t ${DEFAULT_TARGET_LANG}#' \
 	< service-template > ${notdir $@}
 	mkdir -p ${dir ${OPUSMT_CACHE}}
 	${INSTALL_BIN} ${notdir $@} $@
 	rm -f ${notdir $@}
-	update-rc.d ${notdir $@} defaults
+	update-rc.d ${notdir $@} defaults 80
 	rm -f ${notdir $@}
-	service ${notdir $@} start || true
+	systemctl daemon-reload
+	service ${notdir $@} restart
 
 
 ## opusMT service via sysvinit
@@ -160,24 +151,11 @@ ${NMT_MODEL}:
 	mkdir -p ${dir ${OPUSMT_CACHE}}
 	${INSTALL_BIN} ${notdir $@} $@
 	rm -f ${notdir $@}
-	update-rc.d ${notdir $@} defaults
+	update-rc.d ${notdir $@} defaults 60
 	rm -f ${notdir $@}
-	service ${notdir $@} start || true
+	systemctl daemon-reload
+	service ${notdir $@} restart
 
-## opusMT service via sysvinit
-/etc/init.d/opusMT-dev-${DATASET}-${LANGPAIR}: ${OPUSMT_DEV_SERVER} ${APPLYBPE} ${BPEMODEL} service-template
-	sed 	-e 's#%%SERVICENAME%%#opusMT-server-${DATASET}-${LANGPAIR}#' \
-		-e 's#%%APPSHORTDESCR%%#opusMT-server#' \
-		-e 's#%%APPLONGDESCR%%#translation service#' \
-		-e 's#%%APPBIN%%#$<#' \
-		-e 's#%%APPARGS%%#-p ${OPUSMT_PORT} -c ${OPUSMT_CACHE} --bpe ${BPEMODEL} --mtport ${MARIAN_PORT} -s ${subst +, ,${SRC_LANGS}} -t ${subst +, ,${TRG_LANGS}}#' \
-	< service-template > ${notdir $@}
-	mkdir -p ${dir ${OPUSMT_CACHE}}
-	${INSTALL_BIN} ${notdir $@} $@
-	rm -f ${notdir $@}
-	update-rc.d ${notdir $@} defaults
-	rm -f ${notdir $@}
-	service ${notdir $@} start || true
 
 ## opusMT service via sysvinit
 /etc/init.d/marian-${DATASET}-${LANGPAIR}: ${NMT_MODEL} service-template
@@ -189,14 +167,16 @@ ${NMT_MODEL}:
 	< service-template > ${notdir $@}
 	${INSTALL_BIN} ${notdir $@} $@
 	rm -f ${notdir $@}
-	update-rc.d ${notdir $@} defaults
+	update-rc.d ${notdir $@} defaults 20
 	rm -f ${notdir $@}
-	service ${notdir $@} start || true
+	systemctl daemon-reload
+	service ${notdir $@} restart
+	sleep 2
 
 
-remove-services: remove-marian-service remove-opusMT-service remove-opusMT-websocket-server
+remove-services: remove-marian-service remove-opusMT-service remove-opusMT-router
 
-remove-opusMT-websocket-server:
+remove-opusMT-router:
 	service opusMT stop || true
 	update-rc.d -f opusMT remove
 	rm -f /etc/init.d/opusMT
