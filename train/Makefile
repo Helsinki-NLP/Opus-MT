@@ -322,6 +322,7 @@ iso639 = aa ab ae af ak am an ar as av ay az ba be bg bh bi bm bn bo br bs ca ce
 all2en:
 	for s in ${iso639}; do \
 	  if [ "$$s" != "en" ]; then \
+	    if [ ! -e ${WORKHOME}/$$s-en/train.submit ]; then \
 	      ${MAKE} SRCLANGS=$$s TRGLANGS='en' traindata devdata; \
 	      if [ `zcat ${WORKHOME}/$$s-en/train/*.src.${PRE_SRC}.gz | wc -l` -gt 1000000 ]; then \
 		echo "$$s-en bigger than 1 million"; \
@@ -335,10 +336,12 @@ all2en:
 	      else \
 		echo "$$s-en too small"; \
 	      fi \
+	    fi \
 	  fi \
 	done
 	for s in ${iso639}; do \
 	  if [ "$$s" != "en" ]; then \
+	    if [ ! -e ${WORKHOME}/en-$$s/train.submit ]; then \
 	      ${MAKE} TRGLANGS=$$s SRCLANGS='en' traindata devdata; \
 	      if [ `zcat ${WORKHOME}/en-$$s/train/*.src.${PRE_SRC}.gz | wc -l` -gt 1000000 ]; then \
 		echo "en-$$s bigger than 1 million"; \
@@ -352,6 +355,7 @@ all2en:
 	      else \
 		echo "en-$$s too small"; \
 	      fi \
+	    fi \
 	  fi \
 	done
 
