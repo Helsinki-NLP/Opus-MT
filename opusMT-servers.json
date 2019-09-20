@@ -7,11 +7,11 @@
 	"source-languages" : "fi",
 	"target-languages" : "en"
     },
-    "192.168.1.13:20002" : {
+    "192.168.1.14:20002" : {
 	"source-languages" : "sv",
 	"target-languages" : "fi"
     },
-    "192.168.1.13:20003" : {
+    "192.168.1.14:20003" : {
 	"source-languages" : "fi",
 	"target-languages" : "sv"
     }
