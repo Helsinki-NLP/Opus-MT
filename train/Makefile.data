@@ -161,7 +161,9 @@ ${DEV_SRC}: ${TRAIN_SRC}.${PRE_SRC}.gz ${TRAIN_TRG}.${PRE_TRG}.gz
 	  done \
 	done
 	paste ${DEV_SRC} ${DEV_TRG} | shuf > $@.shuffled
-	if (( `cat $@.shuffled | wc -l` < ${DEVSIZE} )); then \
+## if we have less than twice the amount of DEVMINSIZE in the data set
+## --> extract some data from the training data to be used as devdata
+	if (( `cat $@.shuffled | wc -l` < $$((${DEVMINSIZE} + ${DEVMINSIZE})) )); then \
 	  echo "Need more devdata - take some from traindata!"; \
 	  echo ".......... (1) extract top $$((${DEVSIZE} + ${TESTSIZE})) lines"; \
 	  zcat ${TRAIN_SRC}.${PRE_SRC}.gz | \
@@ -180,15 +182,32 @@ ${DEV_SRC}: ${TRAIN_SRC}.${PRE_SRC}.gz ${TRAIN_TRG}.${PRE_TRG}.gz
 	  mv -f $@.remaining.${SRC}.gz ${TRAIN_SRC}.${PRE_SRC}.gz; \
 	  mv -f $@.remaining.${TRG}.gz ${TRAIN_TRG}.${PRE_TRG}.gz; \
 	  echo ".......... (3) append to devdata"; \
-	  paste $@.extra.${SRC} $@.extra.${TRG} >> $@.shuffled; \
+	  mv $@.shuffled $@.oldshuffled; \
+	  paste $@.extra.${SRC} $@.extra.${TRG} > $@.shuffled; \
+	  cat $@.oldshuffled >> $@.shuffled; \
+	  rm $@.oldshuffled; \
 	  rm -f $@.extra.${SRC} $@.extra.${TRG}; \
 	fi
+## if we extract test and dev data from the same data set
+## ---> make sure that we do not have any overlap between the two data sets
+## ---> reserve at least DEVMINSIZE data for dev data and keep the rest for testing
+ifeq (${DEVSET},${TESTSET})
+	if (( `cat $@.shuffled | wc -l` < $$((${DEVSIZE} + ${TESTSIZE})) )); then \
+	  cut -f1 $@.shuffled | head -${DEVMINSIZE} > ${DEV_SRC}; \
+	  cut -f2 $@.shuffled | head -${DEVMINSIZE} > ${DEV_TRG}; \
+	  mkdir -p ${dir ${TEST_SRC}}; \
+	  cut -f1 $@.shuffled | tail -n +$$((${DEVMINSIZE} + 1)) > ${TEST_SRC}; \
+	  cut -f2 $@.shuffled | tail -n +$$((${DEVMINSIZE} + 1)) > ${TEST_TRG}; \
+	else
+	  cut -f1 $@.shuffled | head -${DEVSIZE} > ${DEV_SRC}; \
+	  cut -f2 $@.shuffled | head -${DEVSIZE} > ${DEV_TRG}; \
+	  mkdir -p ${dir ${TEST_SRC}}; \
+	  cut -f1 $@.shuffled | tail -${TESTSIZE} > ${TEST_SRC}; \
+	  cut -f2 $@.shuffled | tail -${TESTSIZE} > ${TEST_TRG}; \
+	fi
+else
 	cut -f1 $@.shuffled | head -${DEVSIZE} > ${DEV_SRC}
 	cut -f2 $@.shuffled | head -${DEVSIZE} > ${DEV_TRG}
-ifeq (${DEVSET},${TESTSET})
-	mkdir -p ${dir ${TEST_SRC}}
-	cut -f1 $@.shuffled | tail -${TESTSIZE} > ${TEST_SRC}
-	cut -f2 $@.shuffled | tail -${TESTSIZE} > ${TEST_TRG}
 endif
 	gzip -f $@.shuffled
 
@@ -410,6 +429,13 @@ endif
 ## BPE
 ##----------------------------------------------
 
+## source/target specific bpe
+## - make sure to leave the language flags alone!
+## - make sure that we do not delete the BPE code files
+## if the BPE models already exist
+## ---> do not create new ones and always keep the old ones
+## ---> need to delete the old ones if we want to create new BPE models
+
 
 BPESRCMODEL = ${TRAIN_SRC}.bpe${SRCBPESIZE:000=}k-model
 BPETRGMODEL = ${TRAIN_TRG}.bpe${TRGBPESIZE:000=}k-model
@@ -417,10 +443,8 @@ BPETRGMODEL = ${TRAIN_TRG}.bpe${TRGBPESIZE:000=}k-model
 .PRECIOUS: ${BPESRCMODEL} ${BPETRGMODEL}
 .INTERMEDIATE: ${LOCAL_TRAIN_SRC} ${LOCAL_TRAIN_TRG}
 
-## source/target specific bpe
-## - make sure to leave the language flags alone!
-## - make sure that we do not delete the BPE code files
 ${BPESRCMODEL}: ${WORKDIR}/%.bpe${SRCBPESIZE:000=}k-model: ${TMPDIR}/%
+ifeq ($(wildcard ${BPESRCMODEL}),)
 	mkdir -p ${dir $@}
 ifeq ($(TRGLANGS),${firstword ${TRGLANGS}})
 	python3 ${SNMTPATH}/learn_bpe.py -s $(SRCBPESIZE) < $< > $@
@@ -429,11 +453,24 @@ else
 	python3 ${SNMTPATH}/learn_bpe.py -s $(SRCBPESIZE) < $<.text > $@
 	rm -f $<.text
 endif
+else
+	@echo "$@ already exists!"
+	@echo "WARNING! No new BPE model is created even though the data has changed!"
+	@echo "WARNING! Delete the file if you want to start from scratch!"
+	touch $@
+endif
 
 ## no labels on the target language side
 ${BPETRGMODEL}: ${WORKDIR}/%.bpe${TRGBPESIZE:000=}k-model: ${TMPDIR}/%
+ifeq ($(wildcard ${BPETRGMODEL}),)
 	mkdir -p ${dir $@}
 	python3 ${SNMTPATH}/learn_bpe.py -s $(TRGBPESIZE) < $< > $@
+else
+	@echo "$@ already exists!"
+	@echo "WARNING! No new BPE codes are created!"
+	@echo "WARNING! Delete the file if you want to start from scratch!"
+	touch $@
+endif
 
 
 

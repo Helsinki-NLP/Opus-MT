@@ -57,7 +57,7 @@ else ifeq (${shell hostname --domain},bullx)
   DATAHOME     = ${HOME}/work/opentrans/data/${LANGPAIR}
   WORKHOME     = /scratch/${CSCPROJECT}/joerg/opentrans
   APPLHOME     = ${HOME}/projappl
-  OPUSHOME     = /scratch/project_2001569/nlpl/data/OPUS
+  OPUSHOME     = /scratch/project_2000661/nlpl/data/OPUS
   MOSESHOME    = ${APPLHOME}/mosesdecoder
   MARIAN       = ${APPLHOME}/marian/build
   MARIANCPU    = ${APPLHOME}/marian/build

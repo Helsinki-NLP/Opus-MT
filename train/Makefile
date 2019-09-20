@@ -132,6 +132,7 @@ TUNESET  = OpenSubtitles
 ## size of dev data, test data and BPE merge operations
 
 DEVSIZE    = 5000
+DEVMINSIZE = 1000
 TESTSIZE   = 5000
 BPESIZE    = 32000
 SRCBPESIZE = ${BPESIZE}
@@ -266,11 +267,39 @@ evalfiskmo:
 
 evalnews:
 	if [ "${filter en,${SRCLANGS}}" == "en" ]; then \
-	  ${MAKE} SRC=en TRG=fi TESTSET=fiskmo_testset eval; \
+	  ${MAKE} SRC=en TRG=fi TESTSET=newstest2015 eval; \
+	  ${MAKE} SRC=en TRG=fi TESTSET=newstest2016 eval; \
+	  ${MAKE} SRC=en TRG=fi TESTSET=newstest2017 eval; \
+	  ${MAKE} SRC=en TRG=fi TESTSET=newstest2018 eval; \
 	fi
 	if [ "${filter en,${TRGLANGS}}" == "en" ]; then \
-	  ${MAKE} TRG=fi SRC=en TESTSET=fiskmo_testset eval; \
+	  ${MAKE} TRG=fi SRC=en TESTSET=newstest2015 eval; \
+	  ${MAKE} TRG=fi SRC=en TESTSET=newstest2016 eval; \
+	  ${MAKE} TRG=fi SRC=en TESTSET=newstest2017 eval; \
+	  ${MAKE} TRG=fi SRC=en TESTSET=newstest2018 eval; \
 	fi
+
+
+#	${MAKE} SRCLANGS=fi TRGLANGS=en SRC=fi TRG=en evalnews
+#	${MAKE} SRCLANGS=fi TRGLANGS=en SRC=fi TRG=en eval
+
+run-eval:
+	${MAKE} SRCLANGS=sv TRGLANGS=fi SRC=sv TRG=fi evalfiskmo
+	${MAKE} TRGLANGS=sv SRCLANGS=fi SRC=fi TRG=sv evalfiskmo
+	${MAKE} SRCLANGS=sv TRGLANGS=fi SRC=sv TRG=fi eval
+	${MAKE} TRGLANGS=sv SRCLANGS=fi SRC=fi TRG=sv eval
+	${MAKE} SRCLANGS=de TRGLANGS=fi SRC=de TRG=fi eval
+	${MAKE} SRCLANGS=fi TRGLANGS=fr SRC=fi TRG=fr eval
+	${MAKE} SRCLANGS=fr TRGLANGS=de SRC=fr TRG=de eval
+	${MAKE} SRCLANGS=de TRGLANGS=fr SRC=de TRG=fr eval
+	${MAKE} SRCLANGS=fi TRGLANGS=nl SRC=fi TRG=nl eval
+	${MAKE} SRCLANGS=fr TRGLANGS=fi SRC=fr TRG=fi eval
+	${MAKE} SRCLANGS=nl TRGLANGS=de SRC=nl TRG=de eval
+	${MAKE} SRCLANGS=de TRGLANGS=nl SRC=de TRG=nl eval
+	${MAKE} SRCLANGS=fi TRGLANGS=fr SRC=fi TRG=de eval
+	${MAKE} SRCLANGS=fr TRGLANGS=nl SRC=fr TRG=nl eval
+	${MAKE} SRCLANGS=nl TRGLANGS=fr SRC=nl TRG=fr eval
+	${MAKE} SRCLANGS=sv TRGLANGS=de SRC=sv TRG=de eval
 
 
 all-evalfiskmo: 
@@ -357,6 +386,30 @@ all2en:
 	      fi \
 	    fi \
 	  fi \
+	done
+
+
+new-models:
+	for s in "da fo is no nb nn sv" "et fi" "de af fy nl"; do \
+	  for t in en fr; do \
+		${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" traindata; \
+		${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" devdata; \
+		${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" HPC_CORES=1 train.submit-multigpu; \
+	  done \
+	done
+	for t in "da fo is no nb nn sv" "et fi" "de af fy nl"; do \
+	  for s in fr en; do \
+		${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" traindata; \
+		${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" devdata; \
+		${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" HPC_CORES=1 train.submit-multigpu; \
+	  done \
+	done
+	for s in "da fo is no nb nn sv" "et fi" "de af fy nl"; do \
+	  for t in "da fo is no nb nn sv" "et fi" "de af fy nl"; do \
+		${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" traindata; \
+		${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" devdata; \
+		${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" HPC_CORES=1 train.submit-multigpu; \
+	  done \
 	done
 
 
@@ -595,12 +648,22 @@ endif
 
 
 ## make vocabulary
-vocab: ${WORKDIR}/${MODEL}.vocab.yml
+## - no new vocabulary is created if the file already exists!
+## - need to delete the file if you want to create a new one!
 
-${WORKDIR}/${MODEL}.vocab.yml: 	${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE}.gz \
-				${TRAIN_TRG}.${PRE_TRG}${TRAINSIZE}.gz
+vocab: ${MODEL_VOCAB}
+
+${MODEL_VOCAB}:	${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE}.gz \
+		${TRAIN_TRG}.${PRE_TRG}${TRAINSIZE}.gz
+ifeq ($(wildcard ${MODEL_VOCAB}),)
 	mkdir -p ${dir $@}
 	${LOADMODS} && zcat $^ | ${MARIAN}/marian-vocab --max-size ${VOCABSIZE} > $@
+else
+	@echo "$@ already exists!"
+	@echo "WARNING! No new vocabulary is created even though the data has changed!"
+	@echo "WARNING! Delete the file if you want to start from scratch!"
+	touch $@
+endif
 
 
 ## train transformer model
@@ -608,7 +671,7 @@ ${WORKDIR}/${MODEL}.transformer.model${NR}.done: \
 		${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE}.gz \
 		${TRAIN_TRG}.${PRE_TRG}${TRAINSIZE}.gz \
 		${DEV_SRC}.${PRE_SRC} ${DEV_TRG}.${PRE_TRG} \
-		${WORKDIR}/${MODEL}.vocab.yml
+		${MODEL_VOCAB}
 	mkdir -p ${dir $@}
 	${LOADMODS} && ${MARIAN}/marian ${MARIAN_EXTRA} \
         --model $(@:.done=.npz) \
