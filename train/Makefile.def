@@ -52,7 +52,19 @@ else ifeq (${shell hostname},dx7-nkiel-4gpu)
   MARIAN       = ${APPLHOME}/marian/build
   LOADMODS     = echo "nothing to load"
   MARIAN_WORKSPACE = 10000
-else ifeq (${shell hostname --domain},bullx)
+else ifneq ($(wildcard /wrk/tiedeman/research/),)
+  DATAHOME     = /proj/OPUS/WMT19/data/${LANGPAIR}
+  # APPLHOME   = ${USERAPPL}/tools
+  APPLHOME     = /proj/memad/tools
+  WORKHOME     = /wrk/tiedeman/research/marian/${SRC}-${TRG}
+  OPUSHOME     = /proj/nlpl/data/OPUS
+  MOSESHOME    = /proj/nlpl/software/moses/4.0-65c75ff/moses
+  # MARIAN     = /proj/nlpl/software/marian/1.2.0
+  # MARIAN     = /appl/ling/marian
+  MARIAN       = ${HOME}/appl_taito/tools/marian/build-gpu
+  MARIANCPU    = ${HOME}/appl_taito/tools/marian/build-cpu
+  LOADMODS     = ${LOADGPU}
+else
   CSCPROJECT   = project_2001569
   DATAHOME     = ${HOME}/work/opentrans/data/${LANGPAIR}
   WORKHOME     = /scratch/${CSCPROJECT}/joerg/opentrans
@@ -70,18 +82,6 @@ else ifeq (${shell hostname --domain},bullx)
   LOADMODS     = echo "nothing to load"
   HPC_QUEUE    = small
   MARIAN_WORKSPACE = 30000
-else
-  DATAHOME     = /proj/OPUS/WMT19/data/${LANGPAIR}
-  # APPLHOME   = ${USERAPPL}/tools
-  APPLHOME     = /proj/memad/tools
-  WORKHOME     = /wrk/tiedeman/research/marian/${SRC}-${TRG}
-  OPUSHOME     = /proj/nlpl/data/OPUS
-  MOSESHOME    = /proj/nlpl/software/moses/4.0-65c75ff/moses
-  # MARIAN     = /proj/nlpl/software/marian/1.2.0
-  # MARIAN     = /appl/ling/marian
-  MARIAN       = ${HOME}/appl_taito/tools/marian/build-gpu
-  MARIANCPU    = ${HOME}/appl_taito/tools/marian/build-cpu
-  LOADMODS     = ${LOADGPU}
 endif
 
 
