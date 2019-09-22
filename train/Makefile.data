@@ -131,7 +131,7 @@ ${LOCAL_TRAIN_TRG}: ${LOCAL_TRAIN_SRC}
 
 add-to-local-train-data: ${CLEAN_TRAIN_SRC}
 ifneq (${CLEAN_TRAIN_SRC},)
-	echo "${CLEAN_TRAIN_SRC}"  >> ${dir $@}/README
+	echo "${CLEAN_TRAIN_SRC}"  >> ${dir ${LOCAL_TRAIN_SRC}}/README
 ifneq (${words ${TRGLANGS}},1)
 	echo "more than one target language";
 	zcat ${CLEAN_TRAIN_SRC} |\
