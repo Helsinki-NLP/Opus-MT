@@ -34,8 +34,8 @@ if __name__ == "__main__":
             ws.send(batch)
             result = ws.recv()
             if args.text:
-                json = json.loads(result)
-                print(json['result'])
+                record = json.loads(result)
+                print(record['result'])
             else:
                 print(result.rstrip())
 
