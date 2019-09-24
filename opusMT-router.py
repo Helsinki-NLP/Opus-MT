@@ -63,7 +63,7 @@ class Translate(WebSocket):
             data = json.loads(self.data)
             srctxt = data['text']
             if 'source' in data:
-                if data['source'] != 'detect':
+                if data['source'] != 'DL' and data['source'] != 'detect':
                     fromLang = data['source']
             if 'target' in data:
                 if data['target']:
