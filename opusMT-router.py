@@ -79,7 +79,7 @@ class Translate(WebSocket):
                 toLang = langs[1]
                 if langs[0] != 'DL' and langs[0] != 'detect':
                     fromLang = langs[0]
-                    srctxt = " ".join(tokens)
+                srctxt = " ".join(tokens)
 
         if not fromLang:
             isReliable, textBytesFound, details = cld2.detect(srctxt, bestEffort=True)
