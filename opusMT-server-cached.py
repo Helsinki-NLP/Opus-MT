@@ -140,19 +140,20 @@ class Translate(WebSocket):
                     fromLang = langs[0]
                     srctxt = " ".join(tokens)
 
+        if len(args.trglangs) > 1:
+            prefix = '>>' + toLang + '<< '
+
         ## check the cache first
         # print('input: ' + srctxt, flush=True)
-        if srctxt in cache:
-            translation = cache[srctxt]
+        inputTxt = prefix + srctxt
+        if inputTxt in cache:
+            translation = cache[inputTxt]
             print('CACHED TRANSLATION: ' + translation, flush=True)
             data = {'result': translation, 'origin': 'cache'}
             self.sendMessage(json.dumps(data, sort_keys=True, indent=4))
             # self.request.sendall(bytes(json.dumps(data, sort_keys=True, indent=4), "utf-8"))
             # self.request.sendall(bytes(translation, "utf-8"))
             return
-
-        if len(args.trglangs) > 1:
-            prefix = '>>' + toLang + '<< '
 
         if not fromLang:
             isReliable, textBytesFound, details = cld2.detect(srctxt, bestEffort=True)
@@ -204,7 +205,7 @@ class Translate(WebSocket):
         self.sendMessage(json.dumps(data, sort_keys=True, indent=4))
         # self.request.sendall(bytes(json.dumps(data, sort_keys=True, indent=4), "utf-8"))
         # self.request.sendall(bytes(trgtext, "utf-8"))
-        cache[srctxt] = trgtext
+        cache[inputTxt] = trgtext
 
     def handleConnected(self):
         print(self.address, 'connected')
