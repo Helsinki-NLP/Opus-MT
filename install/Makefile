@@ -5,6 +5,7 @@ INSTALL = install -c
 INSTALL_BIN = ${INSTALL} -m 755
 INSTALL_DATA = ${INSTALL} -m 644
 
+UBUNTU_RELEASE = ${shell lsb_release -a | grep 'Release' | cut -f2}
 
 
 .PHONY: all
@@ -17,12 +18,15 @@ prereqs:
 	sudo apt-get -q update
 	sudo apt-get -q upgrade g++
 	sudo apt-get -q install automake autogen libtool cmake-data cmake unzip
-	-sudo apt-get -q install cmake3-data cmake3
 	sudo apt-get -q install libboost-all-dev libblas-dev libopenblas-dev libz-dev libssl-dev
-	sudo apt-get -q install python3-dev python3-pip python3-setuptools
-	-sudo apt-get -q install python-websocket python3-websocket
+	sudo apt-get -q install python3-dev python3-pip python3-setuptools python3-websocket
 	sudo pip3 install SimpleWebSocketServer
 	sudo pip3 install mosestokenizer pycld2 sqlitedict
+ifeq (${UBUNTU_RELEASE},14.04)
+	sudo apt-get -q install cmake3-data cmake3
+	sudo pip3 install websocket-client==0.46.0
+endif
+
 
 gperftools:
 	${MAKE} prereqs
