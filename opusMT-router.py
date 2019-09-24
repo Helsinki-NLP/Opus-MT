@@ -59,15 +59,27 @@ class Translate(WebSocket):
         toLang = args.deftrg
         prefix = ''
 
-        ## check whether the first token specifies the language pair
-        srctxt = self.data
-        tokens = srctxt.split()
-        langs = tokens.pop(0).split('-')
-        if len(langs) == 2:
-            toLang = langs[1]
-            if langs[0] != 'DL' and langs[0] != 'detect':
-                fromLang = langs[0]
-            srctxt = " ".join(tokens)
+        try:
+            data = json.loads(self.data)
+            srctxt = data['text']
+            if 'source' in data:
+                if data['source'] != 'detect':
+                    fromLang = data['source']
+            if 'target' in data:
+                if data['target']:
+                    toLang = data['target']
+        except ValueError as error:
+            # print("invalid json: %s" % error)
+            srctxt = self.data
+            # check whether the first token specifies the language pair
+            srctxt = self.data
+            tokens = srctxt.split()
+            langs = tokens.pop(0).split('-')
+            if len(langs) == 2:
+                toLang = langs[1]
+                if langs[0] != 'DL' and langs[0] != 'detect':
+                    fromLang = langs[0]
+                    srctxt = " ".join(tokens)
 
         if not fromLang:
             isReliable, textBytesFound, details = cld2.detect(srctxt, bestEffort=True)
