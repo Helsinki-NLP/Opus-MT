@@ -20,7 +20,7 @@
 	"target-languages" : "da+fo+is+no+nb+nn+sv"
     },
     "192.168.1.19:21001" : {
-	"source-languages" : "da+fo+is+no+nb+nn+sv"
-	"target-languages" : "et+fi",
+	"source-languages" : "da+fo+is+no+nb+nn+sv",
+	"target-languages" : "et+fi"
     }
 }
