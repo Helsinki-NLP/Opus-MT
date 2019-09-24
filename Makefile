@@ -63,6 +63,14 @@ INSTALL_DATA = ${INSTALL} -m 644
 all: opusMT-server opusMT-router
 
 
+## install the OPUS-MT server with hard-coded URLs for the services running
+## at the University of Helsinki
+.PHONY: opusMT-UH
+opusMT-UH:
+	${MAKE} OPUSMT_CONFIG=${SHAREDIR}/opusMT/opusMT-servers-UH.json opusMT-router
+
+
+## short-cut targets for installing MT-services for other language pairs
 enfi-server:
 	${MAKE} SRC_LANGS=en TRG_LANGS=fi MARIAN_PORT=10000 OPUSMT_PORT=20000 opusMT-server
 
@@ -82,12 +90,25 @@ fide-server:
 	${MAKE} SRC_LANGS=fi TRG_LANGS=de MARIAN_PORT=10005 OPUSMT_PORT=20005 opusMT-server
 
 
+etfi-scandinavian-server:
+	${MAKE} SRC_LANGS="et+fi" TRG_LANGS="da+fo+is+no+nb+nn+sv" MARIAN_PORT=11000 OPUSMT_PORT=21000 opusMT-server
+
+scandinavian-etfi-server:
+	${MAKE} SRC_LANGS="da+fo+is+no+nb+nn+sv" TRG_LANGS="et+fi" MARIAN_PORT=11001 OPUSMT_PORT=21001 opusMT-server
+
+etfi-germanic-server:
+	${MAKE} SRC_LANGS="et+fi" TRG_LANGS="de+af+fy+nl" MARIAN_PORT=11002 OPUSMT_PORT=21002 opusMT-server
+
+germanic-etfi-server:
+	${MAKE} SRC_LANGS="de+af+fy+nl" TRG_LANGS="et+fi" MARIAN_PORT=11003 OPUSMT_PORT=21003 opusMT-server
+
+
+
+
 
 .PHONY: opusMT-server opusMT-router
 opusMT-server: install-marian-server install-opusMT-server
 opusMT-router: install-opusMT-router
-
-opusMT-devserver: /etc/init.d/opusMT-dev-${DATASET}-${LANGPAIR}
 
 
 .PHONY: install-marian-server install-opusMT-server

@@ -1,18 +1,6 @@
 {
-    "192.168.1.18:20000" : {
-	"source-languages" : "en",
-	"target-languages" : "fi"
-    },
-    "192.168.1.18:20001" : {
+    "localhost:20000" : {
 	"source-languages" : "fi",
 	"target-languages" : "en"
     },
-    "192.168.1.14:20002" : {
-	"source-languages" : "sv",
-	"target-languages" : "fi"
-    },
-    "192.168.1.14:20003" : {
-	"source-languages" : "fi",
-	"target-languages" : "sv"
-    }
 }
