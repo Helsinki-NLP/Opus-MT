@@ -35,8 +35,8 @@ if __name__ == "__main__":
             # data = {'text': batch, 'source': args.source_language, 'target': args.target_language}
             # print("send batch " + json.dumps(data))
             # ws.send(json.dumps(data))
+            # print("send batch " + batch)
             langpair = args.source_language + '-' + args.target_language
-            print("send batch " + batch)
             ws.send(langpair + ' ' + batch)
             result = ws.recv()
             if args.text:
@@ -51,10 +51,12 @@ if __name__ == "__main__":
     if count:
         # translate the remaining sentences
         # print("send batch " + batch)
-        data = {'text': batch, 'source': args.source_language, 'target': args.target_language}
-        ws.send(json.dumps(data))
+        # data = {'text': batch, 'source': args.source_language, 'target': args.target_language}
+        # ws.send(json.dumps(data))
         # 'origin': "ws://{}:{}/translate".format(args.mthost, args.mtport)}
         # ws.send(batch)
+        langpair = args.source_language + '-' + args.target_language
+        ws.send(langpair + ' ' + batch)
         result = ws.recv()
         if args.text:
             json = json.loads(result)
