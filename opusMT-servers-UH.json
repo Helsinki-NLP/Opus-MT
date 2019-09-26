@@ -7,14 +7,6 @@
 	"source-languages" : "fi",
 	"target-languages" : "en"
     },
-    "192.168.1.14:20002" : {
-	"source-languages" : "sv",
-	"target-languages" : "fi"
-    },
-    "192.168.1.14:20003" : {
-	"source-languages" : "fi",
-	"target-languages" : "sv"
-    },
     "192.168.1.19:21000" : {
     	"source-languages" : "et+fi",
     	"target-languages" : "da+fo+is+no+nb+nn+sv"
@@ -22,5 +14,17 @@
     "192.168.1.19:21001" : {
     	"source-languages" : "da+fo+is+no+nb+nn+sv",
     	"target-languages" : "et+fi"
+    },
+    "192.168.1.19:21004" : {
+    	"source-languages" : "de+af+fy+nl",
+    	"target-languages" : "fr"
+    },
+    "192.168.1.14:21100" : {
+	"source-languages" : "fr",
+	"target-languages" : "et+fi"
+    },
+    "192.168.1.14:21101" : {
+	"source-languages" : "et+fi",
+	"target-languages" : "fr"
     }
 }

@@ -91,7 +91,8 @@ class Translate(WebSocket):
         langpair = fromLang + '-' + toLang
         if not langpair in opusMT:
             print('unsupported language pair ' + langpair)
-            self.sendMessage('ERROR: unsupported language pair ' + langpair)
+            # self.sendMessage('ERROR: unsupported language pair ' + langpair)
+            self.sendMessage(json.dumps({'result': 'ERROR: unsupported language pair ' + langpair}, sort_keys=True, indent=4))
             return
 
         server = opusMT[langpair]
