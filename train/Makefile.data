@@ -121,17 +121,20 @@ ${LOCAL_TRAIN_SRC}:
 	rm -f ${LOCAL_TRAIN_SRC} ${LOCAL_TRAIN_TRG}
 	-for s in ${SRCLANGS}; do \
 	  for t in ${TRGLANGS}; do \
-	    ${MAKE} DATASET=${DATASET} SRC:=$$s TRG:=$$t add-to-local-train-data; \
+	    ${MAKE} DATASET=${DATASET} SRC:=$$s TRG:=$$t \
+		add-to-local-train-and-heldout-data; \
 	  done \
 	done
+
+# 	    ${MAKE} DATASET=${DATASET} SRC:=$$s TRG:=$$t add-to-local-train-data; \
 
 ${LOCAL_TRAIN_TRG}: ${LOCAL_TRAIN_SRC}
 	@echo "done!"
 
-
+## TODO: reserve some data for tuning from each corpus
 add-to-local-train-data: ${CLEAN_TRAIN_SRC}
 ifneq (${CLEAN_TRAIN_SRC},)
-	echo "${CLEAN_TRAIN_SRC}"  >> ${dir ${LOCAL_TRAIN_SRC}}/README
+	echo "${CLEAN_TRAIN_SRC}" >> ${dir ${LOCAL_TRAIN_SRC}}/README
 ifneq (${words ${TRGLANGS}},1)
 	echo "more than one target language";
 	zcat ${CLEAN_TRAIN_SRC} |\
@@ -142,6 +145,50 @@ else
 endif
 	zcat ${CLEAN_TRAIN_TRG} >> ${LOCAL_TRAIN_TRG}
 endif
+
+
+## extract training data but keep some heldout data for each dataset
+add-to-local-train-and-heldout-data: ${CLEAN_TRAIN_SRC}
+ifneq (${CLEAN_TRAIN_SRC},)
+	echo "${CLEAN_TRAIN_SRC}" >> ${dir ${LOCAL_TRAIN_SRC}}/README
+	mkdir -p ${HELDOUT_DIR}
+ifneq (${words ${TRGLANGS}},1)
+	echo "more than one target language";
+	for c in ${CLEAN_TRAIN_SRC}; do \
+	  if (( `zcat $$c | head -$$(($(HELDOUTSIZE) + $(HELDOUTSIZE))) | wc -l` == $$(($(HELDOUTSIZE) + $(HELDOUTSIZE))) )); then \
+	    zcat $$c | tail -n +$$(($(HELDOUTSIZE) + 1)) |\
+	    sed "s/^/>>${TRG}<< /" >> ${LOCAL_TRAIN_SRC}; \
+	    zcat $$c | head -$(HELDOUTSIZE) |\
+	    sed "s/^/>>${TRG}<< /" | gzip -c \
+	    > ${HELDOUT_DIR}/`basename $$c`; \
+	  else \
+	    zcat $$c | sed "s/^/>>${TRG}<< /" >> ${LOCAL_TRAIN_SRC}; \
+	  fi \
+	done
+else
+	echo "only one target language"
+	for c in ${CLEAN_TRAIN_SRC}; do \
+	  if (( `zcat $$c | head -$$(($(HELDOUTSIZE) + $(HELDOUTSIZE))) | wc -l` == $$(($(HELDOUTSIZE) + $(HELDOUTSIZE))) )); then \
+	    zcat $$c | tail -n +$$(($(HELDOUTSIZE) + 1)) >> ${LOCAL_TRAIN_SRC}; \
+	    zcat $$c | head -$(HELDOUTSIZE) |\
+	    gzip -c > ${HELDOUT_DIR}/`basename $$c`; \
+	  else \
+	    zcat $$c >> ${LOCAL_TRAIN_SRC}; \
+	  fi \
+	done
+endif
+	for c in ${CLEAN_TRAIN_TRG}; do \
+	  if (( `zcat $$c | head -$$(($(HELDOUTSIZE) + $(HELDOUTSIZE))) | wc -l` == $$(($(HELDOUTSIZE) + $(HELDOUTSIZE))) )); then \
+	    zcat $$c | tail -n +$$(($(HELDOUTSIZE) + 1)) >> ${LOCAL_TRAIN_TRG}; \
+	    zcat $$c | head -$(HELDOUTSIZE) |\
+	    gzip -c > ${HELDOUT_DIR}/`basename $$c`; \
+	  else \
+	    zcat $$c >> ${LOCAL_TRAIN_TRG}; \
+	  fi \
+	done
+endif
+
+
 
 
 
@@ -263,6 +310,15 @@ ifneq (${TESTSET},${DEVSET})
 	  cut -f1 $@.shuffled | tail -${TESTSIZE} > ${TEST_SRC}; \
 	  cut -f2 $@.shuffled | tail -${TESTSIZE} > ${TEST_TRG}; \
 	  echo "testset = top ${TESTSIZE} lines of $@.shuffled!" >> ${dir $@}/README; \
+	fi
+else
+	mkdir -p ${dir $@}
+	if (( `cat $<.shuffled | wc -l` < $$((${DEVSIZE} + ${TESTSIZE})) )); then \
+	  cut -f1 $<.shuffled | tail -n +$$((${DEVMINSIZE} + 1)) > ${TEST_SRC}; \
+	  cut -f2 $<.shuffled | tail -n +$$((${DEVMINSIZE} + 1)) > ${TEST_TRG}; \
+	else \
+	  cut -f1 $<.shuffled | tail -${TESTSIZE} > ${TEST_SRC}; \
+	  cut -f2 $<.shuffled | tail -${TESTSIZE} > ${TEST_TRG}; \
 	fi
 endif
 

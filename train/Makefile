@@ -131,9 +131,11 @@ TUNESET  = OpenSubtitles
 
 ## size of dev data, test data and BPE merge operations
 
-DEVSIZE    = 5000
-DEVMINSIZE = 1000
-TESTSIZE   = 5000
+DEVSIZE     = 5000
+DEVMINSIZE  = 1000
+TESTSIZE    = 5000
+HELDOUTSIZE = ${DEVSIZE}
+
 BPESIZE    = 32000
 SRCBPESIZE = ${BPESIZE}
 TRGBPESIZE = ${BPESIZE}
@@ -191,7 +193,6 @@ TRAIN_TRG = ${WORKDIR}/train/${DATASET}.trg
 LOCAL_TRAIN_SRC = ${TMPDIR}/train/${DATASET}.src
 LOCAL_TRAIN_TRG = ${TMPDIR}/train/${DATASET}.trg
 
-
 TUNE_SRC  = ${WORKDIR}/tune/${TUNESET}.src
 TUNE_TRG  = ${WORKDIR}/tune/${TUNESET}.trg
 
@@ -200,6 +201,9 @@ DEV_TRG   = ${WORKDIR}/val/${DEVSET}.trg
 
 TEST_SRC  = ${WORKDIR}/test/${TESTSET}.src
 TEST_TRG  = ${WORKDIR}/test/${TESTSET}.trg
+
+## heldout data directory (keep one set per data set)
+HELDOUT_DIR  = ${WORKDIR}/heldout
 
 
 MODEL_BASENAME = ${MODEL}.${MODELTYPE}.model${NR}
@@ -218,7 +222,7 @@ dist: ${DIST_PACKAGE}
 ${DIST_PACKAGE}: ${MODEL_FINAL}
 	touch ${WORKDIR}/source.tcmodel
 	cp ${BPESRCMODEL} ${WORKDIR}/source.bpe
-	sed -e 's# - /.*/\([^/]*\)$$#\1#' \
+	sed -e 's# - /.*/\([^/]*\)$$# - \1#' \
 	    -e 's/beam-size: [0-9]*$$/beam-size: 6/' \
 	    -e 's/mini-batch: [0-9]*$$/mini-batch: 1/' \
 	    -e 's/maxi-batch: [0-9]*$$/maxi-batch: 1/' \
@@ -234,11 +238,11 @@ ${DIST_PACKAGE}: ${MODEL_FINAL}
 
 
 
-ALLLANGPAIRS = ${shell ls ${WORKHOME} | grep -- '-'}
+ALLLANGPAIRS = ${shell ls ${WORKHOME} | grep -- '-' | grep -v old}
 
 eval-all:
 	for l in ${ALLLANGPAIRS}; do \
-	  if  [ `ls ${WORKHOME}/$$l/${DATASET}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.*.npz | wc -l` -gt 0 ]; then \
+	  if  [ `find ${WORKHOME}/$$l -name '${DATASET}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.*.npz' | wc -l` -gt 0 ]; then \
 	    ${MAKE} SRCLANGS="`echo $$l | cut -f1 -d'-' | sed 's/\\+/ /g'`" \
 		    TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" eval; \
 	  fi \
@@ -259,7 +263,7 @@ evalfiskmo:
 	  ${MAKE} SRC=sv TRG=fi TESTSET=fiskmo_testset eval; \
 	fi
 	if [ "${filter sv,${TRGLANGS}}" == "sv" ]; then \
-	  ${MAKE} TRG=fi SRC=sv TESTSET=fiskmo_testset eval; \
+	  ${MAKE} TRG=sv SRC=fi TESTSET=fiskmo_testset eval; \
 	fi
 
 
@@ -273,10 +277,10 @@ evalnews:
 	  ${MAKE} SRC=en TRG=fi TESTSET=newstest2018 eval; \
 	fi
 	if [ "${filter en,${TRGLANGS}}" == "en" ]; then \
-	  ${MAKE} TRG=fi SRC=en TESTSET=newstest2015 eval; \
-	  ${MAKE} TRG=fi SRC=en TESTSET=newstest2016 eval; \
-	  ${MAKE} TRG=fi SRC=en TESTSET=newstest2017 eval; \
-	  ${MAKE} TRG=fi SRC=en TESTSET=newstest2018 eval; \
+	  ${MAKE} TRG=en SRC=fi TESTSET=newstest2015 eval; \
+	  ${MAKE} TRG=en SRC=fi TESTSET=newstest2016 eval; \
+	  ${MAKE} TRG=en SRC=fi TESTSET=newstest2017 eval; \
+	  ${MAKE} TRG=en SRC=fi TESTSET=newstest2018 eval; \
 	fi
 
 
@@ -300,6 +304,10 @@ run-eval:
 	${MAKE} SRCLANGS=fr TRGLANGS=nl SRC=fr TRG=nl eval
 	${MAKE} SRCLANGS=nl TRGLANGS=fr SRC=nl TRG=fr eval
 	${MAKE} SRCLANGS=sv TRGLANGS=de SRC=sv TRG=de eval
+
+multi-evalfiskmo:
+	${MAKE} SRCLANGS="da fo is no nb nn sv" TRGLANGS="et fi" SRC=sv TRG=fi evalfiskmo
+	${MAKE} TRGLANGS="da fo is no nb nn sv" SRCLANGS="et fi" SRC=fi TRG=sv evalfiskmo
 
 
 all-evalfiskmo: 
