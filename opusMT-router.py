@@ -24,6 +24,8 @@ parser.add_argument('-t','--deftrg','--default-target-language', type=str, defau
                     help='default target language')
 parser.add_argument('-s','--defsrc','--default-source-language', type=str, default='fi',
                     help='default source language')
+parser.add_argument('-m','--max-input-length', type=int, default=1000,
+                   help='maximum length of the input string')
 
 
 args = parser.parse_args()
@@ -80,6 +82,10 @@ class Translate(WebSocket):
                 if langs[0] != 'DL' and langs[0] != 'detect':
                     fromLang = langs[0]
                 srctxt = " ".join(tokens)
+
+        if len(srctxt) > args.max_input_length:
+            self.sendMessage(json.dumps({'result': 'ERROR: Input too long! Maximum length = {}'.format(args.max_input_length)}, sort_keys=True, indent=4))
+            return
 
         if not fromLang:
             isReliable, textBytesFound, details = cld2.detect(srctxt, bestEffort=True)
