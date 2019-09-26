@@ -6,8 +6,6 @@
 DATASET   = opus
 SRC_LANGS = fi
 TRG_LANGS = en
-# SRC_LANGS = de+fr+sv+en
-# TRG_LANGS = et+hu+fi
 
 LANGPAIR = ${SRC_LANGS}-${TRG_LANGS}
 
@@ -102,6 +100,13 @@ etfi-germanic-server:
 germanic-etfi-server:
 	${MAKE} SRC_LANGS="de+af+fy+nl" TRG_LANGS="et+fi" MARIAN_PORT=11003 OPUSMT_PORT=21003 opusMT-server
 
+
+
+french-etfi-server:
+	${MAKE} SRC_LANGS="fr" TRG_LANGS="et+fi" MARIAN_PORT=11100 OPUSMT_PORT=21100 opusMT-server
+
+etfi-french-server:
+	${MAKE} TRG_LANGS="fr" SRC_LANGS="et+fi" MARIAN_PORT=11101 OPUSMT_PORT=21101 opusMT-server
 
 
 
