@@ -24,6 +24,8 @@ parser.add_argument('-t','--deftrg','--default-target-language', type=str, defau
                     help='default target language')
 parser.add_argument('-s','--defsrc','--default-source-language', type=str, default='fi',
                     help='default source language')
+parser.add_argument('-m','--max-input-length', type=int, default=1000,
+                   help='maximum length of the input string')
 
 
 args = parser.parse_args()
@@ -59,15 +61,31 @@ class Translate(WebSocket):
         toLang = args.deftrg
         prefix = ''
 
-        ## check whether the first token specifies the language pair
-        srctxt = self.data
-        tokens = srctxt.split()
-        langs = tokens.pop(0).split('-')
-        if len(langs) == 2:
-            toLang = langs[1]
-            if langs[0] != 'DL' and langs[0] != 'detect':
-                fromLang = langs[0]
-            srctxt = " ".join(tokens)
+        try:
+            data = json.loads(self.data)
+            srctxt = data['text']
+            if 'source' in data:
+                if data['source'] != 'DL' and data['source'] != 'detect':
+                    fromLang = data['source']
+            if 'target' in data:
+                if data['target']:
+                    toLang = data['target']
+        except ValueError as error:
+            # print("invalid json: %s" % error)
+            srctxt = self.data
+            # check whether the first token specifies the language pair
+            srctxt = self.data
+            tokens = srctxt.split()
+            langs = tokens.pop(0).split('-')
+            if len(langs) == 2:
+                toLang = langs[1]
+                if langs[0] != 'DL' and langs[0] != 'detect':
+                    fromLang = langs[0]
+                srctxt = " ".join(tokens)
+
+        if len(srctxt) > args.max_input_length:
+            self.sendMessage(json.dumps({'result': 'ERROR: Input too long! Maximum length = {}'.format(args.max_input_length)}, sort_keys=True, indent=4))
+            return
 
         if not fromLang:
             isReliable, textBytesFound, details = cld2.detect(srctxt, bestEffort=True)
@@ -79,7 +97,8 @@ class Translate(WebSocket):
         langpair = fromLang + '-' + toLang
         if not langpair in opusMT:
             print('unsupported language pair ' + langpair)
-            self.sendMessage('ERROR: unsupported language pair ' + langpair)
+            # self.sendMessage('ERROR: unsupported language pair ' + langpair)
+            self.sendMessage(json.dumps({'result': 'ERROR: unsupported language pair ' + langpair}, sort_keys=True, indent=4))
             return
 
         server = opusMT[langpair]
