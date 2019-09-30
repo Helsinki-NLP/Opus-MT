@@ -200,7 +200,8 @@ endif
 # --> in case we need more data for development
 #     we can take it from training data
 
-${DEV_SRC}: ${TRAIN_SRC}.${PRE_SRC}.gz ${TRAIN_TRG}.${PRE_TRG}.gz
+
+${DEV_SRC}.shuffled: ${TRAIN_SRC}.${PRE_SRC}.gz ${TRAIN_TRG}.${PRE_TRG}.gz
 	mkdir -p ${dir $@}
 	rm -f ${DEV_SRC} ${DEV_TRG}
 	-for s in ${SRCLANGS}; do \
@@ -208,9 +209,13 @@ ${DEV_SRC}: ${TRAIN_SRC}.${PRE_SRC}.gz ${TRAIN_TRG}.${PRE_TRG}.gz
 	    ${MAKE} SRC=$$s TRG=$$t add-to-dev-data; \
 	  done \
 	done
-	paste ${DEV_SRC} ${DEV_TRG} | shuf > $@.shuffled
+	paste ${DEV_SRC} ${DEV_TRG} | shuf > $@
+
+
 ## if we have less than twice the amount of DEVMINSIZE in the data set
 ## --> extract some data from the training data to be used as devdata
+
+${DEV_SRC}: %: %.shuffled
 	if (( `cat $@.shuffled | wc -l` < $$((${DEVMINSIZE} + ${DEVMINSIZE})) )); then \
 	  echo "Need more devdata - take some from traindata!"; \
 	  echo ".......... (1) extract top $$((${DEVSIZE} + ${TESTSIZE})) lines"; \
@@ -251,7 +256,7 @@ ifeq (${DEVSET},${TESTSET})
 	  echo "testset = top ${DEVMINSIZE} lines of $@.shuffled!"  >> ${dir ${TEST_SRC}}/README; \
 	  cut -f1 $@.shuffled | tail -n +$$((${DEVMINSIZE} + 1)) > ${TEST_SRC}; \
 	  cut -f2 $@.shuffled | tail -n +$$((${DEVMINSIZE} + 1)) > ${TEST_TRG}; \
-	else
+	else \
 	  echo "devset = top ${DEVSIZE} lines of $@.shuffled!"  >> ${dir $@}/README; \
 	  cut -f1 $@.shuffled | head -${DEVSIZE} > ${DEV_SRC}; \
 	  cut -f2 $@.shuffled | head -${DEVSIZE} > ${DEV_TRG}; \
