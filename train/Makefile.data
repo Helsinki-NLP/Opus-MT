@@ -151,7 +151,7 @@ endif
 add-to-local-train-and-heldout-data: ${CLEAN_TRAIN_SRC}
 ifneq (${CLEAN_TRAIN_SRC},)
 	echo "${CLEAN_TRAIN_SRC}" >> ${dir ${LOCAL_TRAIN_SRC}}/README
-	mkdir -p ${HELDOUT_DIR}
+	mkdir -p ${HELDOUT_DIR}/${SRC}-${TRG}
 ifneq (${words ${TRGLANGS}},1)
 	echo "more than one target language";
 	for c in ${CLEAN_TRAIN_SRC}; do \
@@ -160,7 +160,7 @@ ifneq (${words ${TRGLANGS}},1)
 	    sed "s/^/>>${TRG}<< /" >> ${LOCAL_TRAIN_SRC}; \
 	    zcat $$c | head -$(HELDOUTSIZE) |\
 	    sed "s/^/>>${TRG}<< /" | gzip -c \
-	    > ${HELDOUT_DIR}/`basename $$c`; \
+	    > ${HELDOUT_DIR}/${SRC}-${TRG}/`basename $$c`; \
 	  else \
 	    zcat $$c | sed "s/^/>>${TRG}<< /" >> ${LOCAL_TRAIN_SRC}; \
 	  fi \
@@ -171,7 +171,7 @@ else
 	  if (( `zcat $$c | head -$$(($(HELDOUTSIZE) + $(HELDOUTSIZE))) | wc -l` == $$(($(HELDOUTSIZE) + $(HELDOUTSIZE))) )); then \
 	    zcat $$c | tail -n +$$(($(HELDOUTSIZE) + 1)) >> ${LOCAL_TRAIN_SRC}; \
 	    zcat $$c | head -$(HELDOUTSIZE) |\
-	    gzip -c > ${HELDOUT_DIR}/`basename $$c`; \
+	    gzip -c > ${HELDOUT_DIR}/${SRC}-${TRG}/`basename $$c`; \
 	  else \
 	    zcat $$c >> ${LOCAL_TRAIN_SRC}; \
 	  fi \
@@ -181,7 +181,7 @@ endif
 	  if (( `zcat $$c | head -$$(($(HELDOUTSIZE) + $(HELDOUTSIZE))) | wc -l` == $$(($(HELDOUTSIZE) + $(HELDOUTSIZE))) )); then \
 	    zcat $$c | tail -n +$$(($(HELDOUTSIZE) + 1)) >> ${LOCAL_TRAIN_TRG}; \
 	    zcat $$c | head -$(HELDOUTSIZE) |\
-	    gzip -c > ${HELDOUT_DIR}/`basename $$c`; \
+	    gzip -c > ${HELDOUT_DIR}/${SRC}-${TRG}/`basename $$c`; \
 	  else \
 	    zcat $$c >> ${LOCAL_TRAIN_TRG}; \
 	  fi \

@@ -439,14 +439,16 @@ memad:
 	done
 
 memad-multi:
-	${MAKE} SRCLANGS="da fo is no nb nn sv" TRGLANGS="fi et" traindata devdata
-	${MAKE} SRCLANGS="da fo is no nb nn sv" TRGLANGS="fi et" train.submit-multigpu
-	${MAKE} TRGLANGS="da fo is no nb nn sv" SRCLANGS="fi et" traindata devdata
-	${MAKE} TRGLANGS="da fo is no nb nn sv" SRCLANGS="fi et" train.submit-multigpu
-	for s in "en fr" "fi et" "de nl af fy da fo is no nb nn sv" "ca es ga it pt_br pt"; do \
-	  for t in "en fr" "fi et" "de nl af fy da fo is no nb nn sv" "ca es ga it pt_br pt"; do \
+	for s in "da fo is no nb nn sv" "en fr" "et hu fi" "de nl af fy" "ca es fr ga it la oc pt_br pt"; do \
+	      ${MAKE} SRCLANGS="$$s" TRGLANGS="$$s" traindata devdata; \
+	      ${MAKE} SRCLANGS="$$s" TRGLANGS="$$s" HPC_CORES=1 train.submit-multigpu; \
+	done
+	for s in "da fo is no nb nn sv" en fr "en fr" "et hu fi" fi et "de nl af fy" "ca es fr ga it la oc pt_br pt"; do \
+	  for t in "da fo is no nb nn sv" en fr "en fr" "et hu fi" fi et "de nl af fy" "ca es fr ga it la oc pt_br pt"; do \
+	    if [ "$$s" != "$$t" ]; then \
 	      ${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" traindata devdata; \
 	      ${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" HPC_CORES=1 train.submit-multigpu; \
+	    fi \
 	  done \
 	done
 
