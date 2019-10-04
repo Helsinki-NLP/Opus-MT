@@ -423,14 +423,8 @@ new-models:
 
 
 memad:
-	for s in fi sv de fr nl; do \
-	  ${MAKE} SRCLANGS=$$s TRGLANGS=en traindata devdata; \
-	  ${MAKE} SRCLANGS=$$s TRGLANGS=en HPC_CORES=1 train.submit-multigpu; \
-	  ${MAKE} TRGLANGS=$$s SRCLANGS=en traindata devdata; \
-	  ${MAKE} TRGLANGS=$$s SRCLANGS=en HPC_CORES=1 train.submit-multigpu; \
-	done
-	for s in fi sv de fr nl; do \
-	  for t in fi sv de fr nl; do \
+	for s in en fi sv de fr nl; do \
+	  for t in en fi sv de fr nl; do \
 	    if [ "$$s" != "$$t" ]; then \
 	      ${MAKE} SRCLANGS=$$s TRGLANGS=$$t traindata devdata; \
 	      ${MAKE} SRCLANGS=$$s TRGLANGS=$$t HPC_CORES=1 train.submit-multigpu; \

@@ -249,24 +249,24 @@ ${DEV_SRC}: %: %.shuffled
 ## ---> reserve at least DEVMINSIZE data for dev data and keep the rest for testing
 ifeq (${DEVSET},${TESTSET})
 	if (( `cat $@.shuffled | wc -l` < $$((${DEVSIZE} + ${TESTSIZE})) )); then \
-	  echo "devset = top ${DEVMINSIZE} lines of $@.shuffled!"  >> ${dir $@}/README; \
+	  echo "devset = top ${DEVMINSIZE} lines of ${notdir $@}.shuffled!"  >> ${dir $@}/README; \
 	  cut -f1 $@.shuffled | head -${DEVMINSIZE} > ${DEV_SRC}; \
 	  cut -f2 $@.shuffled | head -${DEVMINSIZE} > ${DEV_TRG}; \
 	  mkdir -p ${dir ${TEST_SRC}}; \
-	  echo "testset = top ${DEVMINSIZE} lines of $@.shuffled!"  >> ${dir ${TEST_SRC}}/README; \
+	  echo "testset = top ${DEVMINSIZE} lines of ../val/${notdir $@}.shuffled!"  >> ${dir ${TEST_SRC}}/README; \
 	  cut -f1 $@.shuffled | tail -n +$$((${DEVMINSIZE} + 1)) > ${TEST_SRC}; \
 	  cut -f2 $@.shuffled | tail -n +$$((${DEVMINSIZE} + 1)) > ${TEST_TRG}; \
 	else \
-	  echo "devset = top ${DEVSIZE} lines of $@.shuffled!"  >> ${dir $@}/README; \
+	  echo "devset = top ${DEVSIZE} lines of ${notdir $@}.shuffled!"  >> ${dir $@}/README; \
 	  cut -f1 $@.shuffled | head -${DEVSIZE} > ${DEV_SRC}; \
 	  cut -f2 $@.shuffled | head -${DEVSIZE} > ${DEV_TRG}; \
 	  mkdir -p ${dir ${TEST_SRC}}; \
-	  echo "testset = top ${DEVSIZE} lines of $@.shuffled!"  >> ${dir ${TEST_SRC}}/README; \
+	  echo "testset = top ${DEVSIZE} lines of ../val/${notdir $@}.shuffled!"  >> ${dir ${TEST_SRC}}/README; \
 	  cut -f1 $@.shuffled | tail -${TESTSIZE} > ${TEST_SRC}; \
 	  cut -f2 $@.shuffled | tail -${TESTSIZE} > ${TEST_TRG}; \
 	fi
 else
-	echo "devset = top ${DEVSIZE} lines of $@.shuffled!"  >> ${dir $@}/README
+	echo "devset = top ${DEVSIZE} lines of ${notdir $@}.shuffled!"  >> ${dir $@}/README
 	cut -f1 $@.shuffled | head -${DEVSIZE} > ${DEV_SRC}
 	cut -f2 $@.shuffled | head -${DEVSIZE} > ${DEV_TRG}
 endif
