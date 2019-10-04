@@ -214,7 +214,8 @@ MODEL_DECODER  = ${MODEL_FINAL}.decoder.yml
 
 ## make a distribution package
 
-DIST_PACKAGE = ${WORKHOME}/models/${LANGSTR}/${DATASET}-${shell date +%F}.zip
+# DIST_PACKAGE = ${WORKHOME}/models/${LANGSTR}/${DATASET}-${shell date +%F}.zip
+DIST_PACKAGE = ${WORKHOME}/models/${LANGSTR}/${DATASET}.zip
 
 .PHONY: dist
 dist: ${DIST_PACKAGE}
@@ -233,18 +234,29 @@ ${DIST_PACKAGE}: ${MODEL_FINAL}
 		${notdir ${MODEL_VOCAB}} \
 		source.tcmodel source.bpe decoder.yml
 	mkdir -p ${dir $@}
-	mv -f ${WORKDIR}/${notdir $@} $@
+	mv -f ${WORKDIR}/${notdir $@} ${@:.zip=}-${shell date +%F}.zip
+	rm -f $@
+	cd ${dir $@} && ln -s ${notdir ${@:.zip=}-${shell date +%F}.zip} ${notdir $@}
 	rm -f ${WORKDIR}/decoder.yml ${WORKDIR}/source.bpe ${WORKDIR}/source.tcmodel
-
 
 
 ALLLANGPAIRS = ${shell ls ${WORKHOME} | grep -- '-' | grep -v old}
 
+## evaluate all available models
 eval-all:
 	for l in ${ALLLANGPAIRS}; do \
 	  if  [ `find ${WORKHOME}/$$l -name '${DATASET}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.*.npz' | wc -l` -gt 0 ]; then \
 	    ${MAKE} SRCLANGS="`echo $$l | cut -f1 -d'-' | sed 's/\\+/ /g'`" \
 		    TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" eval; \
+	  fi \
+	done
+
+## make a distribution of all available models
+dist-all:
+	for l in ${ALLLANGPAIRS}; do \
+	  if  [ `find ${WORKHOME}/$$l -name '${DATASET}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.*.npz' | wc -l` -gt 0 ]; then \
+	    ${MAKE} SRCLANGS="`echo $$l | cut -f1 -d'-' | sed 's/\\+/ /g'`" \
+		    TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" dist; \
 	  fi \
 	done
 
@@ -396,32 +408,6 @@ all2en:
 	  fi \
 	done
 
-
-new-models:
-	for s in "da fo is no nb nn sv" "et fi" "de af fy nl"; do \
-	  for t in en fr; do \
-		${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" traindata; \
-		${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" devdata; \
-		${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" HPC_CORES=1 train.submit-multigpu; \
-	  done \
-	done
-	for t in "da fo is no nb nn sv" "et fi" "de af fy nl"; do \
-	  for s in fr en; do \
-		${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" traindata; \
-		${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" devdata; \
-		${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" HPC_CORES=1 train.submit-multigpu; \
-	  done \
-	done
-	for s in "da fo is no nb nn sv" "et fi" "de af fy nl"; do \
-	  for t in "da fo is no nb nn sv" "et fi" "de af fy nl"; do \
-		${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" traindata; \
-		${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" devdata; \
-		${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" HPC_CORES=1 train.submit-multigpu; \
-	  done \
-	done
-
-
-
 memad:
 	for s in en fi sv de fr nl; do \
 	  for t in en fi sv de fr nl; do \
@@ -453,11 +439,6 @@ memad-fi:
 	  ${MAKE} TRGLANGS=$$l SRCLANGS=fi traindata devdata; \
 	  ${MAKE} TRGLANGS=$$l SRCLANGS=fi HPC_CORES=1 train.submit-multigpu; \
 	done
-#	${MAKE} SRCLANGS="en fr de nl da fo is no nb nn sv et fi" \
-#		TRGLANGS="en fr de nl da fo is no nb nn sv et fi" traindata
-#	${MAKE} SRCLANGS="en fr de nl da fo is no nb nn sv et fi" \
-#		TRGLANGS="en fr de nl da fo is no nb nn sv et fi" \
-#		HPC_CORES=1 train.submit-multigpu
 
 
 
@@ -786,7 +767,7 @@ endif
 	echo '#SBATCH -p gpu' >> $@
 ifeq (${shell hostname --domain},bullx)
 	echo '#SBATCH --account=${CSCPROJECT}' >> $@
-	echo '#SBATCH --gres=gpu:${GPU}:${NR_GPUS},nvme:300' >> $@
+	echo '#SBATCH --gres=gpu:${GPU}:${NR_GPUS},nvme:${HPC_DISK}' >> $@
 else
 	echo '#SBATCH --gres=gpu:${GPU}:${NR_GPUS}' >> $@
 endif
@@ -823,7 +804,7 @@ ifdef EMAIL
 endif
 ifeq (${shell hostname --domain},bullx)
 	echo '#SBATCH --account=${CSCPROJECT}' >> $@
-	echo '#SBATCH --gres=nvme:500' >> $@
+	echo '#SBATCH --gres=nvme:${HPC_DISK}' >> $@
 endif
 	echo '#SBATCH -n ${HPC_CORES}' >> $@
 	echo '#SBATCH -N ${HPC_NODES}' >> $@

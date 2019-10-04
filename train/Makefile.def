@@ -22,6 +22,7 @@ NR_GPUS     = 1
 HPC_MEM     = 8g
 HPC_NODES   = 1
 HPC_CORES   = 1
+HPC_DISK    = 500
 HPC_QUEUE   = serial
 # HPC_MODULES = nlpl-opus python-env/3.4.1 efmaral moses
 # HPC_MODULES = nlpl-opus moses cuda-env marian python-3.5.3-ml
