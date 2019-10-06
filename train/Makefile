@@ -251,6 +251,15 @@ eval-all:
 	  fi \
 	done
 
+compare-all:
+	for l in ${ALLLANGPAIRS}; do \
+	  if  [ `find ${WORKHOME}/$$l -name '${DATASET}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.*.npz' | wc -l` -gt 0 ]; then \
+	    ${MAKE} SRCLANGS="`echo $$l | cut -f1 -d'-' | sed 's/\\+/ /g'`" \
+		    TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" compare; \
+	  fi \
+	done
+
+
 ## make a distribution of all available models
 dist-all:
 	for l in ${ALLLANGPAIRS}; do \
@@ -259,6 +268,22 @@ dist-all:
 		    TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" dist; \
 	  fi \
 	done
+
+scores.txt:
+	cd ${WORKHOME} && \
+	grep base */*eval | cut -f1,2- -d '/' | cut -f1,8- -d '.' | \
+	sed 's/.eval:baseline//' | sort  > ${PWD}/$@
+
+
+## upload to Object Storage
+## Don't forget to run this before uploading!
+#	source project_2000661-openrc.sh
+upload:
+	cd ${WORKHOME} && swift upload OPUS-MT --changed --skip-identical models
+	swift post OPUS-MT --read-acl ".r:*"
+
+upload-scores: scores.txt
+	swift upload OPUS-MT --changed --skip-identical $<
 
 
 
@@ -325,17 +350,19 @@ multi-evalfiskmo:
 all-evalfiskmo: 
 	${MAKE} SRCLANGS=sv TRGLANGS=fi SRC=sv TRG=fi evalfiskmo
 	${MAKE} TRGLANGS=sv SRCLANGS=fi SRC=fi TRG=sv evalfiskmo
-	${MAKE} SRCLANGS="da no nb nn sv" TRGLANGS=fi SRC=sv TRG=fi evalfiskmo
-	${MAKE} TRGLANGS="da no nb nn sv" SRCLANGS=fi SRC=fi TRG=sv evalfiskmo
-	${MAKE} SRCLANGS="de da en no nb nn nl sv" TRGLANGS=fi SRC=sv TRG=fi evalfiskmo
-	${MAKE} TRGLANGS="de da en no nb nn nl sv" SRCLANGS=fi SRC=fi TRG=sv evalfiskmo
-	${MAKE} SRCLANGS="da no nb nn sv" TRGLANGS="fi et" SRC=sv TRG=fi evalfiskmo
-	${MAKE} TRGLANGS="da no nb nn sv" SRCLANGS="fi et" SRC=fi TRG=sv evalfiskmo
-	${MAKE} SRCLANGS="da fo is no nb nn sv" TRGLANGS="fi et hu" SRC=sv TRG=fi evalfiskmo
-	${MAKE} TRGLANGS="da fo is no nb nn sv" SRCLANGS="fi et hu" SRC=fi TRG=sv evalfiskmo
-	${MAKE} SRCLANGS="da no nb nn sv" TRGLANGS="fi et" SRC=sv TRG=fi evalfiskmo
-	${MAKE} TRGLANGS="da no nb nn sv" SRCLANGS="fi et" SRC=fi TRG=sv evalfiskmo
+	${MAKE} SRCLANGS="da fo is no nb nn sv" TRGLANGS=fi SRC=sv TRG=fi evalfiskmo
+	${MAKE} SRCLANGS="da fo is no nb nn sv" TRGLANGS='et hu fi' SRC=sv TRG=fi evalfiskmo
 
+#	${MAKE} SRCLANGS="da no nb nn sv" TRGLANGS=fi SRC=sv TRG=fi evalfiskmo
+#	${MAKE} TRGLANGS="da no nb nn sv" SRCLANGS=fi SRC=fi TRG=sv evalfiskmo
+#	${MAKE} SRCLANGS="de da en no nb nn nl sv" TRGLANGS=fi SRC=sv TRG=fi evalfiskmo
+#	${MAKE} TRGLANGS="de da en no nb nn nl sv" SRCLANGS=fi SRC=fi TRG=sv evalfiskmo
+#	${MAKE} SRCLANGS="da no nb nn sv" TRGLANGS="fi et" SRC=sv TRG=fi evalfiskmo
+#	${MAKE} TRGLANGS="da no nb nn sv" SRCLANGS="fi et" SRC=fi TRG=sv evalfiskmo
+#	${MAKE} SRCLANGS="da fo is no nb nn sv" TRGLANGS="fi et hu" SRC=sv TRG=fi evalfiskmo
+#	${MAKE} TRGLANGS="da fo is no nb nn sv" SRCLANGS="fi et hu" SRC=fi TRG=sv evalfiskmo
+#	${MAKE} SRCLANGS="da no nb nn sv" TRGLANGS="fi et" SRC=sv TRG=fi evalfiskmo
+#	${MAKE} TRGLANGS="da no nb nn sv" SRCLANGS="fi et" SRC=fi TRG=sv evalfiskmo
 
 #	${MAKE} SRCLANGS=sv TRGLANGS=fi SRC=sv TRG=fi TRAINSET=Finlex evalfiskmo
 #	${MAKE} TRGLANGS=sv SRCLANGS=fi SRC=fi TRG=sv TRAINSET=Finlex evalfiskmo
@@ -423,14 +450,31 @@ memad-multi:
 	      ${MAKE} SRCLANGS="$$s" TRGLANGS="$$s" traindata devdata; \
 	      ${MAKE} SRCLANGS="$$s" TRGLANGS="$$s" HPC_CORES=1 train.submit-multigpu; \
 	done
-	for s in "da fo is no nb nn sv" en fr "en fr" "et hu fi" fi et "de nl af fy" "ca es fr ga it la oc pt_br pt"; do \
-	  for t in "da fo is no nb nn sv" en fr "en fr" "et hu fi" fi et "de nl af fy" "ca es fr ga it la oc pt_br pt"; do \
+	for s in "da fo is no nb nn sv" "en fr" "et hu fi" "de nl af fy" "ca es fr ga it la oc pt_br pt"; do \
+	  for t in "da fo is no nb nn sv" "en fr" "et hu fi" "de nl af fy" "ca es fr ga it la oc pt_br pt"; do \
 	    if [ "$$s" != "$$t" ]; then \
 	      ${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" traindata devdata; \
 	      ${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" HPC_CORES=1 train.submit-multigpu; \
 	    fi \
 	  done \
 	done
+
+memad-multi2:
+	for s in "en fr" "et hu fi" "de nl af fy" "ca es fr ga it la oc pt_br pt"; do \
+	  for t in "da fo is no nb nn sv" "en fr" "et hu fi" "de nl af fy" "ca es fr ga it la oc pt_br pt"; do \
+	    if [ "$$s" != "$$t" ]; then \
+	      ${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" traindata devdata; \
+	      ${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" HPC_CORES=1 train.submit-multigpu; \
+	    fi \
+	  done \
+	done
+
+
+
+memad-ethufi:
+	${MAKE} SRCLANGS="et hu fi" TRGLANGS="et hu fi" traindata devdata
+	${MAKE} SRCLANGS="et hu fi" TRGLANGS="et hu fi" HPC_CORES=1 train.submit-multigpu
+
 
 memad-fi:
 	for l in en sv de fr; do \
@@ -585,6 +629,7 @@ finetune:
 train: ${WORKDIR}/${MODEL}.${MODELTYPE}.model${NR}.done
 translate: ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}
 eval: ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.eval
+compare: ${WORKHOME}/translations/${LANGSTR}/${TESTSET}.txt
 
 ## ensemble of models (assumes to find them in subdirs of the WORKDIR)
 translate-ensemble: ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.ensemble.${SRC}.${TRG}
@@ -741,6 +786,10 @@ ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}: ${TEST_SRC}.${PR
 		--hyps-baseline $@.sys \
 		--meteor.language ${TRG} > $@
 	rm -f $@.ref $@.sys
+
+
+${WORKHOME}/translations/${LANGSTR}/${TESTSET}.txt: ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}
+	paste -d "\n" ${TEST_SRC} ${TEST_TRG} $< | sed 'n;n;G;' > $@
 
 
 
