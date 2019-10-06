@@ -238,7 +238,10 @@ ${DIST_PACKAGE}: ${MODEL_FINAL}
 	rm -f $@
 	cd ${dir $@} && ln -s ${notdir ${@:.zip=}-${shell date +%F}.zip} ${notdir $@}
 	rm -f ${WORKDIR}/decoder.yml ${WORKDIR}/source.bpe ${WORKDIR}/source.tcmodel
-
+	${MAKE} ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.eval
+	${MAKE} ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.compare
+	cp ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.eval $(@:.zip=.eval)
+	cp ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.compare $(@:.zip=.test)
 
 ALLLANGPAIRS = ${shell ls ${WORKHOME} | grep -- '-' | grep -v old}
 
@@ -248,14 +251,6 @@ eval-all:
 	  if  [ `find ${WORKHOME}/$$l -name '${DATASET}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.*.npz' | wc -l` -gt 0 ]; then \
 	    ${MAKE} SRCLANGS="`echo $$l | cut -f1 -d'-' | sed 's/\\+/ /g'`" \
 		    TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" eval; \
-	  fi \
-	done
-
-compare-all:
-	for l in ${ALLLANGPAIRS}; do \
-	  if  [ `find ${WORKHOME}/$$l -name '${DATASET}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.*.npz' | wc -l` -gt 0 ]; then \
-	    ${MAKE} SRCLANGS="`echo $$l | cut -f1 -d'-' | sed 's/\\+/ /g'`" \
-		    TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" compare; \
 	  fi \
 	done
 
@@ -629,7 +624,7 @@ finetune:
 train: ${WORKDIR}/${MODEL}.${MODELTYPE}.model${NR}.done
 translate: ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}
 eval: ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.eval
-compare: ${WORKHOME}/translations/${LANGSTR}/${TESTSET}.txt
+compare: ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.compare
 
 ## ensemble of models (assumes to find them in subdirs of the WORKDIR)
 translate-ensemble: ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.ensemble.${SRC}.${TRG}
@@ -787,9 +782,8 @@ ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}: ${TEST_SRC}.${PR
 		--meteor.language ${TRG} > $@
 	rm -f $@.ref $@.sys
 
-
-${WORKHOME}/translations/${LANGSTR}/${TESTSET}.txt: ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}
-	paste -d "\n" ${TEST_SRC} ${TEST_TRG} $< | sed 'n;n;G;' > $@
+%.compare: %.eval
+	paste -d "\n" ${TEST_SRC} ${TEST_TRG} ${<:.eval=} | sed 'n;n;G;' > $@
 
 
 
