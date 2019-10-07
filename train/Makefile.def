@@ -68,7 +68,8 @@ else ifneq ($(wildcard /wrk/tiedeman/research/),)
 else
   CSCPROJECT   = project_2001569
   DATAHOME     = ${HOME}/work/opentrans/data/${LANGPAIR}
-  WORKHOME     = /scratch/${CSCPROJECT}/joerg/opentrans
+  # WORKHOME     = /scratch/${CSCPROJECT}/joerg/opentrans
+  WORKHOME     = ${shell realpath ${PWD}/work}
   APPLHOME     = ${HOME}/projappl
   OPUSHOME     = /scratch/project_2000661/nlpl/data/OPUS
   MOSESHOME    = ${APPLHOME}/mosesdecoder

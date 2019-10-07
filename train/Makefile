@@ -120,6 +120,8 @@ OPUSCORPORA  = ${patsubst %/latest/moses/${LANGPAIR}.txt.zip,%,\
 		${patsubst ${OPUSHOME}/%,%,\
 		${shell ls ${OPUSHOME}/*/latest/moses/${LANGPAIR}.txt.zip}}}
 
+ALLLANGPAIRS = ${shell ls ${WORKHOME} | grep -- '-' | grep -v old}
+
 
 ## train/dev/test data
 
@@ -184,7 +186,6 @@ LANGSTR = ${subst ${SPACE},+,$(SRCLANGS)}-${subst ${SPACE},+,$(TRGLANGS)}
 WORKDIR = ${WORKHOME}/${LANGSTR}
 DATADIR = ${WORKHOME}/data
 
-
 ## data sets
 TRAIN_SRC = ${WORKDIR}/train/${DATASET}.src
 TRAIN_TRG = ${WORKDIR}/train/${DATASET}.trg
@@ -205,11 +206,17 @@ TEST_TRG  = ${WORKDIR}/test/${TESTSET}.trg
 ## heldout data directory (keep one set per data set)
 HELDOUT_DIR  = ${WORKDIR}/heldout
 
+## testset dir for all test sets in this language pair
+## and all trokenized test sets that can be found in that directory
+TESTSET_DIR  = ${PWD}/testsets/${SRC}-${TRG}
+TESTSETS     = $(patsubst ${TESTSET_DIR}/%.${SRC}.tok.gz,%,${wildcard ${TESTSET_DIR}/*.${SRC}.tok.gz})
+
 
 MODEL_BASENAME = ${MODEL}.${MODELTYPE}.model${NR}
 MODEL_FINAL    = ${WORKDIR}/${MODEL_BASENAME}.npz.best-perplexity.npz
 MODEL_VOCAB    = ${WORKDIR}/${MODEL}.vocab.yml
 MODEL_DECODER  = ${MODEL_FINAL}.decoder.yml
+
 
 
 ## make a distribution package
@@ -240,27 +247,33 @@ ${DIST_PACKAGE}: ${MODEL_FINAL}
 	rm -f ${WORKDIR}/decoder.yml ${WORKDIR}/source.bpe ${WORKDIR}/source.tcmodel
 	${MAKE} ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.eval
 	${MAKE} ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.compare
-	cp ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.eval $(@:.zip=.eval)
-	cp ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.compare $(@:.zip=.test)
+	cp ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.eval $(@:.zip=-${shell date +%F}.eval)
+	cp ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.compare $(@:.zip=-${shell date +%F}.test)
 
-ALLLANGPAIRS = ${shell ls ${WORKHOME} | grep -- '-' | grep -v old}
 
-## evaluate all available models
-eval-all:
-	for l in ${ALLLANGPAIRS}; do \
-	  if  [ `find ${WORKHOME}/$$l -name '${DATASET}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.*.npz' | wc -l` -gt 0 ]; then \
-	    ${MAKE} SRCLANGS="`echo $$l | cut -f1 -d'-' | sed 's/\\+/ /g'`" \
-		    TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" eval; \
-	  fi \
+
+## eval all available test sets
+eval-testsets:
+	for s in ${SRCLANGS}; do \
+	  for t in ${TRGLANGS}; do \
+	    ${MAKE} SRC=$$s TRG=$$t eval-testsets-langpair; \
+	  done \
 	done
 
+eval-testsets-langpair:
+	for t in ${TESTSETS}; do \
+	  ${MAKE} TESTSET=$$t eval; \
+	done
 
-## make a distribution of all available models
-dist-all:
+## extension -all: run over all language pairs, e.g.
+## - make eval-all
+## - make dist-all
+## ...
+%-all:
 	for l in ${ALLLANGPAIRS}; do \
 	  if  [ `find ${WORKHOME}/$$l -name '${DATASET}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.*.npz' | wc -l` -gt 0 ]; then \
 	    ${MAKE} SRCLANGS="`echo $$l | cut -f1 -d'-' | sed 's/\\+/ /g'`" \
-		    TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" dist; \
+		    TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" ${@:-all=}; \
 	  fi \
 	done
 
@@ -282,71 +295,53 @@ upload-scores: scores.txt
 
 
 
-## fiskmo benchmark for sv-fi
+# ## fiskmo benchmark for sv-fi
 
-FISKMO_SV = ${PWD}/fiskmo_testset.sv.gz
-FISKMO_FI = ${PWD}/fiskmo_testset.fi.gz
-
-
-## benchmark with the fiskmo testset and the current model
-
-evalfiskmo:
-	if [ "${filter sv,${SRCLANGS}}" == "sv" ]; then \
-	  ${MAKE} SRC=sv TRG=fi TESTSET=fiskmo_testset eval; \
-	fi
-	if [ "${filter sv,${TRGLANGS}}" == "sv" ]; then \
-	  ${MAKE} TRG=sv SRC=fi TESTSET=fiskmo_testset eval; \
-	fi
+# FISKMO_SV = ${PWD}/fiskmo_testset.sv.gz
+# FISKMO_FI = ${PWD}/fiskmo_testset.fi.gz
 
 
-## benchmark with en-fi news data
+# ## benchmark with the fiskmo testset and the current model
 
-evalnews:
-	if [ "${filter en,${SRCLANGS}}" == "en" ]; then \
-	  ${MAKE} SRC=en TRG=fi TESTSET=newstest2015 eval; \
-	  ${MAKE} SRC=en TRG=fi TESTSET=newstest2016 eval; \
-	  ${MAKE} SRC=en TRG=fi TESTSET=newstest2017 eval; \
-	  ${MAKE} SRC=en TRG=fi TESTSET=newstest2018 eval; \
-	fi
-	if [ "${filter en,${TRGLANGS}}" == "en" ]; then \
-	  ${MAKE} TRG=en SRC=fi TESTSET=newstest2015 eval; \
-	  ${MAKE} TRG=en SRC=fi TESTSET=newstest2016 eval; \
-	  ${MAKE} TRG=en SRC=fi TESTSET=newstest2017 eval; \
-	  ${MAKE} TRG=en SRC=fi TESTSET=newstest2018 eval; \
-	fi
+# evalfiskmo:
+# 	if [ "${filter sv,${SRCLANGS}}" == "sv" ]; then \
+# 	  ${MAKE} SRC=sv TRG=fi TESTSET=fiskmo_testset eval; \
+# 	fi
+# 	if [ "${filter sv,${TRGLANGS}}" == "sv" ]; then \
+# 	  ${MAKE} TRG=sv SRC=fi TESTSET=fiskmo_testset eval; \
+# 	fi
 
 
-#	${MAKE} SRCLANGS=fi TRGLANGS=en SRC=fi TRG=en evalnews
-#	${MAKE} SRCLANGS=fi TRGLANGS=en SRC=fi TRG=en eval
+# ## benchmark with en-fi news data
 
-run-eval:
-	${MAKE} SRCLANGS=sv TRGLANGS=fi SRC=sv TRG=fi evalfiskmo
-	${MAKE} TRGLANGS=sv SRCLANGS=fi SRC=fi TRG=sv evalfiskmo
-	${MAKE} SRCLANGS=sv TRGLANGS=fi SRC=sv TRG=fi eval
-	${MAKE} TRGLANGS=sv SRCLANGS=fi SRC=fi TRG=sv eval
-	${MAKE} SRCLANGS=de TRGLANGS=fi SRC=de TRG=fi eval
-	${MAKE} SRCLANGS=fi TRGLANGS=fr SRC=fi TRG=fr eval
-	${MAKE} SRCLANGS=fr TRGLANGS=de SRC=fr TRG=de eval
-	${MAKE} SRCLANGS=de TRGLANGS=fr SRC=de TRG=fr eval
-	${MAKE} SRCLANGS=fi TRGLANGS=nl SRC=fi TRG=nl eval
-	${MAKE} SRCLANGS=fr TRGLANGS=fi SRC=fr TRG=fi eval
-	${MAKE} SRCLANGS=nl TRGLANGS=de SRC=nl TRG=de eval
-	${MAKE} SRCLANGS=de TRGLANGS=nl SRC=de TRG=nl eval
-	${MAKE} SRCLANGS=fi TRGLANGS=fr SRC=fi TRG=de eval
-	${MAKE} SRCLANGS=fr TRGLANGS=nl SRC=fr TRG=nl eval
-	${MAKE} SRCLANGS=nl TRGLANGS=fr SRC=nl TRG=fr eval
-	${MAKE} SRCLANGS=sv TRGLANGS=de SRC=sv TRG=de eval
-
-multi-evalfiskmo:
-	${MAKE} SRCLANGS="da fo is no nb nn sv" TRGLANGS="et fi" SRC=sv TRG=fi evalfiskmo
-	${MAKE} TRGLANGS="da fo is no nb nn sv" SRCLANGS="et fi" SRC=fi TRG=sv evalfiskmo
+# evalnews:
+# 	if [ "${filter en,${SRCLANGS}}" == "en" ]; then \
+# 	  ${MAKE} SRC=en TRG=fi TESTSET=newstest2015.en-fi eval; \
+# 	  ${MAKE} SRC=en TRG=fi TESTSET=newstest2016.en-fi eval; \
+# 	  ${MAKE} SRC=en TRG=fi TESTSET=newstest2017.en-fi eval; \
+# 	  ${MAKE} SRC=en TRG=fi TESTSET=newstest2018.en-fi eval; \
+# 	fi
+# 	if [ "${filter en,${TRGLANGS}}" == "en" ]; then \
+# 	  ${MAKE} TRG=en SRC=fi TESTSET=newstest2015.en-fi eval; \
+# 	  ${MAKE} TRG=en SRC=fi TESTSET=newstest2016.en-fi eval; \
+# 	  ${MAKE} TRG=en SRC=fi TESTSET=newstest2017.en-fi eval; \
+# 	  ${MAKE} TRG=en SRC=fi TESTSET=newstest2018.en-fi eval; \
+# 	fi
 
 
-all-evalfiskmo: 
-	${MAKE} SRCLANGS=sv TRGLANGS=fi SRC=sv TRG=fi evalfiskmo
-	${MAKE} TRGLANGS=sv SRCLANGS=fi SRC=fi TRG=sv evalfiskmo
-	${MAKE} SRCLANGS="da fo is no nb nn sv" TRGLANGS=fi SRC=sv TRG=fi evalfiskmo
-	${MAKE} SRCLANGS="da fo is no nb nn sv" TRGLANGS='et hu fi' SRC=sv TRG=fi evalfiskmo
+# #	${MAKE} SRCLANGS=fi TRGLANGS=en SRC=fi TRG=en evalnews
+# #	${MAKE} SRCLANGS=fi TRGLANGS=en SRC=fi TRG=en eval
+
+# multi-evalfiskmo:
+# 	${MAKE} SRCLANGS="da fo is no nb nn sv" TRGLANGS="et fi" SRC=sv TRG=fi evalfiskmo
+# 	${MAKE} TRGLANGS="da fo is no nb nn sv" SRCLANGS="et fi" SRC=fi TRG=sv evalfiskmo
+
+
+# all-evalfiskmo: 
+# 	${MAKE} SRCLANGS=sv TRGLANGS=fi SRC=sv TRG=fi evalfiskmo
+# 	${MAKE} TRGLANGS=sv SRCLANGS=fi SRC=fi TRG=sv evalfiskmo
+# 	${MAKE} SRCLANGS="da fo is no nb nn sv" TRGLANGS=fi SRC=sv TRG=fi evalfiskmo
+# 	${MAKE} SRCLANGS="da fo is no nb nn sv" TRGLANGS='et hu fi' SRC=sv TRG=fi evalfiskmo
 
 #	${MAKE} SRCLANGS="da no nb nn sv" TRGLANGS=fi SRC=sv TRG=fi evalfiskmo
 #	${MAKE} TRGLANGS="da no nb nn sv" SRCLANGS=fi SRC=fi TRG=sv evalfiskmo
@@ -367,6 +362,26 @@ all-evalfiskmo:
 #	${MAKE} SRCLANGS=sv TRGLANGS=fi SRC=sv TRG=fi TRAINSET=fiskmo TRAINSIZE=500000 evalfiskmo
 #	${MAKE} SRCLANGS=sv TRGLANGS=fi SRC=sv TRG=fi TRAINSET=fiskmo TRAINSIZE=1000000 evalfiskmo
 
+
+
+
+run-eval:
+	${MAKE} SRCLANGS=sv TRGLANGS=fi SRC=sv TRG=fi evalfiskmo
+	${MAKE} TRGLANGS=sv SRCLANGS=fi SRC=fi TRG=sv evalfiskmo
+	${MAKE} SRCLANGS=sv TRGLANGS=fi SRC=sv TRG=fi eval
+	${MAKE} TRGLANGS=sv SRCLANGS=fi SRC=fi TRG=sv eval
+	${MAKE} SRCLANGS=de TRGLANGS=fi SRC=de TRG=fi eval
+	${MAKE} SRCLANGS=fi TRGLANGS=fr SRC=fi TRG=fr eval
+	${MAKE} SRCLANGS=fr TRGLANGS=de SRC=fr TRG=de eval
+	${MAKE} SRCLANGS=de TRGLANGS=fr SRC=de TRG=fr eval
+	${MAKE} SRCLANGS=fi TRGLANGS=nl SRC=fi TRG=nl eval
+	${MAKE} SRCLANGS=fr TRGLANGS=fi SRC=fr TRG=fi eval
+	${MAKE} SRCLANGS=nl TRGLANGS=de SRC=nl TRG=de eval
+	${MAKE} SRCLANGS=de TRGLANGS=nl SRC=de TRG=nl eval
+	${MAKE} SRCLANGS=fi TRGLANGS=fr SRC=fi TRG=de eval
+	${MAKE} SRCLANGS=fr TRGLANGS=nl SRC=fr TRG=nl eval
+	${MAKE} SRCLANGS=nl TRGLANGS=fr SRC=nl TRG=fr eval
+	${MAKE} SRCLANGS=sv TRGLANGS=de SRC=sv TRG=de eval
 
 
 
@@ -439,6 +454,13 @@ memad:
 	    fi \
 	  done \
 	done
+
+memad-missing:
+	${MAKE} SRCLANGS=nl TRGLANGS=fi traindata devdata
+	${MAKE} SRCLANGS=nl TRGLANGS=fi HPC_CORES=1 train.submit-multigpu
+	${MAKE} SRCLANGS=nl TRGLANGS=sv traindata devdata
+	${MAKE} SRCLANGS=nl TRGLANGS=sv HPC_CORES=1 train.submit-multigpu
+
 
 memad-multi:
 	for s in "da fo is no nb nn sv" "en fr" "et hu fi" "de nl af fy" "ca es fr ga it la oc pt_br pt"; do \
@@ -515,7 +537,7 @@ germanic-romance:
 
 
 ##==========================
-## various data set variants
+## various data sets
 ##==========================
 
 .PHONY: data
@@ -783,7 +805,14 @@ ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}: ${TEST_SRC}.${PR
 	rm -f $@.ref $@.sys
 
 %.compare: %.eval
-	paste -d "\n" ${TEST_SRC} ${TEST_TRG} ${<:.eval=} | sed 'n;n;G;' > $@
+	paste -d "\n" ${TEST_SRC} ${TEST_TRG} ${<:.eval=} |\
+	sed 's/ \@\-\@ /-/g' | \
+	sed 	-e "s/&apos;/'/g" \
+		-e 's/&quot;/"/g' \
+		-e 's/&lt;/</g' \
+		-e 's/&gt;/>/g' \
+		-e 's/&amp;/&/g' |\
+	sed 'n;n;G;' > $@
 
 
 
