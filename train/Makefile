@@ -247,8 +247,8 @@ ${DIST_PACKAGE}: ${MODEL_FINAL}
 	rm -f ${WORKDIR}/decoder.yml ${WORKDIR}/source.bpe ${WORKDIR}/source.tcmodel
 	${MAKE} ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.eval
 	${MAKE} ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.compare
-	cp ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.eval $(@:.zip=-${shell date +%F}.eval)
-	cp ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.compare $(@:.zip=-${shell date +%F}.test)
+	cp ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.eval $(@:.zip=-${shell date +%F}.eval.txt)
+	cp ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.compare $(@:.zip=-${shell date +%F}.test.txt)
 
 
 
@@ -256,14 +256,15 @@ ${DIST_PACKAGE}: ${MODEL_FINAL}
 eval-testsets:
 	for s in ${SRCLANGS}; do \
 	  for t in ${TRGLANGS}; do \
-	    ${MAKE} SRC=$$s TRG=$$t eval-testsets-langpair; \
+	    ${MAKE} SRC=$$s TRG=$$t compare-testsets-langpair; \
 	  done \
 	done
 
-eval-testsets-langpair:
+%-testsets-langpair:
 	for t in ${TESTSETS}; do \
-	  ${MAKE} TESTSET=$$t eval; \
+	  ${MAKE} TESTSET=$$t ${@:-testsets-langpair=}; \
 	done
+
 
 ## extension -all: run over all language pairs, e.g.
 ## - make eval-all
@@ -277,10 +278,10 @@ eval-testsets-langpair:
 	  fi \
 	done
 
-scores.txt:
+${WORKHOME}/eval/scores.txt:
 	cd ${WORKHOME} && \
-	grep base */*eval | cut -f1,2- -d '/' | cut -f1,8- -d '.' | \
-	sed 's/.eval:baseline//' | sort  > ${PWD}/$@
+	grep base */*eval | cut -f1,2- -d '/' | cut -f1,6- -d '.' | \
+	sed 's/.eval:baseline//' | sort  > $@
 
 
 ## upload to Object Storage
@@ -290,8 +291,24 @@ upload:
 	cd ${WORKHOME} && swift upload OPUS-MT --changed --skip-identical models
 	swift post OPUS-MT --read-acl ".r:*"
 
-upload-scores: scores.txt
-	swift upload OPUS-MT --changed --skip-identical $<
+upload-scores: ${WORKHOME}/eval/scores.txt
+	cd ${WORKHOME} && swift upload OPUS-MT --changed --skip-identical eval/scores.txt
+	swift post OPUS-MT --read-acl ".r:*"
+
+EVALSCORES = ${patsubst ${WORKHOME}/models/%.eval,${WORKHOME}/eval/%.eval.txt,${wildcard ${WORKHOME}/models/*/*.eval}}
+EVALTRANSL = ${patsubst ${WORKHOME}/models/%.compare,${WORKHOME}/eval/%.test.txt,${wildcard ${WORKHOME}/models/*/*.compare}}
+
+${EVALSCORES}: ${WORKHOME}/eval/%.eval.txt: ${WORKHOME}/models/%.eval
+	mkdir -p ${dir $@}
+	cp $< $@
+
+${EVALTRANSL}: ${WORKHOME}/eval/%.test.txt: ${WORKHOME}/models/%.compare
+	mkdir -p ${dir $@}
+	cp $< $@
+
+upload-eval: ${EVALSCORES} ${EVALTRANSL}
+	cd ${WORKHOME} && swift upload OPUS-MT --changed --skip-identical eval
+	swift post OPUS-MT --read-acl ".r:*"
 
 
 
