@@ -1,10 +1,11 @@
 
 # OPUS-MT
 
-Tools for open translation services
+Tools and resources for open translation services
 
 * based on MarianNMT
 * trained on OPUS data
+* [pre-trained downloadable translation models](http://opus.nlpl.eu/Opus-MT.php)
 
 
 This repository includes
