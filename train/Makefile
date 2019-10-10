@@ -213,6 +213,8 @@ TESTSETS     = $(patsubst ${TESTSET_DIR}/%.${SRC}.tok.gz,%,${wildcard ${TESTSET_
 
 
 MODEL_BASENAME = ${MODEL}.${MODELTYPE}.model${NR}
+MODEL_VALIDLOG = ${MODEL}.${MODELTYPE}.valid${NR}.log
+MODEL_TRAINLOG = ${MODEL}.${MODELTYPE}.train${NR}.log
 MODEL_FINAL    = ${WORKDIR}/${MODEL_BASENAME}.npz.best-perplexity.npz
 MODEL_VOCAB    = ${WORKDIR}/${MODEL}.vocab.yml
 MODEL_DECODER  = ${MODEL_FINAL}.decoder.yml
@@ -266,6 +268,19 @@ eval-testsets:
 	done
 
 
+## check whether a model is converged
+finished:
+	@if grep -q 'stalled ${MARIAN_EARLY_STOPPING} times' ${WORKDIR}/${MODEL_VALIDLOG}; then\
+	   echo "${WORKDIR}/${MODEL_BASENAME} finished"; \
+	fi
+
+unfinished:
+	@if ! grep -q 'stalled ${MARIAN_EARLY_STOPPING} times' ${WORKDIR}/${MODEL_VALIDLOG}; then\
+	   echo "${WORKDIR}/${MODEL_BASENAME} unfinished"; \
+	fi
+
+
+
 ## extension -all: run over all language pairs, e.g.
 ## - make eval-all
 ## - make dist-all
@@ -277,11 +292,6 @@ eval-testsets:
 		    TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" ${@:-all=}; \
 	  fi \
 	done
-
-${WORKHOME}/eval/scores.txt:
-	cd ${WORKHOME} && \
-	grep base */*eval | cut -f1,2- -d '/' | cut -f1,6- -d '.' | \
-	sed 's/.eval:baseline//' | sort  > $@
 
 
 ## upload to Object Storage
@@ -295,16 +305,26 @@ upload-scores: ${WORKHOME}/eval/scores.txt
 	cd ${WORKHOME} && swift upload OPUS-MT --changed --skip-identical eval/scores.txt
 	swift post OPUS-MT --read-acl ".r:*"
 
-EVALSCORES = ${patsubst ${WORKHOME}/models/%.eval,${WORKHOME}/eval/%.eval.txt,${wildcard ${WORKHOME}/models/*/*.eval}}
-EVALTRANSL = ${patsubst ${WORKHOME}/models/%.compare,${WORKHOME}/eval/%.test.txt,${wildcard ${WORKHOME}/models/*/*.compare}}
+EVALSCORES = ${patsubst ${WORKHOME}/%.eval,${WORKHOME}/eval/%.eval.txt,${wildcard ${WORKHOME}/*/*.eval}}
+EVALTRANSL = ${patsubst ${WORKHOME}/%.compare,${WORKHOME}/eval/%.test.txt,${wildcard ${WORKHOME}/*/*.compare}}
 
-${EVALSCORES}: ${WORKHOME}/eval/%.eval.txt: ${WORKHOME}/models/%.eval
-	mkdir -p ${dir $@}
-	cp $< $@
+scores: ${WORKHOME}/eval/scores.txt
 
-${EVALTRANSL}: ${WORKHOME}/eval/%.test.txt: ${WORKHOME}/models/%.compare
+${WORKHOME}/eval/scores.txt: ${EVALSCORES}
+	cd ${WORKHOME} && \
+	grep base */*eval | cut -f1,2- -d '/' | cut -f1,6- -d '.' | \
+	sed 's/-/    /' | sed 's/\//    /' | sed 's/ ([^)]*)//g' |\
+	sed 's/.eval:baseline//' | sed "s/  */\t/g" | sort  > $@
+
+${EVALSCORES}: # ${WORKHOME}/eval/%.eval.txt: ${WORKHOME}/models/%.eval
 	mkdir -p ${dir $@}
-	cp $< $@
+	cp ${patsubst ${WORKHOME}/eval/%.eval.txt,${WORKHOME}/%.eval,$@} $@
+#	cp $< $@
+
+${EVALTRANSL}: # ${WORKHOME}/eval/%.test.txt: ${WORKHOME}/models/%.compare
+	mkdir -p ${dir $@}
+	cp ${patsubst ${WORKHOME}/eval/%.test.txt,${WORKHOME}/%.compare,$@} $@
+#	cp $< $@
 
 upload-eval: ${EVALSCORES} ${EVALTRANSL}
 	cd ${WORKHOME} && swift upload OPUS-MT --changed --skip-identical eval
@@ -466,18 +486,13 @@ memad:
 	for s in en fi sv de fr nl; do \
 	  for t in en fi sv de fr nl; do \
 	    if [ "$$s" != "$$t" ]; then \
-	      ${MAKE} SRCLANGS=$$s TRGLANGS=$$t traindata devdata; \
-	      ${MAKE} SRCLANGS=$$s TRGLANGS=$$t HPC_CORES=1 train.submit-multigpu; \
+	      if ! grep -q 'stalled ${MARIAN_EARLY_STOPPING} times' ${WORKHOME}/$$s-$$t/*.valid${NR.log}; then\
+	        ${MAKE} SRCLANGS=$$s TRGLANGS=$$t traindata devdata; \
+	        ${MAKE} SRCLANGS=$$s TRGLANGS=$$t HPC_CORES=1 train.submit-multigpu; \
+	      fi \
 	    fi \
 	  done \
 	done
-
-memad-missing:
-	${MAKE} SRCLANGS=nl TRGLANGS=fi traindata devdata
-	${MAKE} SRCLANGS=nl TRGLANGS=fi HPC_CORES=1 train.submit-multigpu
-	${MAKE} SRCLANGS=nl TRGLANGS=sv traindata devdata
-	${MAKE} SRCLANGS=nl TRGLANGS=sv HPC_CORES=1 train.submit-multigpu
-
 
 memad-multi:
 	for s in "da fo is no nb nn sv" "en fr" "et hu fi" "de nl af fy" "ca es fr ga it la oc pt_br pt"; do \
@@ -502,12 +517,6 @@ memad-multi2:
 	    fi \
 	  done \
 	done
-
-
-
-memad-ethufi:
-	${MAKE} SRCLANGS="et hu fi" TRGLANGS="et hu fi" traindata devdata
-	${MAKE} SRCLANGS="et hu fi" TRGLANGS="et hu fi" HPC_CORES=1 train.submit-multigpu
 
 
 memad-fi:
