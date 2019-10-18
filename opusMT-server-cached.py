@@ -47,7 +47,7 @@ parser.add_argument('-d','--deftrg','--default-target-language', type=str,
                     help='default target language (for multilingual models)')
 parser.add_argument('--bpe','--bpe-model', type=str, default='opus.de+fr+sv+en.bpe32k-model',
                     help='BPE model for source text segmentation')
-parser.add_argument('-c','--cache', type=str, default='opentrans-cache.db',
+parser.add_argument('-c','--cache', type=str, default='opusMT-cache.db',
                     help='BPE model for source text segmentation')
 
 
@@ -100,15 +100,6 @@ print("open connection to " + args.mthost + " at port " + str(args.mtport), flus
 ws = create_connection("ws://{}:{}/translate".format(args.mthost, args.mtport))
 
 
-## when using TCP Socket Server
-# class Translate(socketserver.BaseRequestHandler):
-#    def handle(self):
-#        self.data = self.request.recv(1024).strip().decode('utf-8')
-#        
-#        print("{} wrote:".format(self.client_address[0]), flush=True)
-#        print(self.data, flush=True)
-
-
 class Translate(WebSocket):
 
     def handleMessage(self):
@@ -147,12 +138,17 @@ class Translate(WebSocket):
         # print('input: ' + srctxt, flush=True)
         inputTxt = prefix + srctxt
         if inputTxt in cache:
-            translation = cache[inputTxt]
+            cached = cache[inputTxt].split("\t")
+            translation = cached[0]
             print('CACHED TRANSLATION: ' + translation, flush=True)
             data = {'result': translation, 'origin': 'cache'}
+
+            if len(cached) == 4:
+                data['source-segments'] = [cached[1]]
+                data['target-segments'] = [cached[2]]
+                data['alignment'] = [cached[3]]
+
             self.sendMessage(json.dumps(data, sort_keys=True, indent=4))
-            # self.request.sendall(bytes(json.dumps(data, sort_keys=True, indent=4), "utf-8"))
-            # self.request.sendall(bytes(translation, "utf-8"))
             return
 
         if not fromLang:
@@ -165,8 +161,6 @@ class Translate(WebSocket):
             data = {'error': 'unsupported source language ' + fromLang,
                     'source': fromLang, 'target': toLang}
             self.sendMessage(json.dumps(data, sort_keys=True, indent=4))
-            # self.request.sendall(bytes(json.dumps(data, sort_keys=True, indent=4), "utf-8"))
-            # self.request.sendall(bytes('ERROR: unsupported source language ' + fromLang, "utf-8"))
             return
 
         if not toLang in args.trglangs:
@@ -174,17 +168,24 @@ class Translate(WebSocket):
             data = {'error': 'unsupported target language ' + toLang,
                     'source': fromLang, 'target': toLang}
             self.sendMessage(json.dumps(data, sort_keys=True, indent=4))
-            # self.request.sendall(bytes(json.dumps(data, sort_keys=True, indent=4), "utf-8"))
-            # self.request.sendall(bytes('ERROR: unsupported target language ' + toLang, "utf-8"))
             return
 
         langpair = fromLang + toLang
-        message = []
+        sentSourceBPE = []
+        sentTranslated = []
+        sentTranslatedTokenized = []
+        sentTranslatedBPE = []
+        sentAlignment = []
         for s in sentence_splitter[fromLang]([normalizer[fromLang](srctxt)]):
             key = langpair + ' ' + s
             if key in cache:
-                detokenized = cache[key]
-                print('CACHED TRANSLATION: ' + detokenized, flush=True)
+                cached = cache[key].split("\t")
+                sentTranslated.append(cached[0])
+                if len(cached) == 4:
+                    sentSourceBPE.append(cached[1])
+                    sentTranslatedBPE.append(cached[2])
+                    sentAlignment.append(cached[3])
+                print('CACHED TRANSLATION: ' + cached[0], flush=True)
             else:
                 # print('raw sentence: ' + s, flush=True)
                 tokenized = ' '.join(tokenizer[fromLang](s))
@@ -193,19 +194,31 @@ class Translate(WebSocket):
                 # print('segmented sentence ' + prefix + segmented, flush=True)
                 ws.send(prefix + segmented)
                 # print('successfully sent', flush=True)
-                translated = ws.recv().replace('@@ ','')
+                received = ws.recv().strip().split(' ||| ')
+                translated = received[0].replace('@@ ','')
+                alignment = ''
+                if len(received) == 2:
+                    alignment = received[1]
                 # print('translated sentence ' + translated, flush=True)
                 detokenized = detokenizer[toLang](translated.split())
                 print('TRANSLATION: ' + detokenized, flush=True)
-            message.append(detokenized)
-            cache[key] = detokenized
-        trgtext = ' '.join(message)
-        data = {'result': trgtext, 'source': fromLang, 'target': toLang}
+
+                sentSourceBPE.append(segmented)
+                sentTranslatedBPE.append(received[0])
+                sentAlignment.append(alignment)
+                sentTranslated.append(detokenized)
+                
+                cache[key] = detokenized + "\t" + segmented + "\t" + received[0] + "\t" + alignment
+                
+        trgtext = ' '.join(sentTranslated)
+        data = {'result': trgtext, 'source': fromLang, 'target': toLang,
+                'source-segments': sentSourceBPE, 'target-segments': sentTranslatedBPE, 'alignment' : sentAlignment }
         # 'origin': "ws://{}:{}/translate".format(args.mthost, args.mtport)}
         self.sendMessage(json.dumps(data, sort_keys=True, indent=4))
-        # self.request.sendall(bytes(json.dumps(data, sort_keys=True, indent=4), "utf-8"))
-        # self.request.sendall(bytes(trgtext, "utf-8"))
-        cache[inputTxt] = trgtext
+
+        ## TODO: we should also store alignments and source segments for the whole text
+        # if not inputTxt in cache:
+        #     cache[inputTxt] = trgtext
 
     def handleConnected(self):
         print(self.address, 'connected')
@@ -221,13 +234,3 @@ print("listen on socket " + str(args.port))
 server = SimpleWebSocketServer('', args.port, Translate)
 server.serveforever()
 
-
-# if __name__ == "__main__":
-
-    ## using TCP Socket Server instead
-    ## Create the server, binding to localhost on port 9999
-    # server = socketserver.TCPServer(("localhost", args.port), Translate)
-
-    ## Activate the server; this will keep running until you
-    ## interrupt the program with Ctrl-C
-    # server.serve_forever()
