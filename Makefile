@@ -100,6 +100,9 @@ etfi-germanic-server:
 germanic-etfi-server:
 	${MAKE} SRC_LANGS="de+af+fy+nl" TRG_LANGS="et+fi" MARIAN_PORT=11003 OPUSMT_PORT=21003 opusMT-server
 
+germanic-server:
+	${MAKE} SRC_LANGS="de+af+fy+nl" TRG_LANGS="de+af+fy+nl" MARIAN_PORT=11004 OPUSMT_PORT=21004 opusMT-server
+
 
 
 french-etfi-server:
@@ -189,7 +192,7 @@ ${NMT_MODEL}:
 		-e 's#%%APPSHORTDESCR%%#marian-server#' \
 		-e 's#%%APPLONGDESCR%%#translation service#' \
 		-e 's#%%APPBIN%%#${MARIAN_SERVER}#' \
-		-e 's#%%APPARGS%%#-p ${MARIAN_PORT} ${MARIAN_PARA} -m ${NMT_MODEL} -v ${NMT_VOCAB} ${NMT_VOCAB}#' \
+		-e 's#%%APPARGS%%#--alignment -p ${MARIAN_PORT} ${MARIAN_PARA} -m ${NMT_MODEL} -v ${NMT_VOCAB} ${NMT_VOCAB}#' \
 	< service-template > ${notdir $@}
 	${INSTALL_BIN} ${notdir $@} $@
 	rm -f ${notdir $@}
@@ -230,7 +233,7 @@ remove-marian-service:
 	@echo 'respawn'                                >> ${notdir $@}
 	@echo 'respawn limit 3 12'                     >> ${notdir $@}
 	@echo ''                                       >> ${notdir $@}
-	@echo "exec ${MARIAN_SERVER} -p ${MARIAN_PORT} ${MARIAN_PARA} -m ${NMT_MODEL} -v ${NMT_VOCAB} ${NMT_VOCAB}" >> ${notdir $@}
+	@echo "exec ${MARIAN_SERVER} --alignment -p ${MARIAN_PORT} ${MARIAN_PARA} -m ${NMT_MODEL} -v ${NMT_VOCAB} ${NMT_VOCAB}" >> ${notdir $@}
 	${INSTALL_DATA} -b -S .old ${notdir $@} $@
 	rm -f ${notdir $@}
 	service ${notdir $(@:.conf=)} start || true
