@@ -123,6 +123,10 @@ OPUSCORPORA  = ${patsubst %/latest/moses/${LANGPAIR}.txt.zip,%,\
 ALLLANGPAIRS = ${shell ls ${WORKHOME} | grep -- '-' | grep -v old}
 
 
+
+
+
+
 ## train/dev/test data
 
 TRAINSET = $(filter-out WMT-News ${DEVSET} ${TESTSET},${OPUSCORPORA})
@@ -187,8 +191,9 @@ WORKDIR = ${WORKHOME}/${LANGSTR}
 DATADIR = ${WORKHOME}/data
 
 ## data sets
-TRAIN_SRC = ${WORKDIR}/train/${DATASET}.src
-TRAIN_TRG = ${WORKDIR}/train/${DATASET}.trg
+TRAIN_BASE = ${WORKDIR}/train/${DATASET}
+TRAIN_SRC  = ${TRAIN_BASE}.src
+TRAIN_TRG  = ${TRAIN_BASE}.trg
 
 ## training data in local space
 LOCAL_TRAIN_SRC = ${TMPDIR}/train/${DATASET}.src
@@ -223,8 +228,9 @@ MODEL_DECODER  = ${MODEL_FINAL}.decoder.yml
 
 ## make a distribution package
 
+MODELSHOME = ${WORKHOME}/models
 # DIST_PACKAGE = ${WORKHOME}/models/${LANGSTR}/${DATASET}-${shell date +%F}.zip
-DIST_PACKAGE = ${WORKHOME}/models/${LANGSTR}/${DATASET}.zip
+DIST_PACKAGE = ${MODELSHOME}/${LANGSTR}/${DATASET}.zip
 
 .PHONY: dist
 dist: ${DIST_PACKAGE}
@@ -241,6 +247,8 @@ ${DIST_PACKAGE}: ${MODEL_FINAL}
 	cd ${WORKDIR} && zip ${notdir $@} \
 		${notdir ${MODEL_FINAL}} \
 		${notdir ${MODEL_VOCAB}} \
+		${notdir ${MODEL_VALIDLOG}} \
+		${notdir ${MODEL_TRAINLOG}} \
 		source.tcmodel source.bpe decoder.yml
 	mkdir -p ${dir $@}
 	mv -f ${WORKDIR}/${notdir $@} ${@:.zip=}-${shell date +%F}.zip
@@ -251,6 +259,76 @@ ${DIST_PACKAGE}: ${MODEL_FINAL}
 	${MAKE} ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.compare
 	cp ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.eval $(@:.zip=-${shell date +%F}.eval.txt)
 	cp ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.compare $(@:.zip=-${shell date +%F}.test.txt)
+
+
+##-----------------------------------
+## make packages from trained models
+## check old-models as well!
+
+TRAINED_NEW_MODELS = ${patsubst ${WORKHOME}/%/,%,${dir ${wildcard ${WORKHOME}/*/*.best-perplexity.npz}}}
+# TRAINED_OLD_MODELS = ${patsubst ${WORKHOME}/old-models/%/,%,${dir ${wildcard ${WORKHOME}/old-models/*/*.best-perplexity.npz}}}
+TRAINED_OLD_MODELS = ${patsubst ${WORKHOME}/old-models/%/,%,${dir ${wildcard ${WORKHOME}/old-models/??-??/*.best-perplexity.npz}}}
+
+TRAINED_OLD_ONLY_MODELS = ${filter-out ${TRAINED_NEW_MODELS},${TRAINED_OLD_MODELS}}
+TRAINED_NEW_ONLY_MODELS = ${filter-out ${TRAINED_OLD_MODELS},${TRAINED_NEW_MODELS}}
+TRAINED_DOUBLE_MODELS   = ${filter ${TRAINED_NEW_MODELS},${TRAINED_OLD_MODELS}}
+
+## make packages of all new models
+## unless there are better models in old-models
+new-models-dist:
+	@echo "nr of extra models: ${words ${TRAINED_NEW_ONLY_MODELS}}"
+	for l in ${TRAINED_NEW_ONLY_MODELS}; do \
+	  ${MAKE} SRCLANGS="`echo $$l | cut -f1 -d'-' | sed 's/\\+/ /g'`" \
+		  TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" dist; \
+	done
+	@echo "trained double ${words ${TRAINED_DOUBLE_MODELS}}"
+	for l in ${TRAINED_DOUBLE_MODELS}; do \
+	  n=`grep 'new best' work/$$l/*.valid1.log | tail -1 | cut -f12 -d ' '`; \
+	  o=`grep 'new best' work/old-models/$$l/*.valid1.log | tail -1 | cut -f12 -d ' '`; \
+	  if (( $$(echo "$$n < $$o" |bc -l) )); then \
+	    ${MAKE} SRCLANGS="`echo $$l | cut -f1 -d'-' | sed 's/\\+/ /g'`" \
+		    TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" dist; \
+	  fi \
+	done
+
+
+## fix decoder path in old-models (to run evaluations
+fix-decoder-path:
+	for l in ${wildcard ${WORKHOME}/old-models/*/*.best-perplexity.npz.decoder.yml}; do \
+	  sed --in-place=.backup 's#/\(..-..\)/opus#/old-models/\1/opus#' $$l; \
+	  sed --in-place=.backup2 's#/old-models/old-models/#/old-models/#' $$l; \
+	  sed --in-place=.backup2 's#/old-models/old-models/#/old-models/#' $$l; \
+	done
+
+## make packages of all old models from old-models
+## unless there are better models in work (new models)
+old-models-dist:
+	@echo "nr of extra models: ${words ${TRAINED_OLD_ONLY_MODELS}}"
+	for l in ${TRAINED_OLD_ONLY_MODELS}; do \
+	  ${MAKE} SRCLANGS="`echo $$l | cut -f1 -d'-' | sed 's/\\+/ /g'`" \
+		  TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" \
+	          WORKHOME=${WORKHOME}/old-models \
+	          MODELSHOME=${WORKHOME}/models dist; \
+	done
+	@echo "trained double ${words ${TRAINED_DOUBLE_MODELS}}"
+	for l in ${TRAINED_DOUBLE_MODELS}; do \
+	  n=`grep 'new best' work/$$l/*.valid1.log | tail -1 | cut -f12 -d ' '`; \
+	  o=`grep 'new best' work/old-models/$$l/*.valid1.log | tail -1 | cut -f12 -d ' '`; \
+	  if (( $$(echo "$$o < $$n" |bc -l) )); then \
+	    ${MAKE} SRCLANGS="`echo $$l | cut -f1 -d'-' | sed 's/\\+/ /g'`" \
+		    TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" \
+	            WORKHOME=${WORKHOME}/old-models \
+	            MODELSHOME=${WORKHOME}/models dist; \
+	  else \
+	    echo "$$l: new better than old"; \
+	  fi \
+	done
+
+
+
+
+
+
 
 
 
@@ -329,6 +407,12 @@ ${EVALTRANSL}: # ${WORKHOME}/eval/%.test.txt: ${WORKHOME}/models/%.compare
 upload-eval: ${EVALSCORES} ${EVALTRANSL}
 	cd ${WORKHOME} && swift upload OPUS-MT --changed --skip-identical eval
 	swift post OPUS-MT --read-acl ".r:*"
+
+upload-images:
+	cd ${WORKHOME} && swift upload OPUS-MT --changed --skip-identical \
+		--use-slo --segment-size 5G opusMT-images
+	swift post OPUS-MT --read-acl ".r:*"
+
 
 
 
@@ -442,8 +526,10 @@ run-eval:
 
 iso639 = aa ab ae af ak am an ar as av ay az ba be bg bh bi bm bn bo br bs ca ce ch cn co cr cs cu cv cy da de dv dz ee el en eo es et eu fa ff fi fj fo fr fy ga gd gl gn gr gu gv ha hb he hi ho hr ht hu hy hz ia id ie ig ik io is it iu ja jp jv ka kg ki kj kk kl km kn ko kr ks ku kv kw ky la lb lg li ln lo lt lu lv me mg mh mi mk ml mn mo mr ms mt my na nb nd ne ng nl nn no nr nv ny oc oj om or os pa pi pl po ps pt qu rm rn ro ru rw ry sa sc sd se sg sh si sk sl sm sn so sq sr ss st su sv sw ta tc te tg th ti tk tl tn to tr ts tt tw ty ua ug uk ur uz ve vi vo wa wo xh yi yo za zh zu
 
+NO_MEMAD = ${filter-out fi sv de fr nl,${iso639}}
+
 all2en:
-	for s in ${iso639}; do \
+	for s in ${NO_MEMAD}; do \
 	  if [ "$$s" != "en" ]; then \
 	    if [ ! -e ${WORKHOME}/$$s-en/train.submit ]; then \
 	      ${MAKE} SRCLANGS=$$s TRGLANGS='en' traindata devdata; \
@@ -462,7 +548,7 @@ all2en:
 	    fi \
 	  fi \
 	done
-	for s in ${iso639}; do \
+	for s in ${NO_MEMAD}; do \
 	  if [ "$$s" != "en" ]; then \
 	    if [ ! -e ${WORKHOME}/en-$$s/train.submit ]; then \
 	      ${MAKE} TRGLANGS=$$s SRCLANGS='en' traindata devdata; \
@@ -494,6 +580,14 @@ memad:
 	  done \
 	done
 
+en-fiet:
+	${MAKE} SRCLANGS="en" TRGLANGS="et fi" traindata devdata
+	${MAKE} SRCLANGS="en" TRGLANGS="et fi" HPC_CORES=1 train.submit-multigpu
+	${MAKE} TRGLANGS="en" SRCLANGS="et fi" traindata devdata
+	${MAKE} TRGLANGS="en" SRCLANGS="et fi" HPC_CORES=1 train.submit-multigpu
+
+
+
 memad-multi:
 	for s in "da fo is no nb nn sv" "en fr" "et hu fi" "de nl af fy" "ca es fr ga it la oc pt_br pt"; do \
 	      ${MAKE} SRCLANGS="$$s" TRGLANGS="$$s" traindata devdata; \
@@ -517,6 +611,21 @@ memad-multi2:
 	    fi \
 	  done \
 	done
+
+memad-multi3:
+	for s in "da fo is no nb nn sv" "de nl af fy" "ca es fr ga it la oc pt_br pt"; do \
+	      ${MAKE} SRCLANGS="$$s" TRGLANGS="en" traindata devdata; \
+	      ${MAKE} SRCLANGS="$$s" TRGLANGS="en" HPC_CORES=1 train.submit-multigpu; \
+	      ${MAKE} SRCLANGS="en" TRGLANGS="$$s" traindata devdata; \
+	      ${MAKE} SRCLANGS="en" TRGLANGS="$$s" HPC_CORES=1 train.submit-multigpu; \
+	done
+	${MAKE} SRCLANGS="en" TRGLANGS="fr" traindata devdata
+	${MAKE} SRCLANGS="en" TRGLANGS="fr" HPC_CORES=1 train.submit-multigpu
+	${MAKE} SRCLANGS="fr" TRGLANGS="en" traindata devdata
+	${MAKE} SRCLANGS="fr" TRGLANGS="en" HPC_CORES=1 train.submit-multigpu
+
+
+
 
 
 memad-fi:
@@ -578,6 +687,8 @@ devdata:	${DEV_SRC}.${PRE_SRC} ${DEV_TRG}.${PRE_TRG}
 testdata:	${TEST_SRC}.${PRE_SRC} ${TEST_TRG}
 
 devdata-raw:	${DEV_SRC} ${DEV_TRG}
+
+wordalign:	${TRAIN_BASE}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.src-trg.alg.gz
 
 
 MULTEVALHOME = ${APPLHOME}/multeval
@@ -745,6 +856,8 @@ else
 endif
 
 
+
+
 ## train transformer model
 ${WORKDIR}/${MODEL}.transformer.model${NR}.done: \
 		${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE}.gz \
@@ -786,6 +899,63 @@ ${WORKDIR}/${MODEL}.transformer.model${NR}.done: \
         --exponential-smoothing
 	touch $@
 
+
+
+
+## word alignment used for guided alignment
+${TRAIN_BASE}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.src-trg.alg.gz: \
+			${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE}.gz \
+			${TRAIN_TRG}.${PRE_TRG}${TRAINSIZE}.gz
+	gzip -cd < $(word 1,$^) > $(LOCAL_TRAIN_SRC).tmptxt
+	gzip -cd < $(word 1,$^) > $(LOCAL_TRAIN_TRG).tmptxt
+	${WORDALIGN} -s $(LOCAL_TRAIN_SRC).tmptxt -t $(LOCAL_TRAIN_TRG).tmptxt \
+		-f $(LOCAL_TRAIN_SRC).fwd -r $(LOCAL_TRAIN_TRG).rev
+	${ATOOLS} -c grow-diag-final -i $(LOCAL_TRAIN_SRC).fwd -j $(LOCAL_TRAIN_TRG).rev |\
+	gzip -c > $@
+
+
+## train transformer model with guided alignment
+${WORKDIR}/${MODEL}.transformer-align.model${NR}.done: \
+		${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE}.gz \
+		${TRAIN_TRG}.${PRE_TRG}${TRAINSIZE}.gz \
+		${TRAIN_BASE}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.src-trg.alg.gz \
+		${DEV_SRC}.${PRE_SRC} ${DEV_TRG}.${PRE_TRG} \
+		${MODEL_VOCAB}
+	mkdir -p ${dir $@}
+	${LOADMODS} && ${MARIAN}/marian ${MARIAN_EXTRA} \
+        --model $(@:.done=.npz) \
+	--type transformer \
+        --train-sets ${word 1,$^} ${word 2,$^} ${MARIAN_TRAIN_WEIGHTS} \
+        --max-length 500 \
+        --vocabs ${word 6,$^} ${word 6,$^} \
+        --mini-batch-fit \
+	-w ${MARIAN_WORKSPACE} \
+	--maxi-batch 500 \
+        --early-stopping ${MARIAN_EARLY_STOPPING} \
+        --valid-freq ${MARIAN_VALID_FREQ} \
+	--save-freq ${MARIAN_SAVE_FREQ} \
+	--disp-freq ${MARIAN_DISP_FREQ} \
+        --valid-sets ${word 4,$^} ${word 5,$^} \
+        --valid-metrics perplexity \
+        --valid-mini-batch 16 \
+        --beam-size 12 --normalize 1 \
+        --log $(@:.model${NR}.done=.train${NR}.log) --valid-log $(@:.model${NR}.done=.valid${NR}.log) \
+        --enc-depth 6 --dec-depth 6 \
+        --transformer-heads 8 \
+        --transformer-postprocess-emb d \
+        --transformer-postprocess dan \
+        --transformer-dropout 0.1 --label-smoothing 0.1 \
+        --learn-rate 0.0003 --lr-warmup 16000 --lr-decay-inv-sqrt 16000 --lr-report \
+        --optimizer-params 0.9 0.98 1e-09 --clip-norm 5 \
+        --tied-embeddings-all \
+	--overwrite --keep-best \
+	--devices ${MARIAN_GPUS} \
+        --sync-sgd --seed ${SEED} \
+	--sqlite \
+	--tempdir ${TMPDIR} \
+        --exponential-smoothing \
+	--guided-alignment ${word 3,$^}
+	touch $@
 
 
 

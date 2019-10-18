@@ -36,6 +36,7 @@ gperftools:
 	make -j 2 -C $@
 	sudo make -j 2 -C $@ install
 
+## OLD WAY OF INSTALLING MKL
 ## requires ssh key or loging of user tiedeman ...
 l_mkl_2019.4.243.tgz:
 	scp tiedeman@taito.csc.fi:/proj/OPUS/Opus-MT/install/$@ .

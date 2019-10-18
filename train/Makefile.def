@@ -66,13 +66,14 @@ else ifneq ($(wildcard /wrk/tiedeman/research/),)
   MARIANCPU    = ${HOME}/appl_taito/tools/marian/build-cpu
   LOADMODS     = ${LOADGPU}
 else
-  CSCPROJECT   = project_2001569
+  CSCPROJECT   = project_2001194
   DATAHOME     = ${HOME}/work/opentrans/data/${LANGPAIR}
   # WORKHOME     = /scratch/${CSCPROJECT}/joerg/opentrans
   WORKHOME     = ${shell realpath ${PWD}/work}
   APPLHOME     = ${HOME}/projappl
   OPUSHOME     = /scratch/project_2000661/nlpl/data/OPUS
   MOSESHOME    = ${APPLHOME}/mosesdecoder
+  EFLOMAL_HOME = ${APPLHOME}/eflomal/
   MARIAN       = ${APPLHOME}/marian/build
   MARIANCPU    = ${APPLHOME}/marian/build
   # GPU_MODULES  = cuda intel-mkl
@@ -91,6 +92,9 @@ ifdef LOCAL_SCRATCH
   TMPDIR       = ${LOCAL_SCRATCH}
 endif
 
+
+WORDALIGN = ${EFLOMAL_HOME}align.py
+ATOOLS    = ${FASTALIGN_HOME}atools
 
 
 # sorted languages and langpair used to match resources in OPUS
