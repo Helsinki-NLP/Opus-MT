@@ -1,0 +1,151 @@
+# -*-makefile-*-
+#
+# make distribution packages
+# and upload them to cPouta ObjectStorage
+#
+
+MODELSHOME = ${WORKHOME}/models
+# DIST_PACKAGE = ${WORKHOME}/models/${LANGSTR}/${DATASET}-${shell date +%F}.zip
+DIST_PACKAGE = ${MODELSHOME}/${LANGSTR}/${DATASET}.zip
+
+
+
+.PHONY: dist
+dist: ${DIST_PACKAGE}
+
+${DIST_PACKAGE}: ${MODEL_FINAL}
+	touch ${WORKDIR}/source.tcmodel
+	cp ${BPESRCMODEL} ${WORKDIR}/source.bpe
+	sed -e 's# - /.*/\([^/]*\)$$# - \1#' \
+	    -e 's/beam-size: [0-9]*$$/beam-size: 6/' \
+	    -e 's/mini-batch: [0-9]*$$/mini-batch: 1/' \
+	    -e 's/maxi-batch: [0-9]*$$/maxi-batch: 1/' \
+	    -e 's/relative-paths: false/relative-paths: true/' \
+	< ${MODEL_DECODER} > ${WORKDIR}/decoder.yml
+	cd ${WORKDIR} && zip ${notdir $@} \
+		${notdir ${MODEL_FINAL}} \
+		${notdir ${MODEL_VOCAB}} \
+		${notdir ${MODEL_VALIDLOG}} \
+		${notdir ${MODEL_TRAINLOG}} \
+		source.tcmodel source.bpe decoder.yml
+	mkdir -p ${dir $@}
+	mv -f ${WORKDIR}/${notdir $@} ${@:.zip=}-${shell date +%F}.zip
+	rm -f $@
+	cd ${dir $@} && ln -s ${notdir ${@:.zip=}-${shell date +%F}.zip} ${notdir $@}
+	rm -f ${WORKDIR}/decoder.yml ${WORKDIR}/source.bpe ${WORKDIR}/source.tcmodel
+	${MAKE} ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.eval
+	${MAKE} ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.compare
+	cp ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.eval $(@:.zip=-${shell date +%F}.eval.txt)
+	cp ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.compare $(@:.zip=-${shell date +%F}.test.txt)
+
+
+##-----------------------------------
+## make packages from trained models
+## check old-models as well!
+
+TRAINED_NEW_MODELS = ${patsubst ${WORKHOME}/%/,%,${dir ${wildcard ${WORKHOME}/*/*.best-perplexity.npz}}}
+# TRAINED_OLD_MODELS = ${patsubst ${WORKHOME}/old-models/%/,%,${dir ${wildcard ${WORKHOME}/old-models/*/*.best-perplexity.npz}}}
+TRAINED_OLD_MODELS = ${patsubst ${WORKHOME}/old-models/%/,%,${dir ${wildcard ${WORKHOME}/old-models/??-??/*.best-perplexity.npz}}}
+
+TRAINED_OLD_ONLY_MODELS = ${filter-out ${TRAINED_NEW_MODELS},${TRAINED_OLD_MODELS}}
+TRAINED_NEW_ONLY_MODELS = ${filter-out ${TRAINED_OLD_MODELS},${TRAINED_NEW_MODELS}}
+TRAINED_DOUBLE_MODELS   = ${filter ${TRAINED_NEW_MODELS},${TRAINED_OLD_MODELS}}
+
+## make packages of all new models
+## unless there are better models in old-models
+new-models-dist:
+	@echo "nr of extra models: ${words ${TRAINED_NEW_ONLY_MODELS}}"
+	for l in ${TRAINED_NEW_ONLY_MODELS}; do \
+	  ${MAKE} SRCLANGS="`echo $$l | cut -f1 -d'-' | sed 's/\\+/ /g'`" \
+		  TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" dist; \
+	done
+	@echo "trained double ${words ${TRAINED_DOUBLE_MODELS}}"
+	for l in ${TRAINED_DOUBLE_MODELS}; do \
+	  n=`grep 'new best' work/$$l/*.valid1.log | tail -1 | cut -f12 -d ' '`; \
+	  o=`grep 'new best' work/old-models/$$l/*.valid1.log | tail -1 | cut -f12 -d ' '`; \
+	  if (( $$(echo "$$n < $$o" |bc -l) )); then \
+	    ${MAKE} SRCLANGS="`echo $$l | cut -f1 -d'-' | sed 's/\\+/ /g'`" \
+		    TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" dist; \
+	  fi \
+	done
+
+
+## fix decoder path in old-models (to run evaluations
+fix-decoder-path:
+	for l in ${wildcard ${WORKHOME}/old-models/*/*.best-perplexity.npz.decoder.yml}; do \
+	  sed --in-place=.backup 's#/\(..-..\)/opus#/old-models/\1/opus#' $$l; \
+	  sed --in-place=.backup2 's#/old-models/old-models/#/old-models/#' $$l; \
+	  sed --in-place=.backup2 's#/old-models/old-models/#/old-models/#' $$l; \
+	done
+
+## make packages of all old models from old-models
+## unless there are better models in work (new models)
+old-models-dist:
+	@echo "nr of extra models: ${words ${TRAINED_OLD_ONLY_MODELS}}"
+	for l in ${TRAINED_OLD_ONLY_MODELS}; do \
+	  ${MAKE} SRCLANGS="`echo $$l | cut -f1 -d'-' | sed 's/\\+/ /g'`" \
+		  TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" \
+	          WORKHOME=${WORKHOME}/old-models \
+	          MODELSHOME=${WORKHOME}/models dist; \
+	done
+	@echo "trained double ${words ${TRAINED_DOUBLE_MODELS}}"
+	for l in ${TRAINED_DOUBLE_MODELS}; do \
+	  n=`grep 'new best' work/$$l/*.valid1.log | tail -1 | cut -f12 -d ' '`; \
+	  o=`grep 'new best' work/old-models/$$l/*.valid1.log | tail -1 | cut -f12 -d ' '`; \
+	  if (( $$(echo "$$o < $$n" |bc -l) )); then \
+	    ${MAKE} SRCLANGS="`echo $$l | cut -f1 -d'-' | sed 's/\\+/ /g'`" \
+		    TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" \
+	            WORKHOME=${WORKHOME}/old-models \
+	            MODELSHOME=${WORKHOME}/models dist; \
+	  else \
+	    echo "$$l: new better than old"; \
+	  fi \
+	done
+
+
+
+
+## upload to Object Storage
+## Don't forget to run this before uploading!
+#	source project_2000661-openrc.sh
+upload:
+	cd ${WORKHOME} && swift upload OPUS-MT --changed --skip-identical models
+	swift post OPUS-MT --read-acl ".r:*"
+
+upload-scores: ${WORKHOME}/eval/scores.txt
+	cd ${WORKHOME} && swift upload OPUS-MT --changed --skip-identical eval/scores.txt
+	swift post OPUS-MT --read-acl ".r:*"
+
+
+
+EVALSCORES = ${patsubst ${WORKHOME}/%.eval,${WORKHOME}/eval/%.eval.txt,${wildcard ${WORKHOME}/*/*.eval}}
+EVALTRANSL = ${patsubst ${WORKHOME}/%.compare,${WORKHOME}/eval/%.test.txt,${wildcard ${WORKHOME}/*/*.compare}}
+
+scores: ${WORKHOME}/eval/scores.txt
+
+${WORKHOME}/eval/scores.txt: ${EVALSCORES}
+	cd ${WORKHOME} && \
+	grep base */*eval | cut -f1,2- -d '/' | cut -f1,6- -d '.' | \
+	sed 's/-/    /' | sed 's/\//    /' | sed 's/ ([^)]*)//g' |\
+	sed 's/.eval:baseline//' | sed "s/  */\t/g" | sort  > $@
+
+${EVALSCORES}: # ${WORKHOME}/eval/%.eval.txt: ${WORKHOME}/models/%.eval
+	mkdir -p ${dir $@}
+	cp ${patsubst ${WORKHOME}/eval/%.eval.txt,${WORKHOME}/%.eval,$@} $@
+#	cp $< $@
+
+${EVALTRANSL}: # ${WORKHOME}/eval/%.test.txt: ${WORKHOME}/models/%.compare
+	mkdir -p ${dir $@}
+	cp ${patsubst ${WORKHOME}/eval/%.test.txt,${WORKHOME}/%.compare,$@} $@
+#	cp $< $@
+
+upload-eval: ${EVALSCORES} ${EVALTRANSL}
+	cd ${WORKHOME} && swift upload OPUS-MT --changed --skip-identical eval
+	swift post OPUS-MT --read-acl ".r:*"
+
+upload-images:
+	cd ${WORKHOME} && swift upload OPUS-MT --changed --skip-identical \
+		--use-slo --segment-size 5G opusMT-images
+	swift post OPUS-MT --read-acl ".r:*"
+
+

@@ -327,6 +327,16 @@ endif
 
 
 
+## reduce training data size if necessary
+ifdef TRAINSIZE
+${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE}.gz: ${TRAIN_SRC}.${PRE_SRC}.gz
+	zcat $< | head -${TRAINSIZE} | gzip -c > $@
+
+${TRAIN_TRG}.${PRE_TRG}${TRAINSIZE}.gz: ${TRAIN_TRG}.${PRE_TRG}.gz
+	zcat $< | head -${TRAINSIZE} | gzip -c > $@
+endif
+
+
 
 
 
