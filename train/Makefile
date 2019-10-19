@@ -194,17 +194,40 @@ finished:
 	fi
 
 
-## extension -all: run over all language pairs, e.g.
+## extension -all: run something over all language pairs, e.g.
+##   make wordalign-all
+## this goes sequentially over all language pairs
+## for the parallelizable version of this: look at %-all-parallel
+%-all:
+	for l in ${ALL_LANG_PAIRS}; do \
+	    ${MAKE} SRCLANGS="`echo $$l | cut -f1 -d'-' | sed 's/\\+/ /g'`" \
+		    TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" ${@:-all=}; \
+	done
+
+# run something over all language pairs that have trained models
 ## - make eval-all
 ## - make dist-all
-## ...
-%-all:
+%-allmodels:
 	for l in ${ALL_LANG_PAIRS}; do \
 	  if  [ `find ${WORKHOME}/$$l -name '${DATASET}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.*.npz' | wc -l` -gt 0 ]; then \
 	    ${MAKE} SRCLANGS="`echo $$l | cut -f1 -d'-' | sed 's/\\+/ /g'`" \
-		    TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" ${@:-all=}; \
+		    TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" ${@:-allmodels=}; \
 	  fi \
 	done
+
+
+## run sonething over all language pairs but make it possible to do it in parallel
+%-all-parallel:
+	${MAKE} $(subst -all-parallel,,${patsubst %,$@__%-run-for-langpair,${ALL_LANG_PAIRS}})
+
+## run a command that includes the langpair, for example
+##   make wordalign__en-da+sv-run  ...... runs wordalign with SRCLANGS="en" TRGLANGS="da sv"
+## What is this good for?
+## ---> can run many lang-pairs in parallel instead of having a for loop and run sequencetially
+%-run-for-langpair:
+	${MAKE} SRCLANGS='$(subst +, ,$(firstword $(subst -, ,${lastword ${subst __, ,${@:-run-for-langpair=}}})))' \
+		TRGLANGS='$(subst +, ,$(lastword $(subst -, ,${lastword ${subst __, ,${@:-run-for-langpair=}}})))' \
+	${shell echo $@ | sed 's/__.*$$//'}
 
 
 ## right-to-left model
@@ -352,16 +375,31 @@ ${WORKDIR}/${MODEL}.transformer.model${NR}.done: \
 
 
 
+
 ## word alignment used for guided alignment
+
+.INTERMEDIATE: ${LOCAL_TRAIN_SRC}.algtmp ${LOCAL_TRAIN_TRG}.algtmp
+
+${LOCAL_TRAIN_SRC}.algtmp: ${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE}.gz
+	mkdir -p ${dir $@}
+	gzip -cd < $< > $@
+
+${LOCAL_TRAIN_TRG}.algtmp: ${TRAIN_TRG}.${PRE_TRG}${TRAINSIZE}.gz
+	mkdir -p ${dir $@}
+	gzip -cd < $< > $@
+
 ${TRAIN_BASE}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.src-trg.alg.gz: \
 			${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE}.gz \
 			${TRAIN_TRG}.${PRE_TRG}${TRAINSIZE}.gz
-	gzip -cd < $(word 1,$^) > $(LOCAL_TRAIN_SRC).tmptxt
-	gzip -cd < $(word 2,$^) > $(LOCAL_TRAIN_TRG).tmptxt
-	${WORDALIGN} -s $(LOCAL_TRAIN_SRC).tmptxt -t $(LOCAL_TRAIN_TRG).tmptxt \
-		--overwrite -f $(LOCAL_TRAIN_SRC).fwd -r $(LOCAL_TRAIN_TRG).rev
-	${ATOOLS} -c grow-diag-final -i $(LOCAL_TRAIN_SRC).fwd -j $(LOCAL_TRAIN_TRG).rev |\
-	gzip -c > $@
+	${MAKE} ${LOCAL_TRAIN_SRC}.algtmp ${LOCAL_TRAIN_TRG}.algtmp
+	if  [ `head $(LOCAL_TRAIN_SRC).algtmp | wc -l` -gt 0 ]; then \
+	  ${WORDALIGN} -s $(LOCAL_TRAIN_SRC).algtmp -t $(LOCAL_TRAIN_TRG).algtmp \
+		--overwrite -f $(LOCAL_TRAIN_SRC).fwd -r $(LOCAL_TRAIN_TRG).rev; \
+	  ${ATOOLS} -c grow-diag-final -i $(LOCAL_TRAIN_SRC).fwd -j $(LOCAL_TRAIN_TRG).rev |\
+	  gzip -c > $@; \
+	fi
+	rm -f ${LOCAL_TRAIN_SRC}.algtmp ${LOCAL_TRAIN_TRG}.algtmp
+	rm -f $(LOCAL_TRAIN_SRC).fwd $(LOCAL_TRAIN_TRG).rev
 
 
 ## train transformer model with guided alignment

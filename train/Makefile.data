@@ -441,7 +441,7 @@ BPETRGMODEL = ${TRAIN_TRG}.bpe${TRGBPESIZE:000=}k-model
 .PRECIOUS: ${BPESRCMODEL} ${BPETRGMODEL}
 .INTERMEDIATE: ${LOCAL_TRAIN_SRC} ${LOCAL_TRAIN_TRG}
 
-${BPESRCMODEL}: ${WORKDIR}/%.bpe${SRCBPESIZE:000=}k-model: ${TMPDIR}/%
+${BPESRCMODEL}: ${WORKDIR}/%.bpe${SRCBPESIZE:000=}k-model: ${TMPDIR}/${LANGSTR}/%
 ifeq ($(wildcard ${BPESRCMODEL}),)
 	mkdir -p ${dir $@}
 ifeq ($(TRGLANGS),${firstword ${TRGLANGS}})
@@ -459,7 +459,7 @@ else
 endif
 
 ## no labels on the target language side
-${BPETRGMODEL}: ${WORKDIR}/%.bpe${TRGBPESIZE:000=}k-model: ${TMPDIR}/%
+${BPETRGMODEL}: ${WORKDIR}/%.bpe${TRGBPESIZE:000=}k-model: ${TMPDIR}/${LANGSTR}/%
 ifeq ($(wildcard ${BPETRGMODEL}),)
 	mkdir -p ${dir $@}
 	python3 ${SNMTPATH}/learn_bpe.py -s $(TRGBPESIZE) < $< > $@
@@ -496,8 +496,8 @@ endif
 
 
 ## get it from local space and compress ...
-${WORKDIR}/%.trg.${PRE_TRG}.gz: ${TMPDIR}/%.trg.${PRE_TRG}
+${WORKDIR}/%.trg.${PRE_TRG}.gz: ${TMPDIR}/${LANGSTR}/%.trg.${PRE_TRG}
 	gzip -c < $< > $@
 
-${WORKDIR}/%.src.${PRE_SRC}.gz: ${TMPDIR}/%.src.${PRE_SRC}
+${WORKDIR}/%.src.${PRE_SRC}.gz: ${TMPDIR}/${LANGSTR}/%.src.${PRE_SRC}
 	gzip -c < $< > $@
