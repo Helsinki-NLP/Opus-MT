@@ -158,11 +158,11 @@ all2en:
 	done
 
 memad:
-	for s in en fi sv de fr nl; do \
+	for s in fi en sv de fr nl; do \
 	  for t in en fi sv de fr nl; do \
 	    if [ "$$s" != "$$t" ]; then \
 	      if ! grep -q 'stalled ${MARIAN_EARLY_STOPPING} times' ${WORKHOME}/$$s-$$t/*.valid${NR.log}; then\
-	        ${MAKE} SRCLANGS=$$s TRGLANGS=$$t traindata devdata; \
+	        ${MAKE} SRCLANGS=$$s TRGLANGS=$$t traindata devdata wordalign; \
 	        ${MAKE} SRCLANGS=$$s TRGLANGS=$$t HPC_CORES=1 train.submit-multigpu; \
 	      fi \
 	    fi \
