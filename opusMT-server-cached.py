@@ -199,6 +199,16 @@ class Translate(WebSocket):
                 alignment = ''
                 if len(received) == 2:
                     alignment = received[1]
+                    ## change the source IDs if there is a lang-ID prefix
+                    if prefix != '':
+                        links = alignment.split(' ')
+                        fixedLinks = []
+                        for link in links:
+                            ids = link.split('-')
+                            if ids[0] != '0':
+                                ids[0] = str(int(ids[0])-1)
+                                fixedLinks.append('-'.join(ids))
+                        alignment = ' '.join(fixedLinks)
                 # print('translated sentence ' + translated, flush=True)
                 detokenized = detokenizer[toLang](translated.split())
                 print('TRANSLATION: ' + detokenized, flush=True)
