@@ -43,6 +43,14 @@
     	"source-languages" : "et+hu+fi",
     	"target-languages" : "et+hu+fi"
     },
+    "192.168.1.15:20002" : {
+    	"source-languages" : "sv",
+    	"target-languages" : "fi"
+    },
+    "192.168.1.15:20003" : {
+    	"source-languages" : "fi",
+    	"target-languages" : "sv"
+    },
     "192.168.1.15:21005" : {
     	"source-languages" : "ca+es+fr+ga+it+la+oc+pt_br+pt",
     	"target-languages" : "ca+es+fr+ga+it+la+oc+pt_br+pt"
