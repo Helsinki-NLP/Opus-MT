@@ -201,13 +201,15 @@ class Translate(WebSocket):
                     alignment = received[1]
                     links = alignment.split(' ')
                     fixedLinks = []
+                    inputLength = len(segmented.split(' '))
+                    outputLength = len(received[0].split(' '))
                     for link in links:
                         ids = link.split('-')
                         ## change the source IDs if there is a lang-ID prefix
                         if prefix != '':
                             ids[0] = str(int(ids[0])-1)
-                        if ids[0] != '-1' and int(ids[0])<len(segmented):
-                            if int(ids[1])<len(received[0]):
+                        if ids[0] != '-1' and int(ids[0])<inputLength:
+                            if int(ids[1])<outputLength:
                                 fixedLinks.append('-'.join(ids))
                     alignment = ' '.join(fixedLinks)
                 # print('translated sentence ' + translated, flush=True)

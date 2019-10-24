@@ -132,6 +132,15 @@ install-opusMT-router: /etc/init.d/opusMT
 # install-marian-server: /etc/init/marian-${DATASET}-${LANGPAIR}.conf
 # install-opusMT-server: /etc/init/opusMT-${DATASET}-${LANGPAIR}.conf
 
+.PHONY: update-model
+update-model:
+	mv ${OPUSMT_CACHE} ${OPUSMT_CACHE}.${shell date +%F}
+	mv ${NMT_MODEL} ${NMT_MODEL}.${shell date +%F}
+	mv ${NMT_VOCAB} ${NMT_VOCAB}.${shell date +%F}
+	mv ${BPEMODEL} ${BPEMODEL}.${shell date +%F}
+	${MAKE} ${NMT_MODEL}
+	service opusMT-${DATASET}-${LANGPAIR} restart
+
 
 .PHONY: download-model
 download-model: ${NMT_MODEL}
