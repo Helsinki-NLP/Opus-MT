@@ -146,6 +146,8 @@ class Translate(WebSocket):
             if len(cached) == 4:
                 data['source-segments'] = [cached[1]]
                 data['target-segments'] = [cached[2]]
+                data['source-sentences'] = [srctxt]
+                data['target-sentences'] = [translation]
                 data['alignment'] = [cached[3]]
 
             self.sendMessage(json.dumps(data, sort_keys=True, indent=4))
@@ -176,7 +178,10 @@ class Translate(WebSocket):
         sentTranslatedTokenized = []
         sentTranslatedBPE = []
         sentAlignment = []
-        for s in sentence_splitter[fromLang]([normalizer[fromLang](srctxt)]):
+        sentSource = sentence_splitter[fromLang]([normalizer[fromLang](srctxt)])
+
+        # for s in sentence_splitter[fromLang]([normalizer[fromLang](srctxt)]):
+        for s in sentSource:
             key = langpair + ' ' + s
             if key in cache:
                 cached = cache[key].split("\t")
@@ -225,7 +230,9 @@ class Translate(WebSocket):
                 
         trgtext = ' '.join(sentTranslated)
         data = {'result': trgtext, 'source': fromLang, 'target': toLang,
-                'source-segments': sentSourceBPE, 'target-segments': sentTranslatedBPE, 'alignment' : sentAlignment }
+                'source-sentences': sentSource, 'target-sentences': sentTranslated,
+                'source-segments': sentSourceBPE, 'target-segments': sentTranslatedBPE,
+                'alignment' : sentAlignment }
         # 'origin': "ws://{}:{}/translate".format(args.mthost, args.mtport)}
         self.sendMessage(json.dumps(data, sort_keys=True, indent=4))
 
