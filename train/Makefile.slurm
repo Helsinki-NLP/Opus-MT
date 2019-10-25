@@ -37,7 +37,7 @@ ifeq (${shell hostname --domain},bullx)
 else
 	echo '#SBATCH --gres=gpu:${GPU}:${NR_GPUS}' >> $@
 endif
-	echo '#SBATCH -t ${WALLTIME}:00:00' >> $@
+	echo '#SBATCH -t ${HPC_TIME}:00' >> $@
 	echo 'module use -a /proj/nlpl/modules' >> $@
 	for m in ${GPU_MODULES}; do \
 	  echo "module load $$m" >> $@; \
@@ -75,7 +75,7 @@ endif
 	echo '#SBATCH -n ${HPC_CORES}' >> $@
 	echo '#SBATCH -N ${HPC_NODES}' >> $@
 	echo '#SBATCH -p ${HPC_QUEUE}' >> $@
-	echo '#SBATCH -t ${WALLTIME}:00:00' >> $@
+	echo '#SBATCH -t ${HPC_TIME}:00' >> $@
 	echo '${HPC_EXTRA}' >> $@
 	echo 'module use -a /proj/nlpl/modules' >> $@
 	for m in ${CPU_MODULES}; do \

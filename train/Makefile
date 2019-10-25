@@ -257,6 +257,12 @@ finished:
 	${@:-cpu=}
 
 
+%-spm:
+	${MAKE} WORKHOME=${shell realpath ${PWD}/work-spm} \
+		PRE=norm PRE_SRC=txt PRE_TRG=txt \
+		MARIAN=${MARIAN}-spm \
+		MODEL_VOCABTYPE=spm \
+	${@:-spm=}
 
 
 
@@ -331,19 +337,20 @@ else
 endif
 
 
+## NEW: take away dependency on ${MODEL_VOCAB}
+
 ## train transformer model
 ${WORKDIR}/${MODEL}.transformer.model${NR}.done: \
 		${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE}.gz \
 		${TRAIN_TRG}.${PRE_TRG}${TRAINSIZE}.gz \
-		${DEV_SRC}.${PRE_SRC} ${DEV_TRG}.${PRE_TRG} \
-		${MODEL_VOCAB}
+		${DEV_SRC}.${PRE_SRC} ${DEV_TRG}.${PRE_TRG}
 	mkdir -p ${dir $@}
 	${LOADMODS} && ${MARIAN}/marian ${MARIAN_EXTRA} \
         --model $(@:.done=.npz) \
 	--type transformer \
         --train-sets ${word 1,$^} ${word 2,$^} ${MARIAN_TRAIN_WEIGHTS} \
         --max-length 500 \
-        --vocabs ${word 5,$^} ${word 5,$^} \
+        --vocabs ${MODEL_VOCAB} ${MODEL_VOCAB} \
         --mini-batch-fit \
 	-w ${MARIAN_WORKSPACE} \
 	--maxi-batch 500 \
@@ -402,20 +409,21 @@ ${TRAIN_BASE}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.src-trg.alg.gz: \
 	rm -f $(LOCAL_TRAIN_SRC).fwd $(LOCAL_TRAIN_TRG).rev
 
 
+## NEW: take away dependency on ${MODEL_VOCAB}
+
 ## train transformer model with guided alignment
 ${WORKDIR}/${MODEL}.transformer-align.model${NR}.done: \
 		${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE}.gz \
 		${TRAIN_TRG}.${PRE_TRG}${TRAINSIZE}.gz \
 		${TRAIN_BASE}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.src-trg.alg.gz \
-		${DEV_SRC}.${PRE_SRC} ${DEV_TRG}.${PRE_TRG} \
-		${MODEL_VOCAB}
+		${DEV_SRC}.${PRE_SRC} ${DEV_TRG}.${PRE_TRG}
 	mkdir -p ${dir $@}
 	${LOADMODS} && ${MARIAN}/marian ${MARIAN_EXTRA} \
         --model $(@:.done=.npz) \
 	--type transformer \
         --train-sets ${word 1,$^} ${word 2,$^} ${MARIAN_TRAIN_WEIGHTS} \
         --max-length 500 \
-        --vocabs ${word 6,$^} ${word 6,$^} \
+        --vocabs ${MODEL_VOCAB} ${MODEL_VOCAB} \
         --mini-batch-fit \
 	-w ${MARIAN_WORKSPACE} \
 	--maxi-batch 500 \

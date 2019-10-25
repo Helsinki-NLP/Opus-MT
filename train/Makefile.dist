@@ -149,3 +149,7 @@ upload-images:
 	swift post OPUS-MT --read-acl ".r:*"
 
 
+
+# ## dangerous area ....
+# delete-eval:
+# 	swift delete OPUS-MT eval

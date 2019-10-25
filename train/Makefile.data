@@ -14,16 +14,16 @@ endif
 
 
 
-CLEAN_TRAIN_SRC = ${patsubst %,${DATADIR}/raw/%.${LANGPAIR}.clean.${SRCEXT}.gz,${TRAINSET}}
+CLEAN_TRAIN_SRC = ${patsubst %,${DATADIR}/${PRE}/%.${LANGPAIR}.clean.${SRCEXT}.gz,${TRAINSET}}
 CLEAN_TRAIN_TRG = ${patsubst %.${SRCEXT}.gz,%.${TRGEXT}.gz,${CLEAN_TRAIN_SRC}}
 
-CLEAN_TUNE_SRC  = ${patsubst %,${DATADIR}/raw/%.${LANGPAIR}.clean.${SRCEXT}.gz,${TUNESET}}
+CLEAN_TUNE_SRC  = ${patsubst %,${DATADIR}/${PRE}/%.${LANGPAIR}.clean.${SRCEXT}.gz,${TUNESET}}
 CLEAN_TUNE_TRG  = ${patsubst %.${SRCEXT}.gz,%.${TRGEXT}.gz,${CLEAN_TUNE_SRC}}
 
-CLEAN_DEV_SRC   = ${patsubst %,${DATADIR}/raw/%.${LANGPAIR}.clean.${SRCEXT}.gz,${DEVSET}}
+CLEAN_DEV_SRC   = ${patsubst %,${DATADIR}/${PRE}/%.${LANGPAIR}.clean.${SRCEXT}.gz,${DEVSET}}
 CLEAN_DEV_TRG   = ${patsubst %.${SRCEXT}.gz,%.${TRGEXT}.gz,${CLEAN_DEV_SRC}}
 
-CLEAN_TEST_SRC  = ${patsubst %,${DATADIR}/raw/%.${LANGPAIR}.clean.${SRCEXT}.gz,${TESTSET}}
+CLEAN_TEST_SRC  = ${patsubst %,${DATADIR}/${PRE}/%.${LANGPAIR}.clean.${SRCEXT}.gz,${TESTSET}}
 CLEAN_TEST_TRG  = ${patsubst %.${SRCEXT}.gz,%.${TRGEXT}.gz,${CLEAN_TEST_SRC}}
 
 DATA_SRC := ${sort ${CLEAN_TRAIN_SRC} ${CLEAN_TUNE_SRC} ${CLEAN_DEV_SRC} ${CLEAN_TEST_SRC}}
@@ -66,7 +66,7 @@ clean-data-source: ${DATA_SRC}
 ## this is too strict for non-latin languages
 #	grep -i '[a-zäöå0-9]' |\
 
-%.clean.${SRCEXT}.gz: %.${SRCEXT}.tok %.${TRGEXT}.tok
+%.clean.${SRCEXT}.gz: %.${SRCEXT}.${PRE} %.${TRGEXT}.${PRE}
 	rm -f $@.${SRCEXT} $@.${TRGEXT}
 	ln -s ${word 1,$^} $@.${SRCEXT}
 	ln -s ${word 2,$^} $@.${TRGEXT}
@@ -277,9 +277,9 @@ ${TEST_SRC}: ${DEV_SRC}
 ifneq (${TESTSET},${DEVSET})
 	mkdir -p ${dir $@}
 	rm -f ${TEST_SRC} ${TEST_TRG}
-	if [ -e ${TESTSET_DIR}/${TESTSET}.${SRC}.tok.gz ]; then \
-	  ${MAKE} CLEAN_TEST_SRC=${TESTSET_DIR}/${TESTSET}.${SRC}.tok.gz \
-		  CLEAN_TEST_TRG=${TESTSET_DIR}/${TESTSET}.${TRG}.tok.gz \
+	if [ -e ${TESTSET_DIR}/${TESTSET}.${SRC}.${PRE}.gz ]; then \
+	  ${MAKE} CLEAN_TEST_SRC=${TESTSET_DIR}/${TESTSET}.${SRC}.${PRE}.gz \
+		  CLEAN_TEST_TRG=${TESTSET_DIR}/${TESTSET}.${TRG}.${PRE}.gz \
 	  add-to-test-data; \
 	else \
 	  for s in ${SRCLANGS}; do \
@@ -296,9 +296,9 @@ ifneq (${TESTSET},${DEVSET})
 	fi
 else
 	mkdir -p ${dir $@}
-	if [ -e ${TESTSET_DIR}/${TESTSET}.${SRC}.tok.gz ]; then \
-	  ${MAKE} CLEAN_TEST_SRC=${TESTSET_DIR}/${TESTSET}.${SRC}.tok.gz \
-		  CLEAN_TEST_TRG=${TESTSET_DIR}/${TESTSET}.${TRG}.tok.gz \
+	if [ -e ${TESTSET_DIR}/${TESTSET}.${SRC}.${PRE}.gz ]; then \
+	  ${MAKE} CLEAN_TEST_SRC=${TESTSET_DIR}/${TESTSET}.${SRC}.${PRE}.gz \
+		  CLEAN_TEST_TRG=${TESTSET_DIR}/${TESTSET}.${TRG}.${PRE}.gz \
 	  add-to-test-data; \
 	elif (( `zcat $<.shuffled.gz | wc -l` < $$((${DEVSIZE} + ${TESTSIZE})) )); then \
 	  zcat $<.shuffled.gz | cut -f1 | tail -n +$$((${DEVMINSIZE} + 1)) > ${TEST_SRC}; \
@@ -411,14 +411,25 @@ endif
 	sed 's/  */ /g;s/^ *//g;s/ *$$//g' > $@
 
 
+
+## only normalisation
+%.norm: %.raw
+	$(LOAD_MOSES) cat $< |\
+	$(TOKENIZER)/replace-unicode-punctuation.perl |\
+	$(TOKENIZER)/remove-non-printing-char.perl |\
+	$(TOKENIZER)/normalize-punctuation.perl |\
+	sed 's/  */ /g;s/^ *//g;s/ *$$//g' > $@
+
+
+
 # tokenize testsets
 testsets/%.raw: testsets/%.gz
 	gzip -cd < $< > $@
 
-testsets/%.tok.gz: testsets/%.tok
+testsets/%.${PRE}.gz: testsets/%.${PRE}
 	gzip -c < $< > $@
 
-ALLTEST = $(patsubst %.gz,%.tok.gz,${sort $(subst .tok,,${wildcard testsets/*/*.??.gz})})
+ALLTEST = $(patsubst %.gz,%.${PRE}.gz,${sort $(subst .${PRE},,${wildcard testsets/*/*.??.gz})})
 
 tokenize-testsets: ${ALLTEST}
 
@@ -472,7 +483,7 @@ endif
 
 
 
-%.src.${PRE_SRC}: %.src ${BPESRCMODEL}
+%.src.bpe${SRCBPESIZE:000=}k: %.src ${BPESRCMODEL}
 ifeq ($(TRGLANGS),${firstword ${TRGLANGS}})
 	python3 ${SNMTPATH}/apply_bpe.py -c $(word 2,$^) < $< > $@
 else
@@ -483,21 +494,27 @@ else
 	rm -f $<.labels $<.text $@.text
 endif
 
-%.trg.${PRE_TRG}: %.trg ${BPETRGMODEL}
+%.trg.bpe${TRGBPESIZE:000=}k: %.trg ${BPETRGMODEL}
 	python3 ${SNMTPATH}/apply_bpe.py -c $(word 2,$^) < $< > $@
 
 
 
-# %.trg.${PRE_TRG}.gz: %.trg.${PRE_TRG}
-# 	gzip -f $<
+%.trg.txt: %.trg
+	mkdir -p ${dir $@}
+	mv $< $@
 
-# %.src.${PRE_SRC}.gz: %.src.${PRE_SRC}
-# 	gzip -f $<
+%.src.txt: %.src
+	mkdir -p ${dir $@}
+	mv $< $@
 
+
+##----------------------------------------------
 
 ## get it from local space and compress ...
 ${WORKDIR}/%.trg.${PRE_TRG}.gz: ${TMPDIR}/${LANGSTR}/%.trg.${PRE_TRG}
+	mkdir -p ${dir $@}
 	gzip -c < $< > $@
 
 ${WORKDIR}/%.src.${PRE_SRC}.gz: ${TMPDIR}/${LANGSTR}/%.src.${PRE_SRC}
+	mkdir -p ${dir $@}
 	gzip -c < $< > $@

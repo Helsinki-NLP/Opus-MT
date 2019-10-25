@@ -169,6 +169,17 @@ memad:
 	  done \
 	done
 
+enfisv:
+	${MAKE} SRCLANGS="en fi sv" TRGLANGS="en fi sv" traindata devdata wordalign
+	${MAKE} SRCLANGS="en fi sv" TRGLANGS="en fi sv" WALLTIME=72 HPC_CORES=1 train.submit-multigpu
+
+germanic:
+	${MAKE} SRCLANGS="en de nl fy af da fo is no nb nn sv" \
+		TRGLANGS="en de nl fy af da fo is no nb nn sv" traindata devdata wordalign
+	${MAKE} SRCLANGS="en de nl fy af da fo is no nb nn sv" \
+		TRGLANGS="en de nl fy af da fo is no nb nn sv" \
+		WALLTIME=72 HPC_CORES=1 train.submit-multigpu
+
 en-fiet:
 	${MAKE} SRCLANGS="en" TRGLANGS="et fi" traindata devdata
 	${MAKE} SRCLANGS="en" TRGLANGS="et fi" HPC_CORES=1 train.submit-multigpu
@@ -239,7 +250,7 @@ romance:
 	${MAKE} TRGLANGS="es ca ga oc it la fr ro pt_br pt" SRCLANGS="fi et hu" traindata
 	${MAKE} TRGLANGS="es ca ga oc it la fr ro pt_br pt" SRCLANGS="fi et hu" HPC_CORES=1 train.submit-multigpu
 
-germanic:
+westgermanic:
 	${MAKE} SRCLANGS="de nl af fy" TRGLANGS="fi et hu" traindata
 	${MAKE} SRCLANGS="de nl af fy" TRGLANGS="fi et hu" HPC_CORES=1 train.submit-multigpu
 	${MAKE} TRGLANGS="de nl af fy" SRCLANGS="fi et hu" traindata
