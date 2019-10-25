@@ -91,8 +91,12 @@ class Translate(WebSocket):
             isReliable, textBytesFound, details = cld2.detect(srctxt, bestEffort=True)
             fromLang = details[0][1]
             print("language detected = " + fromLang)
-            if fromLang == toLang and toLang != args.defsrc:
-                toLang = args.defsrc
+            # if fromLang == toLang and toLang != args.defsrc:
+            #     toLang = args.defsrc
+
+        # special case: DL as target means to use the same as input
+        if toLang == 'DL' or toLang == 'detect':
+            toLang=fromLang
 
         langpair = fromLang + '-' + toLang
         if not langpair in opusMT:

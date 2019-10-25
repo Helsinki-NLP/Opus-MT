@@ -104,6 +104,11 @@ germanic-server:
 	${MAKE} SRC_LANGS="de+af+fy+nl" TRG_LANGS="de+af+fy+nl" MARIAN_PORT=11004 OPUSMT_PORT=21004 opusMT-server
 
 
+romance-server:
+	${MAKE} SRC_LANGS="ca+es+fr+ga+it+la+oc+pt_br+pt" TRG_LANGS="ca+es+fr+ga+it+la+oc+pt_br+pt" \
+		MARIAN_PORT=11005 OPUSMT_PORT=21005 opusMT-server
+
+
 
 french-etfi-server:
 	${MAKE} SRC_LANGS="fr" TRG_LANGS="et+fi" MARIAN_PORT=11100 OPUSMT_PORT=21100 opusMT-server
@@ -126,6 +131,15 @@ install-opusMT-router: /etc/init.d/opusMT
 
 # install-marian-server: /etc/init/marian-${DATASET}-${LANGPAIR}.conf
 # install-opusMT-server: /etc/init/opusMT-${DATASET}-${LANGPAIR}.conf
+
+.PHONY: update-model
+update-model:
+	mv ${OPUSMT_CACHE} ${OPUSMT_CACHE}.${shell date +%F}
+	mv ${NMT_MODEL} ${NMT_MODEL}.${shell date +%F}
+	mv ${NMT_VOCAB} ${NMT_VOCAB}.${shell date +%F}
+	mv ${BPEMODEL} ${BPEMODEL}.${shell date +%F}
+	${MAKE} ${NMT_MODEL}
+	service opusMT-${DATASET}-${LANGPAIR} restart
 
 
 .PHONY: download-model

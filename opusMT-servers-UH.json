@@ -7,6 +7,10 @@
 	"source-languages" : "fi",
 	"target-languages" : "en"
     },
+    "192.168.1.19:20004" : {
+	"source-languages" : "de",
+	"target-languages" : "fi"
+    },
     "192.168.1.19:21000" : {
     	"source-languages" : "et+fi",
     	"target-languages" : "da+fo+is+no+nb+nn+sv"
@@ -26,5 +30,29 @@
     "192.168.1.14:21101" : {
 	"source-languages" : "et+fi",
 	"target-languages" : "fr"
+    },
+    "192.168.1.22:21004" : {
+    	"source-languages" : "de+af+fy+nl",
+    	"target-languages" : "de+af+fy+nl"
+    },
+    "192.168.1.22:21005" : {
+    	"source-languages" : "da+fo+is+no+nb+nn+sv",
+    	"target-languages" : "da+fo+is+no+nb+nn+sv"
+    },
+    "192.168.1.22:21006" : {
+    	"source-languages" : "et+hu+fi",
+    	"target-languages" : "et+hu+fi"
+    },
+    "192.168.1.15:20002" : {
+    	"source-languages" : "sv",
+    	"target-languages" : "fi"
+    },
+    "192.168.1.15:20003" : {
+    	"source-languages" : "fi",
+    	"target-languages" : "sv"
+    },
+    "192.168.1.15:21005" : {
+    	"source-languages" : "ca+es+fr+ga+it+la+oc+pt_br+pt",
+    	"target-languages" : "ca+es+fr+ga+it+la+oc+pt_br+pt"
     }
 }
