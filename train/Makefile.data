@@ -498,6 +498,13 @@ endif
 	python3 ${SNMTPATH}/apply_bpe.py -c $(word 2,$^) < $< > $@
 
 
+## this places @@ markers in front of punctuations
+## if they appear to the right of the segment boundary
+## (useful if we use BPE without tokenization)
+%.segfix: %
+	perl -pe 's/(\P{P})\@\@ (\p{P})/$$1 \@\@$$2/g' < $< > $@
+
+
 
 %.trg.txt: %.trg
 	mkdir -p ${dir $@}

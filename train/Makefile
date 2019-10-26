@@ -265,6 +265,11 @@ finished:
 	${@:-spm=}
 
 
+%-bpe:
+	${MAKE} WORKHOME=${shell realpath ${PWD}/work-bpe} \
+		PRE_SRC=${PRE_SRC}.segfix PRE_TRG=${PRE_TRG}.segfix \
+		PRE=norm MODEL_VOCABTYPE=spm \
+	${@:-bpe=}
 
 
 
@@ -471,7 +476,7 @@ ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.ensemble.${SRC}.${TRG}: ${TEST_
 			${WORKDIR}/${MODEL}.vocab.yml \
 			${WORKDIR}/${MODEL}.vocab.yml \
 		${MARIAN_DECODER_FLAGS} \
-	| sed 's/\@\@ //g' > $@
+	| sed 's/\@\@ //g' | sed 's/ \@\@//g' > $@
 
 
 #------------------------------------------------------------------------
@@ -487,7 +492,7 @@ ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}: ${TEST_SRC}.${PR
 		-c ${word 2,$^}.best-perplexity.npz.decoder.yml \
 		-d ${MARIAN_GPUS} \
 		${MARIAN_DECODER_FLAGS} \
-	| sed 's/\@\@ //g' > $@
+	| sed 's/\@\@ //g' | sed 's/ \@\@//g' > $@
 	rm -f $@.input
 
 %.eval: % ${TEST_TRG}

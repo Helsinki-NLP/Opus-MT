@@ -169,6 +169,15 @@ memad:
 	  done \
 	done
 
+
+fiensv-bpe:
+	${MAKE} SRCLANGS=fi TRGLANGS=sv traindata-bpe devdata-bpe wordalign-bpe
+	${MAKE} SRCLANGS=fi TRGLANGS=sv WALLTIME=72 HPC_CORES=1 train-bpe.submit-multigpu
+	${MAKE} SRCLANGS=fi TRGLANGS=en traindata-bpe devdata-bpe wordalign-bpe
+	${MAKE} SRCLANGS=fi TRGLANGS=en WALLTIME=72 HPC_CORES=1 train-bpe.submit-multigpu
+
+
+
 enfisv:
 	${MAKE} SRCLANGS="en fi sv" TRGLANGS="en fi sv" traindata devdata wordalign
 	${MAKE} SRCLANGS="en fi sv" TRGLANGS="en fi sv" WALLTIME=72 HPC_CORES=1 train.submit-multigpu
