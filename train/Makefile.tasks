@@ -124,13 +124,13 @@ all2en:
 	      ${MAKE} SRCLANGS=$$s TRGLANGS='en' traindata devdata; \
 	      if [ `zcat ${WORKHOME}/$$s-en/train/*.src.${PRE_SRC}.gz | wc -l` -gt 1000000 ]; then \
 		echo "$$s-en bigger than 1 million"; \
-		${MAKE} SRCLANGS=$$s TRGLANGS='en' HPC_CORES=1 train.submit-multigpu; \
+		${MAKE} SRCLANGS=$$s TRGLANGS='en' HPC_CORES=1 HPC_MEM=4g train.submit-multigpu; \
 	      elif [ `zcat ${WORKHOME}/$$s-en/train/*.src.${PRE_SRC}.gz | wc -l` -gt 100000 ]; then \
 		echo "$$s-en bigger than 100k"; \
 		${MAKE} SRCLANGS=$$s TRGLANGS='en' \
 			MARIAN_VALID_FREQ=2500 \
 			MARIAN_EARLY_STOPPING=5 \
-			HPC_CORES=1 train.submit; \
+			HPC_CORES=1 HPC_MEM=4g train.submit; \
 	      else \
 		echo "$$s-en too small"; \
 	      fi \
@@ -143,13 +143,13 @@ all2en:
 	      ${MAKE} TRGLANGS=$$s SRCLANGS='en' traindata devdata; \
 	      if [ `zcat ${WORKHOME}/en-$$s/train/*.src.${PRE_SRC}.gz | wc -l` -gt 1000000 ]; then \
 		echo "en-$$s bigger than 1 million"; \
-		${MAKE} TRGLANGS=$$s SRCLANGS='en' HPC_CORES=1 train.submit-multigpu; \
+		${MAKE} TRGLANGS=$$s SRCLANGS='en' HPC_CORES=1 HPC_MEM=4g train.submit-multigpu; \
 	      elif [ `zcat ${WORKHOME}/en-$$s/train/*.src.${PRE_SRC}.gz | wc -l` -gt 100000 ]; then \
 		echo "en-$$s bigger than 100k"; \
 		${MAKE} TRGLANGS=$$s SRCLANGS='en' \
 			MARIAN_VALID_FREQ=2500 \
 			MARIAN_EARLY_STOPPING=5 \
-			HPC_CORES=1 train.submit; \
+			HPC_CORES=1 HPC_MEM=4g train.submit; \
 	      else \
 		echo "en-$$s too small"; \
 	      fi \
@@ -163,50 +163,66 @@ memad:
 	    if [ "$$s" != "$$t" ]; then \
 	      if ! grep -q 'stalled ${MARIAN_EARLY_STOPPING} times' ${WORKHOME}/$$s-$$t/*.valid${NR.log}; then\
 	        ${MAKE} SRCLANGS=$$s TRGLANGS=$$t traindata devdata wordalign; \
-	        ${MAKE} SRCLANGS=$$s TRGLANGS=$$t HPC_CORES=1 train.submit-multigpu; \
+	        ${MAKE} SRCLANGS=$$s TRGLANGS=$$t HPC_CORES=1 HPC_MEM=4g train.submit-multigpu; \
 	      fi \
 	    fi \
 	  done \
 	done
 
 
-fiensv-bpe:
-	${MAKE} SRCLANGS=fi TRGLANGS=sv traindata-bpe devdata-bpe wordalign-bpe
-	${MAKE} SRCLANGS=fi TRGLANGS=sv WALLTIME=72 HPC_CORES=1 train-bpe.submit-multigpu
-	${MAKE} SRCLANGS=fi TRGLANGS=en traindata-bpe devdata-bpe wordalign-bpe
-	${MAKE} SRCLANGS=fi TRGLANGS=en WALLTIME=72 HPC_CORES=1 train-bpe.submit-multigpu
+fiensv_bpe:
+	${MAKE} SRCLANGS=fi TRGLANGS=sv traindata-bpe 
+	${MAKE} SRCLANGS=fi TRGLANGS=sv devdata-bpe
+	${MAKE} SRCLANGS=fi TRGLANGS=sv wordalign-bpe
+	${MAKE} SRCLANGS=fi TRGLANGS=sv WALLTIME=72 HPC_MEM=4g HPC_CORES=1 train-bpe.submit-multigpu
+	${MAKE} SRCLANGS=fi TRGLANGS=en traindata-bpe 
+	${MAKE} SRCLANGS=fi TRGLANGS=en devdata-bpe
+	${MAKE} SRCLANGS=fi TRGLANGS=en wordalign-bpe
+	${MAKE} SRCLANGS=fi TRGLANGS=en WALLTIME=72 HPC_MEM=4g HPC_CORES=1 train-bpe.submit-multigpu
+
+
+fiensv_spm:
+	${MAKE} SRCLANGS=fi TRGLANGS=sv traindata-spm 
+	${MAKE} SRCLANGS=fi TRGLANGS=sv devdata-spm
+	${MAKE} SRCLANGS=fi TRGLANGS=sv wordalign-spm
+	${MAKE} SRCLANGS=fi TRGLANGS=sv WALLTIME=72 HPC_MEM=4g HPC_CORES=1 train-spm.submit-multigpu
+	${MAKE} SRCLANGS=fi TRGLANGS=en traindata-spm 
+	${MAKE} SRCLANGS=fi TRGLANGS=en devdata-spm
+	${MAKE} SRCLANGS=fi TRGLANGS=en wordalign-spm
+	${MAKE} SRCLANGS=fi TRGLANGS=en WALLTIME=72 HPC_MEM=4g HPC_CORES=1 train-spm.submit-multigpu
+
 
 
 
 enfisv:
 	${MAKE} SRCLANGS="en fi sv" TRGLANGS="en fi sv" traindata devdata wordalign
-	${MAKE} SRCLANGS="en fi sv" TRGLANGS="en fi sv" WALLTIME=72 HPC_CORES=1 train.submit-multigpu
+	${MAKE} SRCLANGS="en fi sv" TRGLANGS="en fi sv" HPC_MEM=4g WALLTIME=72 HPC_CORES=1 train.submit-multigpu
 
 germanic:
 	${MAKE} SRCLANGS="en de nl fy af da fo is no nb nn sv" \
 		TRGLANGS="en de nl fy af da fo is no nb nn sv" traindata devdata wordalign
 	${MAKE} SRCLANGS="en de nl fy af da fo is no nb nn sv" \
 		TRGLANGS="en de nl fy af da fo is no nb nn sv" \
-		WALLTIME=72 HPC_CORES=1 train.submit-multigpu
+		WALLTIME=72 HPC_CORES=1 HPC_MEM=4g train.submit-multigpu
 
 en-fiet:
 	${MAKE} SRCLANGS="en" TRGLANGS="et fi" traindata devdata
-	${MAKE} SRCLANGS="en" TRGLANGS="et fi" HPC_CORES=1 train.submit-multigpu
+	${MAKE} SRCLANGS="en" TRGLANGS="et fi" HPC_MEM=4g HPC_CORES=1 train.submit-multigpu
 	${MAKE} TRGLANGS="en" SRCLANGS="et fi" traindata devdata
-	${MAKE} TRGLANGS="en" SRCLANGS="et fi" HPC_CORES=1 train.submit-multigpu
+	${MAKE} TRGLANGS="en" SRCLANGS="et fi" HPC_MEM=4g HPC_CORES=1 train.submit-multigpu
 
 
 
 memad-multi:
 	for s in "da fo is no nb nn sv" "en fr" "et hu fi" "de nl af fy" "ca es fr ga it la oc pt_br pt"; do \
 	      ${MAKE} SRCLANGS="$$s" TRGLANGS="$$s" traindata devdata; \
-	      ${MAKE} SRCLANGS="$$s" TRGLANGS="$$s" HPC_CORES=1 train.submit-multigpu; \
+	      ${MAKE} SRCLANGS="$$s" TRGLANGS="$$s" HPC_MEM=4g HPC_CORES=1 train.submit-multigpu; \
 	done
 	for s in "da fo is no nb nn sv" "en fr" "et hu fi" "de nl af fy" "ca es fr ga it la oc pt_br pt"; do \
 	  for t in "da fo is no nb nn sv" "en fr" "et hu fi" "de nl af fy" "ca es fr ga it la oc pt_br pt"; do \
 	    if [ "$$s" != "$$t" ]; then \
 	      ${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" traindata devdata; \
-	      ${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" HPC_CORES=1 train.submit-multigpu; \
+	      ${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" HPC_MEM=4g HPC_CORES=1 train.submit-multigpu; \
 	    fi \
 	  done \
 	done
@@ -216,7 +232,7 @@ memad-multi2:
 	  for t in "da fo is no nb nn sv" "en fr" "et hu fi" "de nl af fy" "ca es fr ga it la oc pt_br pt"; do \
 	    if [ "$$s" != "$$t" ]; then \
 	      ${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" traindata devdata; \
-	      ${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" HPC_CORES=1 train.submit-multigpu; \
+	      ${MAKE} SRCLANGS="$$s" TRGLANGS="$$t" HPC_MEM=4g HPC_CORES=1 train.submit-multigpu; \
 	    fi \
 	  done \
 	done
@@ -224,14 +240,14 @@ memad-multi2:
 memad-multi3:
 	for s in "da fo is no nb nn sv" "de nl af fy" "ca es fr ga it la oc pt_br pt"; do \
 	      ${MAKE} SRCLANGS="$$s" TRGLANGS="en" traindata devdata; \
-	      ${MAKE} SRCLANGS="$$s" TRGLANGS="en" HPC_CORES=1 train.submit-multigpu; \
+	      ${MAKE} SRCLANGS="$$s" TRGLANGS="en" HPC_MEM=4g HPC_CORES=1 train.submit-multigpu; \
 	      ${MAKE} SRCLANGS="en" TRGLANGS="$$s" traindata devdata; \
-	      ${MAKE} SRCLANGS="en" TRGLANGS="$$s" HPC_CORES=1 train.submit-multigpu; \
+	      ${MAKE} SRCLANGS="en" TRGLANGS="$$s" HPC_MEM=4g HPC_CORES=1 train.submit-multigpu; \
 	done
 	${MAKE} SRCLANGS="en" TRGLANGS="fr" traindata devdata
-	${MAKE} SRCLANGS="en" TRGLANGS="fr" HPC_CORES=1 train.submit-multigpu
+	${MAKE} SRCLANGS="en" TRGLANGS="fr" HPC_MEM=4g HPC_CORES=1 train.submit-multigpu
 	${MAKE} SRCLANGS="fr" TRGLANGS="en" traindata devdata
-	${MAKE} SRCLANGS="fr" TRGLANGS="en" HPC_CORES=1 train.submit-multigpu
+	${MAKE} SRCLANGS="fr" TRGLANGS="en" HPC_MEM=4g HPC_CORES=1 train.submit-multigpu
 
 
 
@@ -240,40 +256,40 @@ memad-multi3:
 memad-fi:
 	for l in en sv de fr; do \
 	  ${MAKE} SRCLANGS=$$l TRGLANGS=fi traindata devdata; \
-	  ${MAKE} SRCLANGS=$$l TRGLANGS=fi HPC_CORES=1 train.submit-multigpu; \
+	  ${MAKE} SRCLANGS=$$l TRGLANGS=fi HPC_MEM=4g HPC_CORES=1 train.submit-multigpu; \
 	  ${MAKE} TRGLANGS=$$l SRCLANGS=fi traindata devdata; \
-	  ${MAKE} TRGLANGS=$$l SRCLANGS=fi HPC_CORES=1 train.submit-multigpu; \
+	  ${MAKE} TRGLANGS=$$l SRCLANGS=fi HPC_MEM=4g HPC_CORES=1 train.submit-multigpu; \
 	done
 
 
 
 nordic:
 	${MAKE} SRCLANGS="da fo is no nb nn sv" TRGLANGS="fi et hu" traindata
-	${MAKE} SRCLANGS="da fo is no nb nn sv" TRGLANGS="fi et hu" HPC_CORES=1 train.submit-multigpu
+	${MAKE} SRCLANGS="da fo is no nb nn sv" TRGLANGS="fi et hu" HPC_MEM=4g HPC_CORES=1 train.submit-multigpu
 	${MAKE} TRGLANGS="da fo is no nb nn sv" SRCLANGS="fi et hu" traindata
-	${MAKE} TRGLANGS="da fo is no nb nn sv" SRCLANGS="fi et hu" HPC_CORES=1 train.submit-multigpu
+	${MAKE} TRGLANGS="da fo is no nb nn sv" SRCLANGS="fi et hu" HPC_MEM=4g HPC_CORES=1 train.submit-multigpu
 
 romance:
 	${MAKE} SRCLANGS="es ca ga oc it la fr ro pt_br pt" TRGLANGS="fi et hu" traindata
-	${MAKE} SRCLANGS="es ca ga oc it la fr ro pt_br pt" TRGLANGS="fi et hu" HPC_CORES=1 train.submit-multigpu
+	${MAKE} SRCLANGS="es ca ga oc it la fr ro pt_br pt" TRGLANGS="fi et hu" HPC_MEM=4g HPC_CORES=1 train.submit-multigpu
 	${MAKE} TRGLANGS="es ca ga oc it la fr ro pt_br pt" SRCLANGS="fi et hu" traindata
-	${MAKE} TRGLANGS="es ca ga oc it la fr ro pt_br pt" SRCLANGS="fi et hu" HPC_CORES=1 train.submit-multigpu
+	${MAKE} TRGLANGS="es ca ga oc it la fr ro pt_br pt" SRCLANGS="fi et hu" HPC_MEM=4g HPC_CORES=1 train.submit-multigpu
 
 westgermanic:
 	${MAKE} SRCLANGS="de nl af fy" TRGLANGS="fi et hu" traindata
-	${MAKE} SRCLANGS="de nl af fy" TRGLANGS="fi et hu" HPC_CORES=1 train.submit-multigpu
+	${MAKE} SRCLANGS="de nl af fy" TRGLANGS="fi et hu" HPC_MEM=4g HPC_CORES=1 train.submit-multigpu
 	${MAKE} TRGLANGS="de nl af fy" SRCLANGS="fi et hu" traindata
-	${MAKE} TRGLANGS="de nl af fy" SRCLANGS="fi et hu" HPC_CORES=1 train.submit-multigpu
+	${MAKE} TRGLANGS="de nl af fy" SRCLANGS="fi et hu" HPC_MEM=4g HPC_CORES=1 train.submit-multigpu
 
 
 germanic-romance:
 	${MAKE} SRCLANGS="fr ca es gl it la oc pt_br pt ro" \
 		TRGLANGS="en de nl fy af da fo is no nb nn sv" traindata
-	${MAKE} HPC_CORES=1 SRCLANGS="fr ca es gl it la oc pt_br pt ro" \
+	${MAKE} HPC_MEM=4g HPC_CORES=1 SRCLANGS="fr ca es gl it la oc pt_br pt ro" \
 		TRGLANGS="en de nl fy af da fo is no nb nn sv" train.submit-multigpu
 	${MAKE} TRGLANGS="fr ca es gl it la oc pt_br pt ro" \
 		SRCLANGS="en de nl fy af da fo is no nb nn sv" traindata devdata
-	${MAKE} HPC_CORES=1 TRGLANGS="fr ca es gl it la oc pt_br pt ro" \
+	${MAKE} HPC_MEM=4g HPC_CORES=1 TRGLANGS="fr ca es gl it la oc pt_br pt ro" \
 		SRCLANGS="en de nl fy af da fo is no nb nn sv" train.submit-multigpu
 
 

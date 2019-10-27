@@ -71,6 +71,7 @@ endif
 ifeq (${shell hostname --domain},bullx)
 	echo '#SBATCH --account=${CSCPROJECT}' >> $@
 	echo '#SBATCH --gres=nvme:${HPC_DISK}' >> $@
+	echo '#SBATCH --exclude=r05c49' >> $@
 endif
 	echo '#SBATCH -n ${HPC_CORES}' >> $@
 	echo '#SBATCH -N ${HPC_NODES}' >> $@

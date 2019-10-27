@@ -259,16 +259,20 @@ finished:
 
 %-spm:
 	${MAKE} WORKHOME=${shell realpath ${PWD}/work-spm} \
-		PRE=norm PRE_SRC=txt PRE_TRG=txt \
-		MARIAN=${MARIAN}-spm \
-		MODEL_VOCABTYPE=spm \
+		PRE=norm \
+		PRE_SRC=spm${SRCBPESIZE:000=}k \
+		PRE_TRG=spm${TRGBPESIZE:000=}k \
 	${@:-spm=}
+
+## for the inbuilt sentence-piece segmentation:
+#		PRE_SRC=txt PRE_TRG=txt
+#		MARIAN=${MARIAN}-spm
+#		MODEL_VOCABTYPE=spm
 
 
 %-bpe:
 	${MAKE} WORKHOME=${shell realpath ${PWD}/work-bpe} \
-		PRE_SRC=${PRE_SRC}.segfix PRE_TRG=${PRE_TRG}.segfix \
-		PRE=norm MODEL_VOCABTYPE=spm \
+		PRE_SRC=${PRE_SRC}.segfix PRE_TRG=${PRE_TRG}.segfix PRE=norm \
 	${@:-bpe=}
 
 

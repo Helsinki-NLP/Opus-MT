@@ -515,6 +515,76 @@ endif
 	mv $< $@
 
 
+
+
+##----------------------------------------------
+## sentence piece
+##----------------------------------------------
+
+
+SPMSRCMODEL = ${TRAIN_SRC}.spm${SRCBPESIZE:000=}k-model
+SPMTRGMODEL = ${TRAIN_TRG}.spm${TRGBPESIZE:000=}k-model
+
+.PRECIOUS: ${SPMSRCMODEL} ${SPMTRGMODEL}
+
+
+${SPMSRCMODEL}: ${WORKDIR}/%.spm${SRCBPESIZE:000=}k-model: ${TMPDIR}/${LANGSTR}/%
+ifeq ($(wildcard ${SPMSRCMODEL}),)
+	mkdir -p ${dir $@}
+ifeq ($(TRGLANGS),${firstword ${TRGLANGS}})
+	${SPM_HOME}/spm_train \
+		--model_prefix=$@ --vocab_size=$(SRCBPESIZE) --input=$< \
+		--character_coverage=1.0 --hard_vocab_limit=false
+	mv $@.model $@
+else
+	cut -f2- -d ' ' $< > $<.text
+	${SPM_HOME}/spm_train \
+		--model_prefix=$@ --vocab_size=$(SRCBPESIZE) --input=$<.text \
+		--character_coverage=1.0 --hard_vocab_limit=false
+	mv $@.model $@
+	rm -f $<.text
+endif
+else
+	@echo "$@ already exists!"
+	@echo "WARNING! No new SPM model is created even though the data has changed!"
+	@echo "WARNING! Delete the file if you want to start from scratch!"
+	touch $@
+endif
+
+## no labels on the target language side
+${SPMTRGMODEL}: ${WORKDIR}/%.spm${TRGBPESIZE:000=}k-model: ${TMPDIR}/${LANGSTR}/%
+ifeq ($(wildcard ${SPMTRGMODEL}),)
+	mkdir -p ${dir $@}
+	${SPM_HOME}/spm_train \
+		--model_prefix=$@ --vocab_size=$(TRGBPESIZE) --input=$< \
+		--character_coverage=1.0 --hard_vocab_limit=false
+	mv $@.model $@
+else
+	@echo "$@ already exists!"
+	@echo "WARNING! No new SPM model created!"
+	@echo "WARNING! Delete the file if you want to start from scratch!"
+	touch $@
+endif
+
+
+
+%.src.spm${SRCBPESIZE:000=}k: %.src ${SPMSRCMODEL}
+ifeq ($(TRGLANGS),${firstword ${TRGLANGS}})
+	${SPM_HOME}/spm_encode --model $(word 2,$^) < $< > $@
+else
+	cut -f1 -d ' ' $< > $<.labels
+	cut -f2- -d ' ' $< > $<.text
+	${SPM_HOME}/spm_encode --model $(word 2,$^) < $<.text > $@.text
+	paste -d ' ' $<.labels $@.text > $@
+	rm -f $<.labels $<.text $@.text
+endif
+
+%.trg.spm${TRGBPESIZE:000=}k: %.trg ${SPMTRGMODEL}
+	${SPM_HOME}/spm_encode --model $(word 2,$^) < $< > $@
+
+
+
+
 ##----------------------------------------------
 
 ## get it from local space and compress ...
