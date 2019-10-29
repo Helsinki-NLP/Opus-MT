@@ -585,6 +585,23 @@ endif
 
 
 
+## document-level models
+## TODO: make this work with guided alignment
+## ---> need to merge wordalignments done for sentences
+## ---> re-compute positions
+## (word alignment on long sequences can be expensive and erroneous)
+
+%.src.spm${TRGBPESIZE:000=}k.doc${CONTEXT_SIZE}: %.src.spm${TRGBPESIZE:000=}k %.trg.spm${TRGBPESIZE:000=}k
+	./large-context.pl -l ${CONTEXT_SIZE} $^ > $@.tmp
+	cut -f1 $@.tmp > $@
+	cut -f2 $@.tmp > ${word 2,$^}.doc${CONTEXT_SIZE}
+	rm -f $@.tmp
+
+%.trg.spm${TRGBPESIZE:000=}k.doc${CONTEXT_SIZE}: %.src.spm${TRGBPESIZE:000=}k.doc${CONTEXT_SIZE}
+	@echo "done!"
+
+
+
 ##----------------------------------------------
 
 ## get it from local space and compress ...

@@ -192,6 +192,35 @@ fiensv_spm:
 	${MAKE} SRCLANGS=fi TRGLANGS=en WALLTIME=72 HPC_MEM=4g HPC_CORES=1 train-spm.submit-multigpu
 
 
+memad_spm:
+	for s in fi en sv de fr nl; do \
+	  for t in en fi sv de fr nl; do \
+	    if [ "$$s" != "$$t" ]; then \
+	      if ! grep -q 'stalled ${MARIAN_EARLY_STOPPING} times' ${WORKHOME}/$$s-$$t/*.valid${NR.log}; then\
+	          ${MAKE} SRCLANGS=$$s TRGLANGS=$$t traindata-spm; \
+	          ${MAKE} SRCLANGS=$$s TRGLANGS=$$t devdata-spm; \
+	          ${MAKE} SRCLANGS=$$s TRGLANGS=$$t wordalign-spm; \
+	          ${MAKE} SRCLANGS=$$s TRGLANGS=$$t HPC_CORES=1 HPC_MEM=4g train-spm.submit-multigpu; \
+	      fi \
+	    fi \
+	  done \
+	done
+
+
+memad_doc:
+	for s in fi en sv; do \
+	  for t in en fi sv; do \
+	    if [ "$$s" != "$$t" ]; then \
+	      if ! grep -q 'stalled ${MARIAN_EARLY_STOPPING} times' ${WORKHOME}/$$s-$$t/*.valid${NR.log}; then\
+	          ${MAKE} SRCLANGS=$$s TRGLANGS=$$t traindata-doc; \
+	          ${MAKE} SRCLANGS=$$s TRGLANGS=$$t devdata-doc; \
+	          ${MAKE} SRCLANGS=$$s TRGLANGS=$$t wordalign-doc; \
+	          ${MAKE} SRCLANGS=$$s TRGLANGS=$$t HPC_CORES=1 HPC_MEM=4g train-doc.submit-multigpu; \
+	      fi \
+	    fi \
+	  done \
+	done
+
 
 
 enfisv:

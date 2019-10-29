@@ -257,6 +257,18 @@ finished:
 	${@:-cpu=}
 
 
+## document level models
+## TODO: make this work for transformer-align as well
+%-doc:
+	${MAKE} MODEL=${MODEL}.doc${CONTEXT_SIZE}} \
+		WORKHOME=${shell realpath ${PWD}/work-spm} \
+		PRE=norm MODELTYPE=transformer \
+		PRE_SRC=spm${SRCBPESIZE:000=}k.doc${CONTEXT_SIZE} \
+		PRE_TRG=spm${TRGBPESIZE:000=}k.doc${CONTEXT_SIZE} \
+	${@:-doc=}
+
+
+## sentence-piece models
 %-spm:
 	${MAKE} WORKHOME=${shell realpath ${PWD}/work-spm} \
 		PRE=norm \
@@ -461,8 +473,6 @@ ${WORKDIR}/${MODEL}.transformer-align.model${NR}.done: \
         --exponential-smoothing \
 	--guided-alignment ${word 3,$^}
 	touch $@
-
-
 
 
 
