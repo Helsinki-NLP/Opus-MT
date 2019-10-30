@@ -123,7 +123,7 @@ traindata: 	${TRAIN_SRC}.${PRE_SRC}.gz ${TRAIN_TRG}.${PRE_TRG}.gz
 tunedata: 	${TUNE_SRC}.${PRE_SRC} ${TUNE_TRG}.${PRE_TRG}
 devdata:	${DEV_SRC}.${PRE_SRC} ${DEV_TRG}.${PRE_TRG}
 testdata:	${TEST_SRC}.${PRE_SRC} ${TEST_TRG}
-wordalign:	${TRAIN_BASE}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.src-trg.alg.gz
+wordalign:	${TRAIN_ALG}
 
 devdata-raw:	${DEV_SRC} ${DEV_TRG}
 
@@ -260,9 +260,8 @@ finished:
 ## document level models
 ## TODO: make this work for transformer-align as well
 %-doc:
-	${MAKE} MODEL=${MODEL}.doc${CONTEXT_SIZE}} \
-		WORKHOME=${shell realpath ${PWD}/work-spm} \
-		PRE=norm MODELTYPE=transformer \
+	${MAKE} WORKHOME=${shell realpath ${PWD}/work-spm} \
+		PRE=norm \
 		PRE_SRC=spm${SRCBPESIZE:000=}k.doc${CONTEXT_SIZE} \
 		PRE_TRG=spm${TRGBPESIZE:000=}k.doc${CONTEXT_SIZE} \
 	${@:-doc=}
@@ -404,30 +403,6 @@ ${WORKDIR}/${MODEL}.transformer.model${NR}.done: \
 
 
 
-## word alignment used for guided alignment
-
-.INTERMEDIATE: ${LOCAL_TRAIN_SRC}.algtmp ${LOCAL_TRAIN_TRG}.algtmp
-
-${LOCAL_TRAIN_SRC}.algtmp: ${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE}.gz
-	mkdir -p ${dir $@}
-	gzip -cd < $< > $@
-
-${LOCAL_TRAIN_TRG}.algtmp: ${TRAIN_TRG}.${PRE_TRG}${TRAINSIZE}.gz
-	mkdir -p ${dir $@}
-	gzip -cd < $< > $@
-
-${TRAIN_BASE}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.src-trg.alg.gz: \
-			${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE}.gz \
-			${TRAIN_TRG}.${PRE_TRG}${TRAINSIZE}.gz
-	${MAKE} ${LOCAL_TRAIN_SRC}.algtmp ${LOCAL_TRAIN_TRG}.algtmp
-	if  [ `head $(LOCAL_TRAIN_SRC).algtmp | wc -l` -gt 0 ]; then \
-	  ${WORDALIGN} -s $(LOCAL_TRAIN_SRC).algtmp -t $(LOCAL_TRAIN_TRG).algtmp \
-		--overwrite -f $(LOCAL_TRAIN_SRC).fwd -r $(LOCAL_TRAIN_TRG).rev; \
-	  ${ATOOLS} -c grow-diag-final -i $(LOCAL_TRAIN_SRC).fwd -j $(LOCAL_TRAIN_TRG).rev |\
-	  gzip -c > $@; \
-	fi
-	rm -f ${LOCAL_TRAIN_SRC}.algtmp ${LOCAL_TRAIN_TRG}.algtmp
-	rm -f $(LOCAL_TRAIN_SRC).fwd $(LOCAL_TRAIN_TRG).rev
 
 
 ## NEW: take away dependency on ${MODEL_VOCAB}
@@ -436,7 +411,7 @@ ${TRAIN_BASE}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.src-trg.alg.gz: \
 ${WORKDIR}/${MODEL}.transformer-align.model${NR}.done: \
 		${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE}.gz \
 		${TRAIN_TRG}.${PRE_TRG}${TRAINSIZE}.gz \
-		${TRAIN_BASE}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.src-trg.alg.gz \
+		${TRAIN_ALG} \
 		${DEV_SRC}.${PRE_SRC} ${DEV_TRG}.${PRE_TRG}
 	mkdir -p ${dir $@}
 	${LOADMODS} && ${MARIAN}/marian ${MARIAN_EXTRA} \
