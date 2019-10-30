@@ -30,6 +30,58 @@ DATA_SRC := ${sort ${CLEAN_TRAIN_SRC} ${CLEAN_TUNE_SRC} ${CLEAN_DEV_SRC} ${CLEAN
 DATA_TRG := ${sort ${CLEAN_TRAIN_TRG} ${CLEAN_TUNE_TRG} ${CLEAN_DEV_TRG} ${CLEAN_TEST_TRG}}
 
 
+
+
+## make data in reverse direction without redoing word alignment etc ...
+## ---> this is dangerous when things run in parallel
+## ---> only works for bilingual models
+
+REV_LANGSTR = ${subst ${SPACE},+,$(TRGLANGS)}-${subst ${SPACE},+,$(SRCLANGS)}
+REV_WORKDIR = ${WORKHOME}/${REV_LANGSTR}
+
+reverse-data:
+ifeq (${PRE_SRC},${PRE_TRG})
+ifeq (${words ${SRCLANGS}},1)
+ifeq (${words ${TRGLANGS}},1)
+	-if [ -e ${TRAIN_SRC}.${PRE_SRC}.gz ]; then \
+	  mkdir -p ${REV_WORKDIR}/train; \
+	  ln -s ${TRAIN_SRC}.${PRE_SRC}.gz ${REV_WORKDIR}/train/${notdir ${TRAIN_TRG}.${PRE_TRG}.gz}; \
+	  ln -s ${TRAIN_TRG}.${PRE_TRG}.gz ${REV_WORKDIR}/train/${notdir ${TRAIN_SRC}.${PRE_SRC}.gz}; \
+	fi
+	-if [ -e ${SPMSRCMODEL} ]; then \
+	  ln -s ${SPMSRCMODEL} ${REV_WORKDIR}/train/${notdir ${SPMTRGMODEL}}; \
+	  ln -s ${SPMTRGMODEL} ${REV_WORKDIR}/train/${notdir ${SPMSRCMODEL}}; \
+	fi
+	if [ -e ${BPESRCMODEL} ]; then \
+	  ln -s ${BPESRCMODEL} ${REV_WORKDIR}/train/${notdir ${BPETRGMODEL}}; \
+	  ln -s ${BPETRGMODEL} ${REV_WORKDIR}/train/${notdir ${BPESRCMODEL}}; \
+	fi
+	-if [ -e ${TRAIN_ALG} ]; then \
+	  if [ ! -e ${REV_WORKDIR}/train/${notdir ${TRAIN_ALG}} ]; then \
+	    zcat ${TRAIN_ALG} | ${MOSESSCRIPTS}/generic/reverse-alignment.perl |\
+	    gzip -c > ${REV_WORKDIR}/train/${notdir ${TRAIN_ALG}}; \
+	  fi \
+	fi
+	-if [ -e ${DEV_SRC}.${PRE_SRC} ]; then \
+	  mkdir -p ${REV_WORKDIR}/val; \
+	  ln -s ${DEV_SRC}.${PRE_SRC} ${REV_WORKDIR}/val/${notdir ${DEV_TRG}.${PRE_TRG}}; \
+	  ln -s ${DEV_TRG}.${PRE_TRG} ${REV_WORKDIR}/val/${notdir ${DEV_SRC}.${PRE_SRC}}; \
+	fi
+	-if [ -e ${TEST_SRC} ]; then \
+	  mkdir -p ${REV_WORKDIR}/test; \
+	  ln -s ${TEST_SRC} ${REV_WORKDIR}/test/${notdir ${TEST_TRG}}; \
+	  ln -s ${TEST_TRG} ${REV_WORKDIR}/test/${notdir ${TEST_SRC}}; \
+	fi
+	-if [ -e ${MODEL_VOCAB} ]; then \
+	  ln -s ${MODEL_VOCAB} ${REV_WORKDIR}/${notdir ${MODEL_VOCAB}}; \
+	fi
+endif
+endif
+endif
+
+
+
+
 clean-data:
 	for s in ${SRCLANGS}; do \
 	  for t in ${TRGLANGS}; do \
@@ -38,7 +90,6 @@ clean-data:
 	done
 
 clean-data-source: ${DATA_SRC}
-
 
 
 ## word alignment used for guided alignment

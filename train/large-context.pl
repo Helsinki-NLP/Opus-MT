@@ -83,7 +83,6 @@ while (<S>){
     }
     $srcdoc .= join(' ',@srctok);
     $trgdoc .= join(' ',@trgtok);
-    $algdoc .= ' ';
     $algdoc .= adjust_alignment($alg,$srccount,$trgcount,$segcount);
     $srcdoc .= ' <SEP> ';
     $trgdoc .= ' <SEP> ';
@@ -111,5 +110,6 @@ sub adjust_alignment{
 	$t += $trgcount+$segcount+1;
 	push(@newLinks,$s.'-'.$t);
     }
-    return join(' ',@newLinks);
+    return ' '.join(' ',@newLinks) if (@newLinks);
+    return '';
 }
