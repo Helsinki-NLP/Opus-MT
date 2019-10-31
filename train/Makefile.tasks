@@ -158,20 +158,17 @@ all2en:
 	done
 
 
-
-## done:
-#	${MAKE} SRCLANGS=sv TRGLANGS=fi traindata-spm
-#	${MAKE} SRCLANGS=sv TRGLANGS=fi devdata-spm
-#	${MAKE} SRCLANGS=sv TRGLANGS=fi wordalign-spm
-#	${MAKE} SRCLANGS=sv TRGLANGS=fi WALLTIME=72 HPC_MEM=4g HPC_CORES=1 train-spm.submit-multigpu
-#	${MAKE} SRCLANGS=sv TRGLANGS=fi reverse-data-spm
-#	${MAKE} SRCLANGS=fi TRGLANGS=sv WALLTIME=72 HPC_MEM=4g HPC_CORES=1 train-spm.submit-multigpu
-
 memad-fiensv:
+	${MAKE} SRCLANGS=sv TRGLANGS=fi traindata-spm
+	${MAKE} SRCLANGS=sv TRGLANGS=fi devdata-spm
+	${MAKE} SRCLANGS=sv TRGLANGS=fi wordalign-spm
+	${MAKE} SRCLANGS=sv TRGLANGS=fi WALLTIME=72 HPC_MEM=4g HPC_CORES=1 train-spm.submit-multigpu
+	${MAKE} SRCLANGS=sv TRGLANGS=fi reverse-data-spm
+	${MAKE} SRCLANGS=fi TRGLANGS=sv WALLTIME=72 HPC_MEM=4g HPC_CORES=1 train-spm.submit-multigpu
 	${MAKE} SRCLANGS=sv TRGLANGS=fi traindata-doc
 	${MAKE} SRCLANGS=sv TRGLANGS=fi WALLTIME=72 HPC_MEM=4g HPC_CORES=1 train-doc.submit-multigpu
 	${MAKE} SRCLANGS=sv TRGLANGS=fi reverse-data-doc
-	${MAKE} SRCLANGS=fi TRGLANGS=sv WALLTIME=72 HPC_MEM=4g HPC_CORES=1 train-doc.submit-multigpu
+	${MAKE} SRCLANGS=fi TRGLANGS=sv WALLTIME=72 HPC_MEM=12g HPC_CORES=1 train-doc.submit-multigpu
 	${MAKE} SRCLANGS=en TRGLANGS=fi traindata-spm
 	${MAKE} SRCLANGS=en TRGLANGS=fi devdata-spm
 	${MAKE} SRCLANGS=en TRGLANGS=fi wordalign-spm
@@ -183,6 +180,20 @@ memad-fiensv:
 	${MAKE} SRCLANGS=en TRGLANGS=fi reverse-data-doc
 	${MAKE} SRCLANGS=fi TRGLANGS=en WALLTIME=72 HPC_MEM=4g HPC_CORES=1 train-doc.submit-multigpu
 
+memad250-fiensv:
+	${MAKE} CONTEXT_SIZE=250 memad-fiensv_doc
+
+memad-fiensv_doc:
+	${MAKE} SRCLANGS=sv TRGLANGS=fi traindata-doc
+	${MAKE} SRCLANGS=sv TRGLANGS=fi devdata-doc
+	${MAKE} SRCLANGS=sv TRGLANGS=fi WALLTIME=72 HPC_MEM=4g HPC_CORES=1 train-doc.submit-multigpu
+	${MAKE} SRCLANGS=sv TRGLANGS=fi reverse-data-doc
+	${MAKE} SRCLANGS=fi TRGLANGS=sv WALLTIME=72 HPC_MEM=12g HPC_CORES=1 train-doc.submit-multigpu
+	${MAKE} SRCLANGS=en TRGLANGS=fi traindata-doc
+	${MAKE} SRCLANGS=en TRGLANGS=fi devdata-doc
+	${MAKE} SRCLANGS=en TRGLANGS=fi WALLTIME=72 HPC_MEM=4g HPC_CORES=1 train-doc.submit-multigpu
+	${MAKE} SRCLANGS=en TRGLANGS=fi reverse-data-doc
+	${MAKE} SRCLANGS=fi TRGLANGS=en WALLTIME=72 HPC_MEM=4g HPC_CORES=1 train-doc.submit-multigpu
 
 
 

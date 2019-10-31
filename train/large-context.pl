@@ -56,7 +56,7 @@ while (<S>){
 	$algdoc .= ' ';
 	$algdoc .= $srccount+$segcount+1;
 	$algdoc .= '-';
-	$algdoc .= $srccount+$segcount+1;
+	$algdoc .= $trgcount+$segcount+1;
 	print $srcdoc,"\t",$trgdoc,"\t",$algdoc,"\n";
 	$srcdoc = '<CNT> ';
 	$trgdoc = '<CNT> ';
@@ -71,7 +71,7 @@ while (<S>){
 	$algdoc .= ' ';
 	$algdoc .= $srccount+$segcount+1;
 	$algdoc .= '-';
-	$algdoc .= $srccount+$segcount+1;
+	$algdoc .= $trgcount+$segcount+1;
 	print $srcdoc,"\t",$trgdoc,"\t",$algdoc,"\n";
 	$srcdoc = '<BEG> ';
 	$trgdoc = '<BEG> ';
@@ -92,7 +92,7 @@ while (<S>){
     $algdoc .= ' ';
     $algdoc .= $srccount+$segcount;
     $algdoc .= '-';
-    $algdoc .= $srccount+$segcount;
+    $algdoc .= $trgcount+$segcount;
 }
 
 if ($srcdoc || $trgdoc){
