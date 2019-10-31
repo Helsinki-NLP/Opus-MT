@@ -681,8 +681,26 @@ endif
 		%.spm${SRCBPESIZE:000=}k.doc${CONTEXT_SIZE}-spm${TRGBPESIZE:000=}k.doc${CONTEXT_SIZE}.src-trg.alg.gz,$@}
 	rm -f $@.tmp.gz
 
-%.trg.spm${TRGBPESIZE:000=}k.doc${CONTEXT_SIZE}: %.src.spm${SRCBPESIZE:000=}k.doc${CONTEXT_SIZE}
+%.trg.spm${TRGBPESIZE:000=}k.doc${CONTEXT_SIZE}.gz: %.src.spm${SRCBPESIZE:000=}k.doc${CONTEXT_SIZE}.gz
 	@echo "done!"
+
+
+
+## for validation and test data:
+%.src.spm${TRGBPESIZE:000=}k.doc${CONTEXT_SIZE}:
+	${MAKE} PRE_SRC=spm${SRCBPESIZE:000=}k PRE_TRG=spm${TRGBPESIZE:000=}k devdata
+	${MAKE} PRE_SRC=spm${SRCBPESIZE:000=}k PRE_TRG=spm${TRGBPESIZE:000=}k testdata
+	./large-context.pl -l ${CONTEXT_SIZE} \
+		${patsubst %.src.spm${TRGBPESIZE:000=}k.doc${CONTEXT_SIZE},%.src.spm${SRCBPESIZE:000=}k,$@} \
+		${patsubst %.src.spm${TRGBPESIZE:000=}k.doc${CONTEXT_SIZE},%.trg.spm${TRGBPESIZE:000=}k,$@} \
+	| gzip > $@.tmp.gz
+	zcat $@.tmp.gz | cut -f1 > $@
+	zcat $@.tmp.gz | cut -f2 > ${subst .src.,.trg.,$@}
+	rm -f $@.tmp.gz
+
+%.trg.spm${TRGBPESIZE:000=}k.doc${CONTEXT_SIZE}: %.src.spm${TRGBPESIZE:000=}k.doc${CONTEXT_SIZE}
+	@echo "done!"
+
 
 
 ##----------------------------------------------
