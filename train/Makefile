@@ -259,7 +259,6 @@ finished:
 
 
 ## document level models
-## TODO: make this work for transformer-align as well
 %-doc:
 	${MAKE} WORKHOME=${shell realpath ${PWD}/work-spm} \
 		PRE=norm \
@@ -308,42 +307,45 @@ finished:
 
 
 
-## fine-tuning a model using a given TUNESET
-## (TODO: does this work?)
 
-MODE = train
 
-.PHONY: finetune
-finetune:
-	if [ ! -e ${WORKDIR}/${MODEL}-tuned.${MODELTYPE}.model${NR}.npz ]; then \
-	  if [ -e ${WORKDIR}/${MODEL}.${MODELTYPE}.model${NR}.npz.best-perplexity.npz ]; then \
-	    cp ${WORKDIR}/${MODEL}.${MODELTYPE}.model${NR}.npz.best-perplexity.npz \
-		${WORKDIR}/${MODEL}-tuned.${MODELTYPE}.model${NR}.npz; \
-	    if [ -e ${WORKDIR}/${MODEL}.vocab.yml ]; then \
-	      if [ ! -e ${WORKDIR}/${MODEL}-tuned.vocab.yml ]; then \
-	        cp ${WORKDIR}/${MODEL}.vocab.yml ${WORKDIR}/${MODEL}-tuned.vocab.yml; \
-	      fi; \
-	    fi; \
-	    if [ -e ${WORKDIR}/${MODEL}.${SRC}.yml ]; then \
-	      if [ ! -e ${WORKDIR}/${MODEL}-tuned.${SRC}.yml ]; then \
-	        cp ${WORKDIR}/${MODEL}.${SRC}.yml ${WORKDIR}/${MODEL}-tuned.${SRC}.yml; \
-	      fi; \
-	    fi; \
-	    if [ -e ${WORKDIR}/${MODEL}.${TRG}.yml ]; then \
-	      if [ ! -e ${WORKDIR}/${MODEL}-tuned.${TRG}.yml ]; then \
-	        cp ${WORKDIR}/${MODEL}.${TRG}.yml ${WORKDIR}/${MODEL}-tuned.${TRG}.yml; \
-	      fi; \
-	    fi; \
-	    cp ${WORKDIR}/${MODEL}.${MODELTYPE}.model${NR}.npz.yml \
-		${WORKDIR}/${MODEL}-tuned.${MODELTYPE}.model${NR}.npz.yml; \
-	    sleep 1; \
-	  fi \
+## continue document-level training with a new context size
+
+ifndef NEW_CONTEXT
+  NEW_CONTEXT = $$(($(CONTEXT_SIZE) + $(CONTEXT_SIZE)))
+endif
+
+continue-doctrain:
+	mkdir -p ${WORKDIR}/${MODEL}
+	cp ${MODEL_VOCAB} ${WORKDIR}/${MODEL}/${notdir ${MODEL_VOCAB}}
+	cp ${MODEL_FINAL} ${WORKDIR}/${MODEL}/$(subst .doc${CONTEXT_SIZE},.doc${NEW_CONTEXT},${MODEL_BASENAME}).npz
+	${MAKE} MODEL_SUBDIR=${MODEL}/ CONTEXT_SIZE=$(NEW_CONTEXT) train-doc
+
+
+
+
+## continue training with a new dataset
+
+ifndef NEW_DATASET
+  NEW_DATASET = OpenSubtitles
+endif
+
+continue-datatrain:
+	mkdir -p ${WORKDIR}/${MODEL}
+	cp ${MODEL_VOCAB} ${WORKDIR}/${MODEL}/${notdir ${MODEL_VOCAB}}
+	cp ${MODEL_FINAL} ${WORKDIR}/${MODEL}/$(patsubst ${DATASET}%,${NEW_DATASET}%,${MODEL_BASENAME}).npz
+	if [ -e ${BPESRCMODEL} ]; then \
+	  cp ${BPESRCMODEL} $(patsubst ${WORKDIR}/train/${DATASET}%,${WORKDIR}/train/${NEW_DATASET}%,${BPESRCMODEL}); \
+	  cp ${BPETRGMODEL} $(patsubst ${WORKDIR}/train/${DATASET}%,${WORKDIR}/train/${NEW_DATASET}%,${BPETRGMODEL}); \
 	fi
-	${MAKE} MODEL=${MODEL}-tuned DATASET=${TUNESET} \
-		MARIAN_EXTRA="${MARIAN_EXTRA} --no-restore-corpus" ${MODE}; \
+	if [ -e ${SPMSRCMODEL} ]; then \
+	  cp ${SPMSRCMODEL} $(patsubst ${WORKDIR}/train/${DATASET}%,${WORKDIR}/train/${NEW_DATASET}%,${SPMSRCMODEL}); \
+	  cp ${SPMTRGMODEL} $(patsubst ${WORKDIR}/train/${DATASET}%,${WORKDIR}/train/${NEW_DATASET}%,${SPMTRGMODEL}); \
+	fi
+	${MAKE} MODEL_SUBDIR=${MODEL}/ DATASET=$(NEW_DATASET) train
 
 
-
+# MARIAN_EXTRA="${MARIAN_EXTRA} --no-restore-corpus"
 
 
 

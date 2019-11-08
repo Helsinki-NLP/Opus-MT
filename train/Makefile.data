@@ -673,12 +673,7 @@ endif
 
 
 
-## document-level models
-## TODO: make this work with guided alignment
-## ---> need to merge wordalignments done for sentences
-## ---> re-compute positions
-## (word alignment on long sequences can be expensive and erroneous)
-
+## document-level models (with guided alignment)
 %.src.spm${TRGBPESIZE:000=}k.doc${CONTEXT_SIZE}.gz:
 	${MAKE} PRE_SRC=spm${SRCBPESIZE:000=}k PRE_TRG=spm${TRGBPESIZE:000=}k wordalign
 	./large-context.pl -l ${CONTEXT_SIZE} \
