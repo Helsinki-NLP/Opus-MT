@@ -50,6 +50,7 @@ prereqs: GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB
 	apt-get -q install intel-mkl-64bit-2019.5-075
 	pip3 install SimpleWebSocketServer
 	pip3 install mosestokenizer pycld2 sqlitedict
+	pip3 install sentencepiece
 ifeq (${UBUNTU_RELEASE},14.04)
 	apt-get -q install cmake3-data cmake3
 	pip3 install websocket-client==0.46.0

@@ -30,6 +30,7 @@ LANG_PAIR  = ${SRC_LANGS}-${TRG_LANGS}
 NMT_MODEL  = ${MODEL_HOME}/${LANG_PAIR}/${DATASET}.npz
 NMT_VOCAB  = ${MODEL_HOME}/${LANG_PAIR}/${DATASET}.vocab.yml
 BPEMODEL   = ${MODEL_HOME}/${LANG_PAIR}/${DATASET}.bpe
+SPMMODEL   = ${MODEL_HOME}/${LANG_PAIR}/${DATASET}.${SRC_LANGS}.spm
 APPLYBPE   = ${BINDIR}/apply_bpe.py
 
 ## server code
@@ -137,7 +138,11 @@ update-model:
 	mv ${OPUSMT_CACHE} ${OPUSMT_CACHE}.${shell date +%F}
 	mv ${NMT_MODEL} ${NMT_MODEL}.${shell date +%F}
 	mv ${NMT_VOCAB} ${NMT_VOCAB}.${shell date +%F}
-	mv ${BPEMODEL} ${BPEMODEL}.${shell date +%F}
+	if [ -e ${BPEMODEL} ]; then \
+	  mv ${BPEMODEL} ${BPEMODEL}.${shell date +%F}; \
+	elif [ -e ${SPMMODEL} ]; then \
+	  mv ${SPMMODEL} ${SPMMODEL}.${shell date +%F}; \
+	fi
 	${MAKE} ${NMT_MODEL}
 	service opusMT-${DATASET}-${LANGPAIR} restart
 
@@ -158,7 +163,11 @@ ${NMT_MODEL}:
 	mkdir -p ${dir $@}
 	${INSTALL_DATA} model/*.npz $@
 	${INSTALL_DATA} model/*.vocab.yml ${NMT_VOCAB}
-	${INSTALL_DATA} model/*.bpe ${BPEMODEL}
+	if [ -e model/source.bpe ]; then \
+	  ${INSTALL_DATA} model/source.bpe ${BPEMODEL}; \
+	elif [ -e model/source.spm ]; then \
+	  ${INSTALL_DATA} model/source.spm ${SPMMODEL}; \
+	fi
 	rm -f model/*
 	rmdir model
 	rm -f model.zip model-list.txt
@@ -184,13 +193,22 @@ ${NMT_MODEL}:
 
 
 ## opusMT service via sysvinit
-/etc/init.d/opusMT-${DATASET}-${LANGPAIR}: ${OPUSMT_SERVER} ${APPLYBPE} ${BPEMODEL} service-template
-	sed 	-e 's#%%SERVICENAME%%#opusMT-server-${DATASET}-${LANGPAIR}#' \
+/etc/init.d/opusMT-${DATASET}-${LANGPAIR}: ${OPUSMT_SERVER} service-template ${APPLYBPE}
+	if [ -e ${BPEMODEL} ]; then \
+	  sed 	-e 's#%%SERVICENAME%%#opusMT-server-${DATASET}-${LANGPAIR}#' \
 		-e 's#%%APPSHORTDESCR%%#opusMT-server#' \
 		-e 's#%%APPLONGDESCR%%#translation service#' \
 		-e 's#%%APPBIN%%#$<#' \
 		-e 's#%%APPARGS%%#-p ${OPUSMT_PORT} -c ${OPUSMT_CACHE} --bpe ${BPEMODEL} --mtport ${MARIAN_PORT} -s ${subst +, ,${SRC_LANGS}} -t ${subst +, ,${TRG_LANGS}}#' \
-	< service-template > ${notdir $@}
+	  < service-template > ${notdir $@}; \
+	elif [ -e ${SPMMODEL} ]; then \
+	  sed 	-e 's#%%SERVICENAME%%#opusMT-server-${DATASET}-${LANGPAIR}#' \
+		-e 's#%%APPSHORTDESCR%%#opusMT-server#' \
+		-e 's#%%APPLONGDESCR%%#translation service#' \
+		-e 's#%%APPBIN%%#$<#' \
+		-e 's#%%APPARGS%%#-p ${OPUSMT_PORT} -c ${OPUSMT_CACHE} --spm ${SPMMODEL} --mtport ${MARIAN_PORT} -s ${subst +, ,${SRC_LANGS}} -t ${subst +, ,${TRG_LANGS}}#' \
+	  < service-template > ${notdir $@}; \
+	fi
 	mkdir -p ${dir ${OPUSMT_CACHE}}
 	${INSTALL_BIN} ${notdir $@} $@
 	rm -f ${notdir $@}
@@ -253,7 +271,7 @@ remove-marian-service:
 	service ${notdir $(@:.conf=)} start || true
 
 ## service via Ubuntu upstart (does not seem to work)
-/etc/init/opusMT-${DATASET}-${LANGPAIR}.conf: ${OPUSMT_SERVER} ${APPLYBPE} ${BPEMODEL}
+/etc/init/opusMT-${DATASET}-${LANGPAIR}.conf: ${OPUSMT_SERVER} ${APPLYBPE}
 	mkdir -p ${dir ${OPUSMT_CACHE}}
 	mkdir -p ${LOGDIR}/opusMT
 	@echo 'description     "OpusMT Server"'      > ${notdir $@}
@@ -264,7 +282,11 @@ remove-marian-service:
 	@echo 'respawn'                                >> ${notdir $@}
 	@echo 'respawn limit 3 12'                     >> ${notdir $@}
 	@echo ''                                       >> ${notdir $@}
-	@echo "exec $< -c ${OPUSMT_CACHE} --bpe ${BPEMODEL} > ${LOGDIR}/opusMT/server.out 2> ${LOGDIR}/opusMT/server.err" >> ${notdir $@}
+	@if [ -e ${BPEMODEL} ]; then \
+	  echo "exec $< -c ${OPUSMT_CACHE} --bpe ${BPEMODEL} > ${LOGDIR}/opusMT/server.out 2> ${LOGDIR}/opusMT/server.err" >> ${notdir $@}
+	elif [ -e ${SPMMODEL} ]; then \
+	  echo "exec $< -c ${OPUSMT_CACHE} --spm ${SPMMODEL} > ${LOGDIR}/opusMT/server.out 2> ${LOGDIR}/opusMT/server.err" >> ${notdir $@}
+	fi
 	${INSTALL_DATA} -b -S .old ${notdir $@} $@
 	rm -f ${notdir $@}
 	service ${notdir $(@:.conf=)} start || true

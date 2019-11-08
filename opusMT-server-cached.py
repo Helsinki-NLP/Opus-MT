@@ -19,8 +19,10 @@ from websocket import create_connection
 ## pre-processing: 
 ## - moses-script wrapper classes
 ## - BPE-based segmentation from subword-nmt
+## - sentencepiece
 from apply_bpe import BPE
 from mosestokenizer import *
+import sentencepiece as spm
 
 ## language identifer (if source language is not given)
 import pycld2 as cld2
@@ -45,8 +47,10 @@ parser.add_argument('-t','--trglangs', metavar='trglangs',type=str, nargs='+',
                     help='supported source languages')
 parser.add_argument('-d','--deftrg','--default-target-language', type=str,
                     help='default target language (for multilingual models)')
-parser.add_argument('--bpe','--bpe-model', type=str, default='opus.de+fr+sv+en.bpe32k-model',
+parser.add_argument('--bpe','--bpe-model', type=str,
                     help='BPE model for source text segmentation')
+parser.add_argument('--spm','--sentence-piece-model', type=str,
+                    help='sentence piece model for source text segmentation')
 parser.add_argument('-c','--cache', type=str, default='opusMT-cache.db',
                     help='BPE model for source text segmentation')
 
@@ -59,10 +63,17 @@ if not args.deftrg:
 
 
 
-## BPE model for pre-processing
-print("load BPE codes from " + args.bpe, flush=True)
-BPEcodes = codecs.open(args.bpe, encoding='utf-8')
-bpe = BPE(BPEcodes)
+## load BPE model for pre-processing
+if args.bpe:
+    print("load BPE codes from " + args.bpe, flush=True)
+    BPEcodes = codecs.open(args.bpe, encoding='utf-8')
+    bpe = BPE(BPEcodes)
+
+## load SentencePiece model for pre-processing
+if args.spm:
+    print("load sentence piece model from " + args.spm, flush=True)
+    spm = spm.SentencePieceProcessor()
+    spm.Load(args.spm)
 
 
 ## open the cache DB
@@ -85,14 +96,17 @@ sentence_splitter = {}
 normalizer = {}
 detokenizer = {}
 
+## TODO: should we have support for other sentence splitters?
 print("start pre- and post-processing tools")
 for l in args.srclangs:
     sentence_splitter[l] = MosesSentenceSplitter(l)
     normalizer[l] = MosesPunctuationNormalizer(l)
-    tokenizer[l] = MosesTokenizer(l)
+    if args.bpe:
+        tokenizer[l] = MosesTokenizer(l)
 
-for l in args.trglangs:
-    detokenizer[l] = MosesDetokenizer(l)
+if args.bpe:
+    for l in args.trglangs:
+        detokenizer[l] = MosesDetokenizer(l)
 
 
 # open connection
@@ -146,9 +160,13 @@ class Translate(WebSocket):
             if len(cached) == 4:
                 data['source-segments'] = [cached[1]]
                 data['target-segments'] = [cached[2]]
-                data['source-sentences'] = [srctxt]
-                data['target-sentences'] = [translation]
                 data['alignment'] = [cached[3]]
+                if args.bpe:
+                    data['source-sentences'] = [srctxt]
+                    data['target-sentences'] = [translation]
+                    data['segmentation'] = 'bpe'
+                else:
+                    data['segmentation'] = 'spm'
 
             self.sendMessage(json.dumps(data, sort_keys=True, indent=4))
             return
@@ -192,15 +210,29 @@ class Translate(WebSocket):
                     sentAlignment.append(cached[3])
                 print('CACHED TRANSLATION: ' + cached[0], flush=True)
             else:
-                # print('raw sentence: ' + s, flush=True)
-                tokenized = ' '.join(tokenizer[fromLang](s))
-                # print('tokenized sentence: ' + tokenized, flush=True)
-                segmented = bpe.process_line(tokenized)
+                if args.bpe:
+                    # print('raw sentence: ' + s, flush=True)
+                    tokenized = ' '.join(tokenizer[fromLang](s))
+                    # print('tokenized sentence: ' + tokenized, flush=True)
+                    segmented = bpe.process_line(tokenized)
+                elif args.spm:
+                    # print('raw sentence: ' + s, flush=True)
+                    segmented = ' '.join(spm.EncodeAsPieces(s))
+                    # print(segmented, flush=True)
+
                 # print('segmented sentence ' + prefix + segmented, flush=True)
                 ws.send(prefix + segmented)
                 # print('successfully sent', flush=True)
                 received = ws.recv().strip().split(' ||| ')
-                translated = received[0].replace('@@ ','')
+                # print(received, flush=True)
+
+                ## undo segmentation
+                if args.bpe:
+                    translated = received[0].replace('@@ ','')
+                elif args.spm:
+                    translated = received[0].replace(' ','').replace('▁',' ').strip()
+                    # translated = sp.DecodePieces(received[0].split(' '))
+
                 alignment = ''
                 if len(received) == 2:
                     alignment = received[1]
@@ -217,10 +249,13 @@ class Translate(WebSocket):
                             if int(ids[1])<outputLength:
                                 fixedLinks.append('-'.join(ids))
                     alignment = ' '.join(fixedLinks)
-                # print('translated sentence ' + translated, flush=True)
-                detokenized = detokenizer[toLang](translated.split())
-                print('TRANSLATION: ' + detokenized, flush=True)
 
+                if args.bpe:
+                    detokenized = detokenizer[toLang](translated.split())
+                else:
+                    detokenized = translated
+
+                print('TRANSLATION: ' + detokenized, flush=True)
                 sentSourceBPE.append(segmented)
                 sentTranslatedBPE.append(received[0])
                 sentAlignment.append(alignment)
@@ -230,9 +265,15 @@ class Translate(WebSocket):
                 
         trgtext = ' '.join(sentTranslated)
         data = {'result': trgtext, 'source': fromLang, 'target': toLang,
-                'source-sentences': sentSource, 'target-sentences': sentTranslated,
                 'source-segments': sentSourceBPE, 'target-segments': sentTranslatedBPE,
                 'alignment' : sentAlignment }
+        if args.bpe:
+            data['source-sentences'] = sentSource
+            data['target-sentences'] = sentTranslated
+            data['segmentation'] = 'bpe'
+        else:
+            data['segmentation'] = 'spm'
+
         # 'origin': "ws://{}:{}/translate".format(args.mthost, args.mtport)}
         self.sendMessage(json.dumps(data, sort_keys=True, indent=4))
 
