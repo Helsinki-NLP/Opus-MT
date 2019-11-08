@@ -15,7 +15,11 @@ dist: ${DIST_PACKAGE}
 
 ${DIST_PACKAGE}: ${MODEL_FINAL}
 	touch ${WORKDIR}/source.tcmodel
-	cp ${BPESRCMODEL} ${WORKDIR}/source.bpe
+	if [ -e ${BPESRCMODEL} ]; then \
+	  cp ${BPESRCMODEL} ${WORKDIR}/source.bpe; \
+	elif [ -e ${SPMSRCMODEL} ]; then \
+	  cp ${SPMSRCMODEL} ${WORKDIR}/source.spm; \
+	fi
 	sed -e 's# - /.*/\([^/]*\)$$# - \1#' \
 	    -e 's/beam-size: [0-9]*$$/beam-size: 6/' \
 	    -e 's/mini-batch: [0-9]*$$/mini-batch: 1/' \
@@ -27,12 +31,12 @@ ${DIST_PACKAGE}: ${MODEL_FINAL}
 		${notdir ${MODEL_VOCAB}} \
 		${notdir ${MODEL_VALIDLOG}} \
 		${notdir ${MODEL_TRAINLOG}} \
-		source.tcmodel source.bpe decoder.yml
+		source.* decoder.yml
 	mkdir -p ${dir $@}
 	mv -f ${WORKDIR}/${notdir $@} ${@:.zip=}-${shell date +%F}.zip
 	rm -f $@
 	cd ${dir $@} && ln -s ${notdir ${@:.zip=}-${shell date +%F}.zip} ${notdir $@}
-	rm -f ${WORKDIR}/decoder.yml ${WORKDIR}/source.bpe ${WORKDIR}/source.tcmodel
+	rm -f ${WORKDIR}/decoder.yml ${WORKDIR}/source.*
 	${MAKE} ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.eval
 	${MAKE} ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.compare
 	cp ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.eval $(@:.zip=-${shell date +%F}.eval.txt)
@@ -113,7 +117,7 @@ upload:
 	swift post OPUS-MT --read-acl ".r:*"
 
 upload-scores: ${WORKHOME}/eval/scores.txt
-	cd ${WORKHOME} && swift upload OPUS-MT --changed --skip-identical eval/scores.txt
+	cd ${WORKHOME} && swift upload OPUS-MT-eval --changed --skip-identical eval/scores.txt
 	swift post OPUS-MT --read-acl ".r:*"
 
 
@@ -140,7 +144,7 @@ ${EVALTRANSL}: # ${WORKHOME}/eval/%.test.txt: ${WORKHOME}/models/%.compare
 #	cp $< $@
 
 upload-eval: ${EVALSCORES} ${EVALTRANSL}
-	cd ${WORKHOME} && swift upload OPUS-MT --changed --skip-identical eval
+	cd ${WORKHOME} && swift upload OPUS-MT-eval --changed --skip-identical eval
 	swift post OPUS-MT --read-acl ".r:*"
 
 upload-images:

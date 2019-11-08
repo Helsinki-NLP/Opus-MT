@@ -486,12 +486,22 @@ ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}: ${TEST_SRC}.${PR
 
 %.eval: % ${TEST_TRG}
 	grep . ${TEST_TRG} > $@.ref
-	grep . $< | sed 's/ \@\-\@ /-/g' > $@.sys
-	cd ${MULTEVALHOME} && ./multeval.sh eval \
-		--refs $@.ref \
-		--hyps-baseline $@.sys \
-		--meteor.language ${TRG} > $@
+	if  [ `grep '▁' $< | wc -l` -gt 0 ]; then \
+	  grep . $< | sed 's/ //g;s/▁/ /g' > $@.sys; \
+	else \
+	  grep . $< | sed 's/ \@\-\@ /-/g' |\
+	  $(TOKENIZER)/detokenizer.perl -l ${TRG} > $@.sys; \
+	fi
+	cat $@.sys | sacrebleu $@.ref > $@
+	cat $@.sys | sacrebleu --metrics=chrf --width=3 $@.ref >> $@
 	rm -f $@.ref $@.sys
+
+#	cd ${MULTEVALHOME} && ./multeval.sh eval \
+#		--refs $@.ref \
+#		--hyps-baseline $@.sys \
+#		--meteor.language ${TRG} > $@
+#	rm -f $@.ref $@.sys
+
 
 %.compare: %.eval
 	paste -d "\n" ${TEST_SRC} ${TEST_TRG} ${<:.eval=} |\
