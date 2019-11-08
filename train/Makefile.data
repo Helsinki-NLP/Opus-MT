@@ -169,8 +169,13 @@ ${LOCAL_TRAIN_SRC}:
 	rm -f ${LOCAL_TRAIN_SRC} ${LOCAL_TRAIN_TRG}
 	-for s in ${SRCLANGS}; do \
 	  for t in ${TRGLANGS}; do \
-	    ${MAKE} DATASET=${DATASET} SRC:=$$s TRG:=$$t \
+	    if [ ${HELDOUTSIZE} -gt 0 ]; then \
+	      ${MAKE} DATASET=${DATASET} SRC:=$$s TRG:=$$t \
 		add-to-local-train-and-heldout-data; \
+	    else \
+	      ${MAKE} DATASET=${DATASET} SRC:=$$s TRG:=$$t \
+		add-to-local-train-data; \
+	    fi \
 	  done \
 	done
 
@@ -179,8 +184,9 @@ ${LOCAL_TRAIN_SRC}:
 ${LOCAL_TRAIN_TRG}: ${LOCAL_TRAIN_SRC}
 	@echo "done!"
 
-## TODO: reserve some data for tuning from each corpus
-add-to-local-train-data: ${CLEAN_TRAIN_SRC}
+
+## add to the training data
+add-to-local-train-data: ${CLEAN_TRAIN_SRC} ${CLEAN_TRAIN_TRG}
 ifneq (${CLEAN_TRAIN_SRC},)
 	echo "${CLEAN_TRAIN_SRC}" >> ${dir ${LOCAL_TRAIN_SRC}}/README
 ifneq (${words ${TRGLANGS}},1)
@@ -195,8 +201,11 @@ endif
 endif
 
 
+
+
+
 ## extract training data but keep some heldout data for each dataset
-add-to-local-train-and-heldout-data: ${CLEAN_TRAIN_SRC}
+add-to-local-train-and-heldout-data: ${CLEAN_TRAIN_SRC} ${CLEAN_TRAIN_TRG}
 ifneq (${CLEAN_TRAIN_SRC},)
 	echo "${CLEAN_TRAIN_SRC}" >> ${dir ${LOCAL_TRAIN_SRC}}/README
 	mkdir -p ${HELDOUT_DIR}/${SRC}-${TRG}
@@ -604,22 +613,23 @@ SPMTRGMODEL = ${TRAIN_TRG}.spm${TRGBPESIZE:000=}k-model
 .PRECIOUS: ${SPMSRCMODEL} ${SPMTRGMODEL}
 
 
+
 ${SPMSRCMODEL}: ${WORKDIR}/%.spm${SRCBPESIZE:000=}k-model: ${TMPDIR}/${LANGSTR}/%
 ifeq ($(wildcard ${SPMSRCMODEL}),)
 	mkdir -p ${dir $@}
 ifeq ($(TRGLANGS),${firstword ${TRGLANGS}})
-	${SPM_HOME}/spm_train \
-		--model_prefix=$@ --vocab_size=$(SRCBPESIZE) --input=$< \
-		--character_coverage=1.0 --hard_vocab_limit=false
-	mv $@.model $@
-else
-	cut -f2- -d ' ' $< > $<.text
+	grep . $< > $<.text
 	${SPM_HOME}/spm_train \
 		--model_prefix=$@ --vocab_size=$(SRCBPESIZE) --input=$<.text \
 		--character_coverage=1.0 --hard_vocab_limit=false
+else
+	cut -f2- -d ' ' $< | grep . > $<.text
+	${SPM_HOME}/spm_train \
+		--model_prefix=$@ --vocab_size=$(SRCBPESIZE) --input=$<.text \
+		--character_coverage=1.0 --hard_vocab_limit=false
+endif
 	mv $@.model $@
 	rm -f $<.text
-endif
 else
 	@echo "$@ already exists!"
 	@echo "WARNING! No new SPM model is created even though the data has changed!"
@@ -631,10 +641,12 @@ endif
 ${SPMTRGMODEL}: ${WORKDIR}/%.spm${TRGBPESIZE:000=}k-model: ${TMPDIR}/${LANGSTR}/%
 ifeq ($(wildcard ${SPMTRGMODEL}),)
 	mkdir -p ${dir $@}
+	grep . $< > $<.text
 	${SPM_HOME}/spm_train \
-		--model_prefix=$@ --vocab_size=$(TRGBPESIZE) --input=$< \
+		--model_prefix=$@ --vocab_size=$(TRGBPESIZE) --input=$<.text \
 		--character_coverage=1.0 --hard_vocab_limit=false
 	mv $@.model $@
+	rm -f $<.text
 else
 	@echo "$@ already exists!"
 	@echo "WARNING! No new SPM model created!"

@@ -104,6 +104,7 @@ include Makefile.config
 include Makefile.dist
 include Makefile.tasks
 include Makefile.data
+include Makefile.doclevel
 include Makefile.slurm
 
 
@@ -216,7 +217,7 @@ finished:
 	done
 
 
-## run sonething over all language pairs but make it possible to do it in parallel
+## run something over all language pairs but make it possible to do it in parallel
 %-all-parallel:
 	${MAKE} $(subst -all-parallel,,${patsubst %,$@__%-run-for-langpair,${ALL_LANG_PAIRS}})
 
@@ -275,20 +276,31 @@ finished:
 		PRE_TRG=spm${TRGBPESIZE:000=}k \
 	${@:-spm=}
 
+
+## BPE models
+%-bpe:
+	${MAKE} WORKHOME=${shell realpath ${PWD}/work-bpe} \
+		PRE=tok \
+		PRE_SRC=bpe${SRCBPESIZE:000=}k \
+		PRE_TRG=bpe${TRGBPESIZE:000=}k \
+	${@:-bpe=}
+
+
 ## for the inbuilt sentence-piece segmentation:
 #		PRE_SRC=txt PRE_TRG=txt
 #		MARIAN=${MARIAN}-spm
 #		MODEL_VOCABTYPE=spm
 
 
-%-bpe:
-	${MAKE} WORKHOME=${shell realpath ${PWD}/work-bpe} \
-		PRE_SRC=${PRE_SRC}.segfix PRE_TRG=${PRE_TRG}.segfix PRE=norm \
-	${@:-bpe=}
 
-
-
-
+## use the doclevel benchmark data sets
+%-doclevel:
+	${MAKE} SRCLANGS=en TRGLANGS=de \
+		TRAINSET=ost-train \
+		DEVSET=ost-dev \
+		TESTSET=ost-test \
+		DEVSIZE=100000 TESTSIZE=100000 HELDOUTSIZE=0 \
+	${@:-doclevel=}
 
 
 
