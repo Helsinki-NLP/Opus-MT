@@ -165,6 +165,7 @@ resume:
 ## and all trokenized test sets that can be found in that directory
 TESTSET_DIR  = ${PWD}/testsets/${SRC}-${TRG}
 TESTSETS     = $(patsubst ${TESTSET_DIR}/%.${SRC}.tok.gz,%,${wildcard ${TESTSET_DIR}/*.${SRC}.tok.gz})
+TESTSETS_PRE = $(patsubst %.gz,%.${PRE}.gz,${sort $(subst .${PRE},,${wildcard ${TESTSET_DIR}/*.${SRC}.gz})})
 
 ## eval all available test sets
 eval-testsets:
@@ -174,7 +175,7 @@ eval-testsets:
 	  done \
 	done
 
-%-testsets-langpair:
+%-testsets-langpair: ${TESTSETS_PRE}
 	for t in ${TESTSETS}; do \
 	  ${MAKE} TESTSET=$$t ${@:-testsets-langpair=}; \
 	done

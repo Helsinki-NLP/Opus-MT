@@ -516,7 +516,7 @@ testsets/%.${PRE}.gz: testsets/%.${PRE}
 
 ALLTEST = $(patsubst %.gz,%.${PRE}.gz,${sort $(subst .${PRE},,${wildcard testsets/*/*.??.gz})})
 
-tokenize-testsets: ${ALLTEST}
+tokenize-testsets prepare-testsets: ${ALLTEST}
 
 
 ##----------------------------------------------

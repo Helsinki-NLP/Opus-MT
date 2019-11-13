@@ -75,23 +75,23 @@
 
 
 
-run-eval:
-	${MAKE} SRCLANGS=sv TRGLANGS=fi SRC=sv TRG=fi evalfiskmo
-	${MAKE} TRGLANGS=sv SRCLANGS=fi SRC=fi TRG=sv evalfiskmo
-	${MAKE} SRCLANGS=sv TRGLANGS=fi SRC=sv TRG=fi eval
-	${MAKE} TRGLANGS=sv SRCLANGS=fi SRC=fi TRG=sv eval
-	${MAKE} SRCLANGS=de TRGLANGS=fi SRC=de TRG=fi eval
-	${MAKE} SRCLANGS=fi TRGLANGS=fr SRC=fi TRG=fr eval
-	${MAKE} SRCLANGS=fr TRGLANGS=de SRC=fr TRG=de eval
-	${MAKE} SRCLANGS=de TRGLANGS=fr SRC=de TRG=fr eval
-	${MAKE} SRCLANGS=fi TRGLANGS=nl SRC=fi TRG=nl eval
-	${MAKE} SRCLANGS=fr TRGLANGS=fi SRC=fr TRG=fi eval
-	${MAKE} SRCLANGS=nl TRGLANGS=de SRC=nl TRG=de eval
-	${MAKE} SRCLANGS=de TRGLANGS=nl SRC=de TRG=nl eval
-	${MAKE} SRCLANGS=fi TRGLANGS=fr SRC=fi TRG=de eval
-	${MAKE} SRCLANGS=fr TRGLANGS=nl SRC=fr TRG=nl eval
-	${MAKE} SRCLANGS=nl TRGLANGS=fr SRC=nl TRG=fr eval
-	${MAKE} SRCLANGS=sv TRGLANGS=de SRC=sv TRG=de eval
+# run-eval:
+# 	${MAKE} SRCLANGS=sv TRGLANGS=fi SRC=sv TRG=fi evalfiskmo
+# 	${MAKE} TRGLANGS=sv SRCLANGS=fi SRC=fi TRG=sv evalfiskmo
+# 	${MAKE} SRCLANGS=sv TRGLANGS=fi SRC=sv TRG=fi eval
+# 	${MAKE} TRGLANGS=sv SRCLANGS=fi SRC=fi TRG=sv eval
+# 	${MAKE} SRCLANGS=de TRGLANGS=fi SRC=de TRG=fi eval
+# 	${MAKE} SRCLANGS=fi TRGLANGS=fr SRC=fi TRG=fr eval
+# 	${MAKE} SRCLANGS=fr TRGLANGS=de SRC=fr TRG=de eval
+# 	${MAKE} SRCLANGS=de TRGLANGS=fr SRC=de TRG=fr eval
+# 	${MAKE} SRCLANGS=fi TRGLANGS=nl SRC=fi TRG=nl eval
+# 	${MAKE} SRCLANGS=fr TRGLANGS=fi SRC=fr TRG=fi eval
+# 	${MAKE} SRCLANGS=nl TRGLANGS=de SRC=nl TRG=de eval
+# 	${MAKE} SRCLANGS=de TRGLANGS=nl SRC=de TRG=nl eval
+# 	${MAKE} SRCLANGS=fi TRGLANGS=fr SRC=fi TRG=de eval
+# 	${MAKE} SRCLANGS=fr TRGLANGS=nl SRC=fr TRG=nl eval
+# 	${MAKE} SRCLANGS=nl TRGLANGS=fr SRC=nl TRG=fr eval
+# 	${MAKE} SRCLANGS=sv TRGLANGS=de SRC=sv TRG=de eval
 
 
 
