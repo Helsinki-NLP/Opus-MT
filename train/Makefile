@@ -292,18 +292,6 @@ finished:
 
 
 
-## use the doclevel benchmark data sets
-%-doclevel:
-	${MAKE} SRCLANGS=en TRGLANGS=de \
-		TRAINSET=ost-train \
-		DEVSET=ost-dev \
-		TESTSET=ost-test \
-		DEVSIZE=100000 TESTSIZE=100000 HELDOUTSIZE=0 \
-	${@:-doclevel=}
-
-
-
-
 
 
 
@@ -317,8 +305,8 @@ endif
 
 continue-doctrain:
 	mkdir -p ${WORKDIR}/${MODEL}
-	cp ${MODEL_VOCAB} ${WORKDIR}/${MODEL}/${notdir ${MODEL_VOCAB}}
-	cp ${MODEL_FINAL} ${WORKDIR}/${MODEL}/$(subst .doc${CONTEXT_SIZE},.doc${NEW_CONTEXT},${MODEL_BASENAME}).npz
+	cp ${MODEL_VOCAB} ${WORKDIR}/${MODEL}/$(subst .doc${CONTEXT_SIZE},.doc${NEW_CONTEXT},${notdir ${MODEL_VOCAB}})
+	cp ${MODEL_FINAL} ${WORKDIR}/${MODEL}/$(subst .doc${CONTEXT_SIZE},.doc${NEW_CONTEXT},$(notdir ${MODEL_BASENAME})).npz
 	${MAKE} MODEL_SUBDIR=${MODEL}/ CONTEXT_SIZE=$(NEW_CONTEXT) train-doc
 
 
@@ -332,7 +320,7 @@ endif
 
 continue-datatrain:
 	mkdir -p ${WORKDIR}/${MODEL}
-	cp ${MODEL_VOCAB} ${WORKDIR}/${MODEL}/${notdir ${MODEL_VOCAB}}
+	cp ${MODEL_VOCAB} ${WORKDIR}/${MODEL}/$(patsubst ${DATASET}%,${NEW_DATASET}%,${notdir ${MODEL_VOCAB}})
 	cp ${MODEL_FINAL} ${WORKDIR}/${MODEL}/$(patsubst ${DATASET}%,${NEW_DATASET}%,${MODEL_BASENAME}).npz
 	if [ -e ${BPESRCMODEL} ]; then \
 	  cp ${BPESRCMODEL} $(patsubst ${WORKDIR}/train/${DATASET}%,${WORKDIR}/train/${NEW_DATASET}%,${BPESRCMODEL}); \
