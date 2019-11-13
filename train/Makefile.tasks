@@ -157,6 +157,12 @@ all2en:
 	  fi \
 	done
 
+enit:
+	${MAKE} SRCLANGS=en TRGLANGS=it traindata-spm
+	${MAKE} SRCLANGS=en TRGLANGS=it devdata-spm
+	${MAKE} SRCLANGS=en TRGLANGS=it wordalign-spm
+	${MAKE} SRCLANGS=en TRGLANGS=it WALLTIME=72 HPC_MEM=4g HPC_CORES=1 train-spm.submit-multigpu
+
 
 memad-fiensv:
 	${MAKE} SRCLANGS=sv TRGLANGS=fi traindata-spm
@@ -214,11 +220,11 @@ memad:
 
 doclevel:
 	${MAKE} ost-datasets
-	${MAKE} traindata-doc-doclevel
-	${MAKE} devdata-doc-doclevel
-	${MAKE} wordalign-doc-doclevel
+	${MAKE} traindata-doc-ost
+	${MAKE} devdata-doc-ost
+	${MAKE} wordalign-doc-ost
 	${MAKE} CONTEXT_SIZE=${CONTEXT_SIZE} MODELTYPE=${MODELTYPE} \
-		HPC_CORES=1 WALLTIME=72 HPC_MEM=4g train-doc-doclevel.submit
+		HPC_CORES=1 WALLTIME=72 HPC_MEM=4g train-doc-ost.submit
 
 
 fiensv_bpe:
