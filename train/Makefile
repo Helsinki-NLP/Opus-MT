@@ -507,13 +507,23 @@ ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}: ${TEST_SRC}.${PR
 
 
 %.compare: %.eval
-	paste -d "\n" ${TEST_SRC} ${TEST_TRG} ${<:.eval=} |\
-	sed 's/ \@\-\@ /-/g' | \
-	sed 	-e "s/&apos;/'/g" \
+	if  [ `grep '▁' ${<:.eval=} | wc -l` -gt 0 ]; then \
+	  sed 's/ //g;s/▁/ /g;s/^ *//' < ${<:.eval=} > ${<:.eval=.deseg}; \
+	  paste -d "\n" ${TEST_SRC} ${TEST_TRG} ${<:.eval=.deseg} |\
+	  sed 's/ \@\-\@ /-/g' | \
+	  sed 	-e "s/&apos;/'/g" \
 		-e 's/&quot;/"/g' \
 		-e 's/&lt;/</g' \
 		-e 's/&gt;/>/g' \
 		-e 's/&amp;/&/g' |\
-	sed 'n;n;G;' > $@
-
-
+	  sed 'n;n;G;' > $@; \
+	else \
+	  paste -d "\n" ${TEST_SRC} ${TEST_TRG} ${<:.eval=} |\
+	  sed 's/ \@\-\@ /-/g' | \
+	  sed 	-e "s/&apos;/'/g" \
+		-e 's/&quot;/"/g' \
+		-e 's/&lt;/</g' \
+		-e 's/&gt;/>/g' \
+		-e 's/&amp;/&/g' |\
+	  sed 'n;n;G;' > $@; \
+	fi

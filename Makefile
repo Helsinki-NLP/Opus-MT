@@ -232,7 +232,7 @@ ${NMT_MODEL}:
 	rm -f ${notdir $@}
 #	systemctl daemon-reload
 	service ${notdir $@} restart
-	sleep 2
+	sleep 10
 
 
 remove-services: remove-marian-service remove-opusMT-service remove-opusMT-router
