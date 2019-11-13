@@ -212,6 +212,15 @@ memad:
 	done
 
 
+doclevel:
+	${MAKE} ost-datasets
+	${MAKE} traindata-doc-doclevel
+	${MAKE} devdata-doc-doclevel
+	${MAKE} wordalign-doc-doclevel
+	${MAKE} CONTEXT_SIZE=${CONTEXT_SIZE} MODELTYPE=${MODELTYPE} \
+		HPC_CORES=1 WALLTIME=72 HPC_MEM=4g train-doc-doclevel.submit
+
+
 fiensv_bpe:
 	${MAKE} SRCLANGS=fi TRGLANGS=sv traindata-bpe 
 	${MAKE} SRCLANGS=fi TRGLANGS=sv devdata-bpe
