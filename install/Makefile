@@ -49,12 +49,17 @@ prereqs: GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB
 	apt-get -q install python3-dev python3-pip python3-setuptools python3-websocket
 	apt-get -q install intel-mkl-64bit-2019.5-075
 	pip3 install SimpleWebSocketServer
-	pip3 install mosestokenizer pycld2 sqlitedict
-	pip3 install sentencepiece
+ifeq (${UBUNTU_RELEASE},16.04)
+	pip3 install mosestokenizer==1.0.0
+endif
 ifeq (${UBUNTU_RELEASE},14.04)
 	apt-get -q install cmake3-data cmake3
+	pip3 install mosestokenizer==1.0.0
 	pip3 install websocket-client==0.46.0
 endif
+	pip3 install mosestokenizer pycld2 sqlitedict
+	pip3 install sentencepiece
+
 
 GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB:
 	wget https://apt.repos.intel.com/intel-gpg-keys/$@
