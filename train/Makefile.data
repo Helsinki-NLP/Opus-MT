@@ -109,8 +109,9 @@ ${LOCAL_TRAIN_TRG}.algtmp: ${TRAIN_TRG}.${PRE_TRG}${TRAINSIZE}.gz
 
 ## max number of lines in a corpus for running word alignment
 ## (split into chunks of max that size before aligning)
-MAX_WORDALIGN_SIZE = 25000000
-# MAX_WORDALIGN_SIZE = 100000
+
+MAX_WORDALIGN_SIZE = 10000000
+# MAX_WORDALIGN_SIZE = 25000000
 
 ${TRAIN_ALG}: 	${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE}.gz \
 		${TRAIN_TRG}.${PRE_TRG}${TRAINSIZE}.gz
