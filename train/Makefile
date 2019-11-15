@@ -361,6 +361,7 @@ endif
 
 
 ## NEW: take away dependency on ${MODEL_VOCAB}
+## (will be created by marian if it does not exist)
 
 ## train transformer model
 ${WORKDIR}/${MODEL}.transformer.model${NR}.done: \
@@ -462,13 +463,20 @@ ENSEMBLE = ${wildcard ${WORKDIR}/${MODEL}.${MODELTYPE}.model*.npz.best-perplexit
 
 ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.ensemble.${SRC}.${TRG}: ${TEST_SRC}.${PRE_SRC} ${ENSEMBLE}
 	mkdir -p ${dir $@}
-	${LOADMODS} && ${MARIAN}/marian-decoder -i ${word 1,$^} \
+	grep . $< > $@.input
+	${LOADMODS} && ${MARIAN}/marian-decoder -i $@.input \
 		--models ${ENSEMBLE} \
 		--vocabs ${WORKDIR}/${MODEL}.vocab.yml \
 			${WORKDIR}/${MODEL}.vocab.yml \
 			${WORKDIR}/${MODEL}.vocab.yml \
-		${MARIAN_DECODER_FLAGS} \
-	| sed 's/\@\@ //g' | sed 's/ \@\@//g' > $@
+		${MARIAN_DECODER_FLAGS} > $@.output
+ifeq (${PRE_TRG},spm${TRGBPESIZE:000=}k)
+	sed 's/ //g;s/▁/ /g' < $@.output > $@
+else
+	sed 's/\@\@ //g;s/ \@\@//g;s/ \@\-\@ /-/g' < $@.output |\
+	$(TOKENIZER)/detokenizer.perl -l ${TRG} > $@
+endif
+	rm -f $@.input $@.output
 
 
 #------------------------------------------------------------------------
@@ -476,54 +484,35 @@ ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.ensemble.${SRC}.${TRG}: ${TEST_
 # for comparing system to reference translations
 #------------------------------------------------------------------------
 
-${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}: ${TEST_SRC}.${PRE_SRC} \
-		${WORKDIR}/${MODEL}.${MODELTYPE}.model${NR}.npz
+${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}: ${TEST_SRC}.${PRE_SRC} ${MODEL_FINAL}
 	mkdir -p ${dir $@}
 	grep . $< > $@.input
 	${LOADMODS} && ${MARIAN}/marian-decoder -i $@.input \
-		-c ${word 2,$^}.best-perplexity.npz.decoder.yml \
+		-c ${word 2,$^}.decoder.yml \
 		-d ${MARIAN_GPUS} \
-		${MARIAN_DECODER_FLAGS} \
-	| sed 's/\@\@ //g' | sed 's/ \@\@//g' > $@
-	rm -f $@.input
+		${MARIAN_DECODER_FLAGS} > $@.output
+ifeq (${PRE_TRG},spm${TRGBPESIZE:000=}k)
+	sed 's/ //g;s/▁/ /g' < $@.output > $@
+else
+	sed 's/\@\@ //g;s/ \@\@//g;s/ \@\-\@ /-/g' < $@.output |\
+	$(TOKENIZER)/detokenizer.perl -l ${TRG} > $@
+endif
+	rm -f $@.input $@.output
+
 
 %.eval: % ${TEST_TRG}
 	grep . ${TEST_TRG} > $@.ref
-	if  [ `grep '▁' $< | wc -l` -gt 0 ]; then \
-	  grep . $< | sed 's/ //g;s/▁/ /g' > $@.sys; \
-	else \
-	  grep . $< | sed 's/ \@\-\@ /-/g' |\
-	  $(TOKENIZER)/detokenizer.perl -l ${TRG} > $@.sys; \
-	fi
+	grep . $< > $@.sys
 	cat $@.sys | sacrebleu $@.ref > $@
 	cat $@.sys | sacrebleu --metrics=chrf --width=3 $@.ref >> $@
 	rm -f $@.ref $@.sys
 
-#	cd ${MULTEVALHOME} && ./multeval.sh eval \
-#		--refs $@.ref \
-#		--hyps-baseline $@.sys \
-#		--meteor.language ${TRG} > $@
-#	rm -f $@.ref $@.sys
-
 
 %.compare: %.eval
-	if  [ `grep '▁' ${<:.eval=} | wc -l` -gt 0 ]; then \
-	  sed 's/ //g;s/▁/ /g;s/^ *//' < ${<:.eval=} > ${<:.eval=.deseg}; \
-	  paste -d "\n" ${TEST_SRC} ${TEST_TRG} ${<:.eval=.deseg} |\
-	  sed 's/ \@\-\@ /-/g' | \
-	  sed 	-e "s/&apos;/'/g" \
+	paste -d "\n" ${TEST_SRC} ${TEST_TRG} ${<:.eval=} |\
+	sed 	-e "s/&apos;/'/g" \
 		-e 's/&quot;/"/g' \
 		-e 's/&lt;/</g' \
 		-e 's/&gt;/>/g' \
 		-e 's/&amp;/&/g' |\
-	  sed 'n;n;G;' > $@; \
-	else \
-	  paste -d "\n" ${TEST_SRC} ${TEST_TRG} ${<:.eval=} |\
-	  sed 's/ \@\-\@ /-/g' | \
-	  sed 	-e "s/&apos;/'/g" \
-		-e 's/&quot;/"/g' \
-		-e 's/&lt;/</g' \
-		-e 's/&gt;/>/g' \
-		-e 's/&amp;/&/g' |\
-	  sed 'n;n;G;' > $@; \
-	fi
+	sed 'n;n;G;' > $@
