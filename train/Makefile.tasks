@@ -54,7 +54,7 @@ all2pivot:
 	for l in ${filter-out ${PIVOT},${LANGS}}; do \
 	  ${MAKE} SRCLANGS="$$l" TRGLANGS="${PIVOT}" traindata devdata wordalign; \
 	  ${MAKE} SRCLANGS="$$l" TRGLANGS="${PIVOT}" HPC_CORES=1 HPC_MEM=4g train.submit-multigpu; \
-	  ${MAKE} SRCLANGS="${PIVOT}" TRGLANGS="$$l" reverse-data-spm; \
+	  ${MAKE} SRCLANGS="$$l" TRGLANGS="${PIVOT}" reverse-data; \
 	  ${MAKE} SRCLANGS="${PIVOT}" TRGLANGS="$$l" HPC_CORES=1 HPC_MEM=4g train.submit-multigpu; \
 	done
 
