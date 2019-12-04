@@ -11,7 +11,7 @@ LANGPAIR = ${SRC_LANGS}-${TRG_LANGS}
 
 
 ## repository with all public models
-MODEL_REPO = https://object.pouta.csc.fi/OPUS-MT
+MODEL_REPO = https://object.pouta.csc.fi/OPUS-MT-models
 
 
 ## installation destinations
@@ -163,7 +163,7 @@ ${NMT_MODEL}:
 	wget -O model-list.txt ${MODEL_REPO}
 	wget -O model.zip \
 		${MODEL_REPO}/`tr "<>" "\n\n" < model-list.txt | \
-		grep 'models/${SRC_LANGS}-${TRG_LANGS}/${DATASET}' |\
+		grep '${SRC_LANGS}-${TRG_LANGS}/${DATASET}' |\
 		sort | tail -1`
 	mkdir -p model
 	cd model && unzip ../model.zip

@@ -6,7 +6,7 @@ echo '<h1>OPUS-MT</h1>';
 OPUS-MT provides pre-trained neural translation models trained on <a href="http://opus.nlpl.eu">OPUS data</a>. These models can seamlessly run with the OPUS-MT transation servers that can be installed from our <a href="https://github.com/Helsinki-NLP/OPUS-MT">OPUS-MT github repository</a>.
 <?php
 
-$baseUrl = 'https://object.pouta.csc.fi/OPUS-MT';
+$baseUrl = 'https://object.pouta.csc.fi/OPUS-MT-models';
 $xmlstring = file_get_contents($baseUrl);
 
 $xml = simplexml_load_string($xmlstring);
@@ -22,7 +22,7 @@ foreach ($array['Contents'] as &$m){
   }
 
   $pieces = explode('/', $m['Key']);
-  $langs = explode('-', $pieces[1]);
+  $langs = explode('-', $pieces[0]);
 
   $newModel = true;
   if (array_key_exists($langs[0],$modelDate)){
