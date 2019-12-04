@@ -15,23 +15,91 @@ MIN_BLEU_SCORE = 20
 .PHONY: dist
 dist: ${DIST_PACKAGE}
 
+
+
+
+## get the best model from all kind of alternative models
+## in the following sub directories (work-* subdir)
+
+ALT_MODEL_DIR = bpe-old bpe-memad bpe spm-noalign bpe-align spm
+
+best_dist_all:
+	for l in $(sort ${shell ls work* | grep -- '-' | grep -v old | grep -v work}); do \
+	  if  [ `find work*/$$l -name '${DATASET}${TRAINSIZE}.*.npz' | wc -l` -gt 0 ]; then \
+	    ${MAKE} SRCLANGS="`echo $$l | cut -f1 -d'-' | sed 's/\\+/ /g'`" \
+		    TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" best_dist; \
+	  fi \
+	done
+
+best_dist:
+	m=0;\
+	s=''; \
+	for d in ${ALT_MODEL_DIR}; do \
+	  if ls work-$$d/${LANGSTR}/Tatoeba*.eval 1> /dev/null 2>&1; then \
+	    b=`grep 'BLEU+' work-$$d/${LANGSTR}/Tatoeba*.eval | cut -f3 -d' '`; \
+	    if (( $$(echo "$$m-$$b < 1" |bc -l) )); then \
+	      echo "$$d ($$b) is better or not much worse than $$s ($$m)!"; \
+	      m=$$b; \
+	      s=$$d; \
+	    else \
+	      echo "$$d ($$b) is  worse than $$s ($$m)!"; \
+	    fi \
+	  fi \
+	done; \
+	if [ "$$s" != "" ]; then \
+	  ${MAKE} MODELSHOME=${PWD}/models dist-$$s; \
+	fi
+
+
+
+## make a package for distribution
+
 ${DIST_PACKAGE}: ${MODEL_FINAL}
 	${MAKE} $(TEST_EVALUATION)
 	${MAKE} $(TEST_COMPARISON)
 	if  [ `grep BLEU $(TEST_EVALUATION) | cut -f3 -d ' ' | cut -f1 -d '.'` -ge ${MIN_BLEU_SCORE} ]; then \
+	  mkdir -p ${dir $@}; \
+	  M=$(notdir ${@:.zip=})-${shell date +%F}; \
 	  touch ${WORKDIR}/source.tcmodel; \
+	  echo "# $$M.zip" > ${WORKDIR}/README.md; \
+	  echo '' >> ${WORKDIR}/README.md; \
+	  echo "* dataset: ${DATASET}" >> ${WORKDIR}/README.md; \
+	  echo "* model: ${MODELTYPE}" >> ${WORKDIR}/README.md; \
 	  if [ -e ${BPESRCMODEL} ]; then \
+	    echo "* pre-processing: normalization + tokenization + BPE" >> ${WORKDIR}/README.md; \
 	    cp ${BPESRCMODEL} ${WORKDIR}/source.bpe; \
 	    cp ${BPETRGMODEL} ${WORKDIR}/target.bpe; \
 	    cp preprocess-bpe.sh ${WORKDIR}/preprocess.sh; \
 	    cp postprocess-bpe.sh ${WORKDIR}/postprocess.sh; \
 	  elif [ -e ${SPMSRCMODEL} ]; then \
+	    echo "* pre-processing: normalization + SentencePiece" >> ${WORKDIR}/README.md; \
 	    cp ${SPMSRCMODEL} ${WORKDIR}/source.spm; \
 	    cp ${SPMTRGMODEL} ${WORKDIR}/target.spm; \
 	    cp preprocess-spm.sh ${WORKDIR}/preprocess.sh; \
 	    cp postprocess-spm.sh ${WORKDIR}/postprocess.sh; \
 	  fi; \
-	  cp README LICENSE ${WORKDIR}/; \
+	  if [ ${words ${TRGLANGS}} -gt 1 ]; then \
+	    echo '* a sentence initial language token is required in the form of >>id<< (id = valid target language ID)' \
+		>> ${WORKDIR}/README.md; \
+	  fi; \
+	  echo "* download: [$$M.zip](https://object.pouta.csc.fi/OPUS-MT-models/${LANGSTR}/$$M.zip)" >> ${WORKDIR}/README.md; \
+	  echo "* test set translations: [$$M.test.txt](https://object.pouta.csc.fi/OPUS-MT-models/${LANGSTR}/$$M.test.txt)" >> ${WORKDIR}/README.md; \
+	  echo "* test set scores: [$$M.eval.txt](https://object.pouta.csc.fi/OPUS-MT-models/${LANGSTR}/$$M.eval.txt)" >> ${WORKDIR}/README.md; \
+	  echo '' >> ${WORKDIR}/README.md; \
+	  echo '## Benchmarks' >> ${WORKDIR}/README.md; \
+	  echo '' >> ${WORKDIR}/README.md; \
+	  cd ${WORKDIR}; \
+	  grep -H BLEU *k${NR}.*eval | tr '.' '/' | cut -f1,5,6 -d '/' | tr '/' "." > $@.1; \
+	  grep BLEU *k${NR}.*eval | cut -f3 -d ' ' > $@.2; \
+	  grep chrF *k${NR}.*eval | cut -f3 -d ' ' > $@.3; \
+	  cd ${PWD}; \
+	  echo '| testset               | BLEU  | chr-F |' >> ${WORKDIR}/README.md; \
+	  echo '|-----------------------|-------|-------|' >> ${WORKDIR}/README.md; \
+	  paste $@.1 $@.2 $@.3 | sed  "s/\t/ 	| /g;s/^/| /;s/$$/ |/" >> ${WORKDIR}/README.md; \
+	  rm -f $@.1 $@.2 $@.3; \
+	  cat ${WORKDIR}/README.md >> ${dir $@}README.md; \
+	  echo '' >> ${dir $@}README.md; \
+	  cp LICENSE ${WORKDIR}/; \
 	  chmod +x ${WORKDIR}/preprocess.sh; \
 	  sed -e 's# - /.*/\([^/]*\)$$# - \1#' \
 	      -e 's/beam-size: [0-9]*$$/beam-size: 6/' \
@@ -40,18 +108,18 @@ ${DIST_PACKAGE}: ${MODEL_FINAL}
 	      -e 's/relative-paths: false/relative-paths: true/' \
 	  < ${MODEL_DECODER} > ${WORKDIR}/decoder.yml; \
 	  cd ${WORKDIR} && zip ${notdir $@} \
-		README LICENSE \
+		README.md LICENSE \
 		${notdir ${MODEL_FINAL}} \
 		${notdir ${MODEL_VOCAB}} \
 		${notdir ${MODEL_VALIDLOG}} \
 		${notdir ${MODEL_TRAINLOG}} \
 		source.* target.* decoder.yml preprocess.sh postprocess.sh; \
 	  mkdir -p ${dir $@}; \
-	  mv -f ${WORKDIR}/${notdir $@} ${@:.zip=}-${shell date +%F}.zip; \
-	  cp $(TEST_EVALUATION) $(@:.zip=-${shell date +%F}.eval.txt); \
-	  cp $(TEST_COMPARISON) $(@:.zip=-${shell date +%F}.test.txt); \
+	  mv -f ${WORKDIR}/${notdir $@} $(dir $@)$$M.zip; \
+	  cp $(TEST_EVALUATION) $(dir $@)$$M.eval.txt; \
+	  cp $(TEST_COMPARISON) $(dir $@)$$M.test.txt; \
 	  rm -f $@; \
-	  cd ${dir $@} && ln -s ${notdir ${@:.zip=}-${shell date +%F}.zip} ${notdir $@}; \
+	  cd ${dir $@} && ln -s $$M.zip ${notdir $@}; \
 	  rm -f ${WORKDIR}/decoder.yml ${WORKDIR}/source.* ${WORKDIR}/target.*; \
 	  rm -f ${WORKDIR}/preprocess.sh ${WORKDIR}/postprocess.sh; \
 	fi

@@ -276,6 +276,15 @@ finished:
 		PRE_TRG=spm${TRGBPESIZE:000=}k \
 	${@:-spm=}
 
+%-spm-noalign:
+	${MAKE} WORKHOME=${shell realpath ${PWD}/work-spm-noalign} \
+		MODELTYPE=transformer \
+		PRE=norm \
+		PRE_SRC=spm${SRCBPESIZE:000=}k \
+		PRE_TRG=spm${TRGBPESIZE:000=}k \
+	${@:-spm-noalign=}
+
+
 
 ## BPE models
 %-bpe:
@@ -293,21 +302,21 @@ finished:
 		PRE_TRG=bpe${TRGBPESIZE:000=}k \
 	${@:-bpe-align=}
 
-%-bpememad:
+%-bpe-memad:
 	${MAKE} WORKHOME=${shell realpath ${PWD}/work-bpe-memad} \
 		PRE=tok \
 		MODELTYPE=transformer \
 		PRE_SRC=bpe${SRCBPESIZE:000=}k \
 		PRE_TRG=bpe${TRGBPESIZE:000=}k \
-	${@:-bpememad=}
+	${@:-bpe-memad=}
 
-%-bpeold:
+%-bpe-old:
 	${MAKE} WORKHOME=${shell realpath ${PWD}/work-bpe-old} \
 		PRE=tok \
 		MODELTYPE=transformer \
 		PRE_SRC=bpe${SRCBPESIZE:000=}k \
 		PRE_TRG=bpe${TRGBPESIZE:000=}k \
-	${@:-bpeold=}
+	${@:-bpe-old=}
 
 
 ## for the inbuilt sentence-piece segmentation:
