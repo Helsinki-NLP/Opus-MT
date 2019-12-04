@@ -4,8 +4,7 @@
 # and upload them to cPouta ObjectStorage
 #
 
-MODELSHOME = ${WORKHOME}/models
-# DIST_PACKAGE = ${WORKHOME}/models/${LANGSTR}/${DATASET}-${shell date +%F}.zip
+MODELSHOME   = ${WORKHOME}/models
 DIST_PACKAGE = ${MODELSHOME}/${LANGSTR}/${DATASET}.zip
 
 
@@ -15,11 +14,13 @@ MIN_BLEU_SCORE = 20
 .PHONY: dist
 dist: ${DIST_PACKAGE}
 
+.PHONY: scores
+scores: ${WORKHOME}/eval/scores.txt
 
 
 
-## get the best model from all kind of alternative models
-## in the following sub directories (work-* subdir)
+## get the best model from all kind of alternative setups
+## in the following sub directories (add prefix work-)
 
 ALT_MODEL_DIR = bpe-old bpe-memad bpe spm-noalign bpe-align spm
 
@@ -31,10 +32,16 @@ best_dist_all:
 	  fi \
 	done
 
+
+## find the best model according to test set scores
+## and make a distribution package from that model
+## (BLEU needs to be above MIN_BLEU_SCORE)
+
 best_dist:
-	m=0;\
+	@m=0;\
 	s=''; \
 	echo "------------------------------------------------"; \
+	echo "search best model for ${LANGSTR}"; \
 	for d in ${ALT_MODEL_DIR}; do \
 	  if ls work-$$d/${LANGSTR}/Tatoeba*.eval 1> /dev/null 2>&1; then \
 	    b=`grep 'BLEU+' work-$$d/${LANGSTR}/Tatoeba*.eval | cut -f3 -d' '`; \
@@ -49,82 +56,174 @@ best_dist:
 	done; \
 	echo "------------------------------------------------"; \
 	if [ "$$s" != "" ]; then \
-	  ${MAKE} MODELSHOME=${PWD}/models dist-$$s; \
+	  if (( $$(echo "$$m > ${MIN_BLEU_SCORE}" |bc -l) )); then \
+	    ${MAKE} MODELSHOME=${PWD}/models dist-$$s; \
+	  fi; \
 	fi
+
 
 
 
 ## make a package for distribution
 
+## old: only accept models with a certain evaluation score:
+# 	if  [ `grep BLEU $(TEST_EVALUATION) | cut -f3 -d ' ' | cut -f1 -d '.'` -ge ${MIN_BLEU_SCORE} ]; then \
+
+DATE = ${shell date +%F}
+MODELS_URL = https://object.pouta.csc.fi/OPUS-MT-models
+
 ${DIST_PACKAGE}: ${MODEL_FINAL}
-	${MAKE} $(TEST_EVALUATION)
-	${MAKE} $(TEST_COMPARISON)
-	if  [ `grep BLEU $(TEST_EVALUATION) | cut -f3 -d ' ' | cut -f1 -d '.'` -ge ${MIN_BLEU_SCORE} ]; then \
-	  mkdir -p ${dir $@}; \
-	  M=$(notdir ${@:.zip=})-${shell date +%F}; \
-	  touch ${WORKDIR}/source.tcmodel; \
-	  echo "# $$M.zip" > ${WORKDIR}/README.md; \
-	  echo '' >> ${WORKDIR}/README.md; \
-	  echo "* dataset: ${DATASET}" >> ${WORKDIR}/README.md; \
-	  echo "* model: ${MODELTYPE}" >> ${WORKDIR}/README.md; \
-	  if [ -e ${BPESRCMODEL} ]; then \
-	    echo "* pre-processing: normalization + tokenization + BPE" >> ${WORKDIR}/README.md; \
-	    cp ${BPESRCMODEL} ${WORKDIR}/source.bpe; \
-	    cp ${BPETRGMODEL} ${WORKDIR}/target.bpe; \
-	    cp preprocess-bpe.sh ${WORKDIR}/preprocess.sh; \
-	    cp postprocess-bpe.sh ${WORKDIR}/postprocess.sh; \
-	  elif [ -e ${SPMSRCMODEL} ]; then \
-	    echo "* pre-processing: normalization + SentencePiece" >> ${WORKDIR}/README.md; \
-	    cp ${SPMSRCMODEL} ${WORKDIR}/source.spm; \
-	    cp ${SPMTRGMODEL} ${WORKDIR}/target.spm; \
-	    cp preprocess-spm.sh ${WORKDIR}/preprocess.sh; \
-	    cp postprocess-spm.sh ${WORKDIR}/postprocess.sh; \
-	  fi; \
-	  if [ ${words ${TRGLANGS}} -gt 1 ]; then \
-	    echo '* a sentence initial language token is required in the form of `>>id<<` (id = valid target language ID)' \
+	@${MAKE} $(TEST_EVALUATION)
+	@${MAKE} $(TEST_COMPARISON)
+	@mkdir -p ${dir $@}
+	@touch ${WORKDIR}/source.tcmodel
+	@echo "# $(notdir ${@:.zip=})-${DATE}.zip" > ${WORKDIR}/README.md
+	@echo '' >> ${WORKDIR}/README.md
+	@echo "* dataset: ${DATASET}" >> ${WORKDIR}/README.md
+	@echo "* model: ${MODELTYPE}" >> ${WORKDIR}/README.md
+	@if [ -e ${BPESRCMODEL} ]; then \
+	  echo "* pre-processing: normalization + tokenization + BPE" >> ${WORKDIR}/README.md; \
+	  cp ${BPESRCMODEL} ${WORKDIR}/source.bpe; \
+	  cp ${BPETRGMODEL} ${WORKDIR}/target.bpe; \
+	  cp preprocess-bpe.sh ${WORKDIR}/preprocess.sh; \
+	  cp postprocess-bpe.sh ${WORKDIR}/postprocess.sh; \
+	elif [ -e ${SPMSRCMODEL} ]; then \
+	  echo "* pre-processing: normalization + SentencePiece" >> ${WORKDIR}/README.md; \
+	  cp ${SPMSRCMODEL} ${WORKDIR}/source.spm; \
+	  cp ${SPMTRGMODEL} ${WORKDIR}/target.spm; \
+	  cp preprocess-spm.sh ${WORKDIR}/preprocess.sh; \
+	  cp postprocess-spm.sh ${WORKDIR}/postprocess.sh; \
+	fi
+	@if [ ${words ${TRGLANGS}} -gt 1 ]; then \
+	  echo '* a sentence initial language token is required in the form of `>>id<<` (id = valid target language ID)' \
 		>> ${WORKDIR}/README.md; \
-	  fi; \
-	  echo "* download: [$$M.zip](https://object.pouta.csc.fi/OPUS-MT-models/${LANGSTR}/$$M.zip)" >> ${WORKDIR}/README.md; \
-	  echo "* test set translations: [$$M.test.txt](https://object.pouta.csc.fi/OPUS-MT-models/${LANGSTR}/$$M.test.txt)" >> ${WORKDIR}/README.md; \
-	  echo "* test set scores: [$$M.eval.txt](https://object.pouta.csc.fi/OPUS-MT-models/${LANGSTR}/$$M.eval.txt)" >> ${WORKDIR}/README.md; \
-	  echo '' >> ${WORKDIR}/README.md; \
-	  echo '## Benchmarks' >> ${WORKDIR}/README.md; \
-	  echo '' >> ${WORKDIR}/README.md; \
-	  cd ${WORKDIR}; \
-	  grep -H BLEU *k${NR}.*eval | tr '.' '/' | cut -f1,5,6 -d '/' | tr '/' "." > $@.1; \
-	  grep BLEU *k${NR}.*eval | cut -f3 -d ' ' > $@.2; \
-	  grep chrF *k${NR}.*eval | cut -f3 -d ' ' > $@.3; \
-	  cd ${PWD}; \
-	  echo '| testset               | BLEU  | chr-F |' >> ${WORKDIR}/README.md; \
-	  echo '|-----------------------|-------|-------|' >> ${WORKDIR}/README.md; \
-	  paste $@.1 $@.2 $@.3 | sed  "s/\t/ 	| /g;s/^/| /;s/$$/ |/" >> ${WORKDIR}/README.md; \
-	  rm -f $@.1 $@.2 $@.3; \
-	  cat ${WORKDIR}/README.md >> ${dir $@}README.md; \
-	  echo '' >> ${dir $@}README.md; \
-	  cp LICENSE ${WORKDIR}/; \
-	  chmod +x ${WORKDIR}/preprocess.sh; \
-	  sed -e 's# - /.*/\([^/]*\)$$# - \1#' \
-	      -e 's/beam-size: [0-9]*$$/beam-size: 6/' \
-	      -e 's/mini-batch: [0-9]*$$/mini-batch: 1/' \
-	      -e 's/maxi-batch: [0-9]*$$/maxi-batch: 1/' \
-	      -e 's/relative-paths: false/relative-paths: true/' \
-	  < ${MODEL_DECODER} > ${WORKDIR}/decoder.yml; \
-	  cd ${WORKDIR} && zip ${notdir $@} \
+	fi
+	@echo "* download: [$(notdir ${@:.zip=})-${DATE}.zip](${MODELS_URL}/${LANGSTR}/$(notdir ${@:.zip=})-${DATE}.zip)" >> ${WORKDIR}/README.md
+	@echo "* test set translations: [$(notdir ${@:.zip=})-${DATE}.test.txt](${MODELS_URL}/${LANGSTR}/$(notdir ${@:.zip=})-${DATE}.test.txt)" >> ${WORKDIR}/README.md
+	@echo "* test set scores: [$(notdir ${@:.zip=})-${DATE}.eval.txt](${MODELS_URL}/${LANGSTR}/$(notdir ${@:.zip=})-${DATE}.eval.txt)" >> ${WORKDIR}/README.md
+	@echo '' >> ${WORKDIR}/README.md
+	@echo '## Benchmarks' >> ${WORKDIR}/README.md
+	@echo '' >> ${WORKDIR}/README.md
+	@cd ${WORKDIR} && grep -H BLEU *k${NR}.*eval | \
+		tr '.' '/' | cut -f1,5,6 -d '/' | tr '/' "." > $@.1
+	@cd ${WORKDIR} && grep BLEU *k${NR}.*eval | cut -f3 -d ' ' > $@.2
+	@cd ${WORKDIR} && grep chrF *k${NR}.*eval | cut -f3 -d ' ' > $@.3
+	@echo '| testset               | BLEU  | chr-F |' >> ${WORKDIR}/README.md
+	@echo '|-----------------------|-------|-------|' >> ${WORKDIR}/README.md
+	@paste $@.1 $@.2 $@.3 | sed  "s/\t/ 	| /g;s/^/| /;s/$$/ |/" >> ${WORKDIR}/README.md
+	@rm -f $@.1 $@.2 $@.3
+	@cat ${WORKDIR}/README.md >> ${dir $@}README.md
+	@echo '' >> ${dir $@}README.md
+	@cp LICENSE ${WORKDIR}/
+	@chmod +x ${WORKDIR}/preprocess.sh
+	@sed -e 's# - /.*/\([^/]*\)$$# - \1#' \
+	    -e 's/beam-size: [0-9]*$$/beam-size: 6/' \
+	    -e 's/mini-batch: [0-9]*$$/mini-batch: 1/' \
+	    -e 's/maxi-batch: [0-9]*$$/maxi-batch: 1/' \
+	    -e 's/relative-paths: false/relative-paths: true/' \
+	< ${MODEL_DECODER} > ${WORKDIR}/decoder.yml
+	@cd ${WORKDIR} && zip ${notdir $@} \
 		README.md LICENSE \
 		${notdir ${MODEL_FINAL}} \
 		${notdir ${MODEL_VOCAB}} \
 		${notdir ${MODEL_VALIDLOG}} \
 		${notdir ${MODEL_TRAINLOG}} \
-		source.* target.* decoder.yml preprocess.sh postprocess.sh; \
-	  mkdir -p ${dir $@}; \
-	  mv -f ${WORKDIR}/${notdir $@} $(dir $@)$$M.zip; \
-	  cp $(TEST_EVALUATION) $(dir $@)$$M.eval.txt; \
-	  cp $(TEST_COMPARISON) $(dir $@)$$M.test.txt; \
-	  rm -f $@; \
-	  cd ${dir $@} && ln -s $$M.zip ${notdir $@}; \
-	  rm -f ${WORKDIR}/decoder.yml ${WORKDIR}/source.* ${WORKDIR}/target.*; \
-	  rm -f ${WORKDIR}/preprocess.sh ${WORKDIR}/postprocess.sh; \
-	fi
+		source.* target.* decoder.yml preprocess.sh postprocess.sh
+	@mkdir -p ${dir $@}
+	@mv -f ${WORKDIR}/${notdir $@} ${@:.zip=}-${DATE}.zip
+	@cp $(TEST_EVALUATION) ${@:.zip=}-${DATE}.eval.txt
+	@cp $(TEST_COMPARISON) ${@:.zip=}-${DATE}.test.txt
+	@rm -f $@
+	@cd ${dir $@} && ln -s $(notdir ${@:.zip=})-${DATE}.zip ${notdir $@}
+	@rm -f ${WORKDIR}/decoder.yml ${WORKDIR}/source.* ${WORKDIR}/target.*
+	@rm -f ${WORKDIR}/preprocess.sh ${WORKDIR}/postprocess.sh
+
+
+
+
+
+
+EVALSCORES = ${patsubst ${WORKHOME}/%.eval,${WORKHOME}/eval/%.eval.txt,${wildcard ${WORKHOME}/*/*.eval}}
+EVALTRANSL = ${patsubst ${WORKHOME}/%.compare,${WORKHOME}/eval/%.test.txt,${wildcard ${WORKHOME}/*/*.compare}}
+
+
+## upload to Object Storage
+## Don't forget to run this before uploading!
+#	source project_2000661-openrc.sh
+#
+# - make upload ......... released models = all sub-dirs in models/
+# - make upload-models .. trained models in current WORKHOME
+# - make upload-scores .. score file with benchmark results
+# - make upload-eval .... benchmark tests from models in WORKHOME
+# - make upload-images .. images of VMs that run OPUS-MT
+
+upload:
+	cd models && swift upload OPUS-MT-models --changed --skip-identical *
+	swift post OPUS-MT-models --read-acl ".r:*"
+
+upload-models:
+	cd ${WORKHOME} && swift upload OPUS-MT --changed --skip-identical models
+	swift post OPUS-MT --read-acl ".r:*"
+
+upload-scores: ${WORKHOME}/eval/scores.txt
+	cd ${WORKHOME} && swift upload OPUS-MT-eval --changed --skip-identical eval/scores.txt
+	swift post OPUS-MT-eval --read-acl ".r:*"
+
+upload-eval: ${EVALSCORES} ${EVALTRANSL}
+	cd ${WORKHOME} && swift upload OPUS-MT-eval --changed --skip-identical eval
+	swift post OPUS-MT-eval --read-acl ".r:*"
+
+upload-images:
+	cd ${WORKHOME} && swift upload OPUS-MT --changed --skip-identical \
+		--use-slo --segment-size 5G opusMT-images
+	swift post OPUS-MT-images --read-acl ".r:*"
+
+
+
+## this is for the multeval scores
+# ${WORKHOME}/eval/scores.txt: ${EVALSCORES}
+#	cd ${WORKHOME} && \
+#	grep base */*eval | cut -f1,2- -d '/' | cut -f1,6- -d '.' | \
+#	sed 's/-/    /' | sed 's/\//    /' | sed 's/ ([^)]*)//g' |\
+#	sed 's/.eval:baseline//' | sed "s/  */\t/g" | sort  > $@
+
+${WORKHOME}/eval/scores.txt: ${EVALSCORES}
+	cd ${WORKHOME} && grep BLEU */*k${NR}.*eval | cut -f1 -d '/' | tr '-' "\t" > $@.1
+	cd ${WORKHOME} && grep BLEU */*k${NR}.*eval | tr '.' '/' | cut -f2,6,7 -d '/' | tr '/' "." > $@.2
+	cd ${WORKHOME} && grep BLEU */*k${NR}.*eval | cut -f3 -d ' ' > $@.3
+	cd ${WORKHOME} && grep chrF */*k${NR}.*eval | cut -f3 -d ' ' > $@.4
+	paste $@.1 $@.2 $@.3 $@.4 > $@
+	rm -f $@.1 $@.2 $@.3 $@.4
+
+
+${EVALSCORES}: # ${WORKHOME}/eval/%.eval.txt: ${WORKHOME}/models/%.eval
+	mkdir -p ${dir $@}
+	cp ${patsubst ${WORKHOME}/eval/%.eval.txt,${WORKHOME}/%.eval,$@} $@
+#	cp $< $@
+
+${EVALTRANSL}: # ${WORKHOME}/eval/%.test.txt: ${WORKHOME}/models/%.compare
+	mkdir -p ${dir $@}
+	cp ${patsubst ${WORKHOME}/eval/%.test.txt,${WORKHOME}/%.compare,$@} $@
+#	cp $< $@
+
+
+
+
+# ## dangerous area ....
+# delete-eval:
+# 	swift delete OPUS-MT eval
+
+
+
+
+
+
+
+######################################################################
+## handle old models in previous work directories
+## obsolete now?
+######################################################################
+
 
 
 ##-----------------------------------
@@ -230,66 +329,3 @@ link-old-models:
 	rm -f ${MODEL_TRANSLATE}.eval
 	rm -f ${MODEL_TRANSLATE}.compare
 
-
-
-
-
-
-## upload to Object Storage
-## Don't forget to run this before uploading!
-#	source project_2000661-openrc.sh
-upload:
-	cd ${WORKHOME} && swift upload OPUS-MT --changed --skip-identical models
-	swift post OPUS-MT --read-acl ".r:*"
-
-upload-scores: ${WORKHOME}/eval/scores.txt
-	cd ${WORKHOME} && swift upload OPUS-MT-eval --changed --skip-identical eval/scores.txt
-	swift post OPUS-MT --read-acl ".r:*"
-
-
-
-EVALSCORES = ${patsubst ${WORKHOME}/%.eval,${WORKHOME}/eval/%.eval.txt,${wildcard ${WORKHOME}/*/*.eval}}
-EVALTRANSL = ${patsubst ${WORKHOME}/%.compare,${WORKHOME}/eval/%.test.txt,${wildcard ${WORKHOME}/*/*.compare}}
-
-scores: ${WORKHOME}/eval/scores.txt
-
-## this is for the multeval scores
-# ${WORKHOME}/eval/scores.txt: ${EVALSCORES}
-#	cd ${WORKHOME} && \
-#	grep base */*eval | cut -f1,2- -d '/' | cut -f1,6- -d '.' | \
-#	sed 's/-/    /' | sed 's/\//    /' | sed 's/ ([^)]*)//g' |\
-#	sed 's/.eval:baseline//' | sed "s/  */\t/g" | sort  > $@
-
-${WORKHOME}/eval/scores.txt: ${EVALSCORES}
-	cd ${WORKHOME} && grep BLEU */*k${NR}.*eval | cut -f1 -d '/' | tr '-' "\t" > $@.1
-	cd ${WORKHOME} && grep BLEU */*k${NR}.*eval | tr '.' '/' | cut -f2,6,7 -d '/' | tr '/' "." > $@.2
-	cd ${WORKHOME} && grep BLEU */*k${NR}.*eval | cut -f3 -d ' ' > $@.3
-	cd ${WORKHOME} && grep chrF */*k${NR}.*eval | cut -f3 -d ' ' > $@.4
-	paste $@.1 $@.2 $@.3 $@.4 > $@
-	rm -f $@.1 $@.2 $@.3 $@.4
-
-
-${EVALSCORES}: # ${WORKHOME}/eval/%.eval.txt: ${WORKHOME}/models/%.eval
-	mkdir -p ${dir $@}
-	cp ${patsubst ${WORKHOME}/eval/%.eval.txt,${WORKHOME}/%.eval,$@} $@
-#	cp $< $@
-
-${EVALTRANSL}: # ${WORKHOME}/eval/%.test.txt: ${WORKHOME}/models/%.compare
-	mkdir -p ${dir $@}
-	cp ${patsubst ${WORKHOME}/eval/%.test.txt,${WORKHOME}/%.compare,$@} $@
-#	cp $< $@
-
-upload-eval: ${EVALSCORES} ${EVALTRANSL}
-	cd ${WORKHOME} && swift upload OPUS-MT-eval --changed --skip-identical eval
-	swift post OPUS-MT --read-acl ".r:*"
-
-upload-images:
-	cd ${WORKHOME} && swift upload OPUS-MT --changed --skip-identical \
-		--use-slo --segment-size 5G opusMT-images
-	swift post OPUS-MT --read-acl ".r:*"
-
-
-
-# ## dangerous area ....
-# delete-eval:
-# 	swift delete OPUS-MT eval
