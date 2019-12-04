@@ -34,6 +34,7 @@ best_dist_all:
 best_dist:
 	m=0;\
 	s=''; \
+	echo "------------------------------------------------"; \
 	for d in ${ALT_MODEL_DIR}; do \
 	  if ls work-$$d/${LANGSTR}/Tatoeba*.eval 1> /dev/null 2>&1; then \
 	    b=`grep 'BLEU+' work-$$d/${LANGSTR}/Tatoeba*.eval | cut -f3 -d' '`; \
@@ -46,6 +47,7 @@ best_dist:
 	    fi \
 	  fi \
 	done; \
+	echo "------------------------------------------------"; \
 	if [ "$$s" != "" ]; then \
 	  ${MAKE} MODELSHOME=${PWD}/models dist-$$s; \
 	fi
@@ -79,7 +81,7 @@ ${DIST_PACKAGE}: ${MODEL_FINAL}
 	    cp postprocess-spm.sh ${WORKDIR}/postprocess.sh; \
 	  fi; \
 	  if [ ${words ${TRGLANGS}} -gt 1 ]; then \
-	    echo '* a sentence initial language token is required in the form of >>id<< (id = valid target language ID)' \
+	    echo '* a sentence initial language token is required in the form of `>>id<<` (id = valid target language ID)' \
 		>> ${WORKDIR}/README.md; \
 	  fi; \
 	  echo "* download: [$$M.zip](https://object.pouta.csc.fi/OPUS-MT-models/${LANGSTR}/$$M.zip)" >> ${WORKDIR}/README.md; \
