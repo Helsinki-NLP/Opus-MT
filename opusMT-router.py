@@ -45,10 +45,13 @@ for h in opusMT_servers:
     ws[h] = create_connection("ws://" + h)
     srclangs = opusMT_servers[h]["source-languages"].split('+')
     trglangs = opusMT_servers[h]["target-languages"].split('+')
+    model = 'default'
+    if model in opusMT_servers[h]:
+        model = opusMT_servers[h]["model"]
     for s in srclangs:
         for t in trglangs:
-            print(" - serving " + s + t)
-            opusMT[s+'-'+t] = h
+            print(" - serving " + s + t + '-' + model)
+            opusMT[s+'-'+t+'-'+model] = h
 
 
 
@@ -60,10 +63,13 @@ class Translate(WebSocket):
         fromLang = None
         toLang = args.deftrg
         prefix = ''
+        modelName = 'default'
 
         try:
             data = json.loads(self.data)
             srctxt = data['text']
+            if 'model' in data:
+                modelName = data['model']
             if 'source' in data:
                 if data['source'] != 'DL' and data['source'] != 'detect':
                     fromLang = data['source']
@@ -99,13 +105,14 @@ class Translate(WebSocket):
             toLang=fromLang
 
         langpair = fromLang + '-' + toLang
-        if not langpair in opusMT:
+        model =  langpair + '-' + modelName
+        if not model in opusMT:
             print('unsupported language pair ' + langpair)
             # self.sendMessage('ERROR: unsupported language pair ' + langpair)
             self.sendMessage(json.dumps({'result': 'ERROR: unsupported language pair ' + langpair}, sort_keys=True, indent=4))
             return
 
-        server = opusMT[langpair]
+        server = opusMT[model]
 
         record = {'text': srctxt, 'source': fromLang, 'target': toLang}
         message = json.dumps(record, sort_keys=True, indent=4)
