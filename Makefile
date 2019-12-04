@@ -89,6 +89,13 @@ fide-server:
 	${MAKE} SRC_LANGS=fi TRG_LANGS=de MARIAN_PORT=10005 OPUSMT_PORT=20005 opusMT-server
 
 
+## special server for the Goethe Institute
+defi-goethe-server:
+	${MAKE} DATASET=goethe SRC_LANGS=de TRG_LANGS=fi MARIAN_PORT=10006 OPUSMT_PORT=20006 opusMT-server
+
+
+
+
 etfi-scandinavian-server:
 	${MAKE} SRC_LANGS="et+fi" TRG_LANGS="da+fo+is+no+nb+nn+sv" MARIAN_PORT=11000 OPUSMT_PORT=21000 opusMT-server
 
