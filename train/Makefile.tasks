@@ -38,11 +38,36 @@ endif
 ## germanic to germanic
 
 germanic:
-	${MAKE} LANGS="${GERMANIC}" multilingual
+	${MAKE} LANGS="${GERMANIC}" HPC_DISK=1500 multilingual
 
 memad2en:
 	${MAKE} LANGS="${MEMAD_LANGS}" PIVOT=en all2pivot
 
+fiet:
+	${MAKE} SRCLANGS=fi TRGLANGS=et bilingual
+
+etfi:
+	${MAKE} SRCLANGS=et TRGLANGS=fi unidirectional
+
+icelandic:
+	${MAKE} SRCLANGS=is TRGLANGS=en bilingual
+	${MAKE} SRCLANGS=is TRGLANGS="da no nn nb sv" bilingual
+	${MAKE} SRCLANGS=is TRGLANGS=fi bilingual
+
+
+unidirectional:
+	${MAKE} SRCLANGS="${SRCLANGS}" TRGLANGS="${TRGLANGS}" traindata
+	${MAKE} SRCLANGS="${SRCLANGS}" TRGLANGS="${TRGLANGS}" devdata
+	${MAKE} SRCLANGS="${SRCLANGS}" TRGLANGS="${TRGLANGS}" wordalign
+	${MAKE} SRCLANGS="${SRCLANGS}" TRGLANGS="${TRGLANGS}" WALLTIME=72 HPC_MEM=4g HPC_CORES=1 train.submit-multigpu
+
+bilingual:
+	${MAKE} SRCLANGS="${SRCLANGS}" TRGLANGS="${TRGLANGS}" traindata
+	${MAKE} SRCLANGS="${SRCLANGS}" TRGLANGS="${TRGLANGS}" devdata
+	${MAKE} SRCLANGS="${SRCLANGS}" TRGLANGS="${TRGLANGS}" wordalign
+	${MAKE} SRCLANGS="${SRCLANGS}" TRGLANGS="${TRGLANGS}" WALLTIME=72 HPC_MEM=4g HPC_CORES=1 train.submit-multigpu
+	${MAKE} SRCLANGS="${SRCLANGS}" TRGLANGS="${TRGLANGS}" reverse-data
+	${MAKE} SRCLANGS="${TRGLANGS}" TRGLANGS="${SRCLANGS}" WALLTIME=72 HPC_MEM=4g HPC_CORES=1 train.submit-multigpu
 
 
 multilingual:
@@ -57,8 +82,6 @@ all2pivot:
 	  ${MAKE} SRCLANGS="$$l" TRGLANGS="${PIVOT}" reverse-data; \
 	  ${MAKE} SRCLANGS="${PIVOT}" TRGLANGS="$$l" HPC_CORES=1 HPC_MEM=4g train.submit-multigpu; \
 	done
-
-
 
 
 

@@ -1,16 +1,21 @@
 #!/bin/bash
 #
-# USAGE preproces.sh langid bpecodes < input > output
+# USAGE preprocess.sh langid bpecodes < input > output
 #
+#
+# replace MOSESHOME and SPMENCODE with your own setup! 
 
 if [ `hostname -d` == "bullx" ]; then
   APPLHOME=/projappl/project_2001569
   MOSESHOME=${APPLHOME}/mosesdecoder
   SPMENCODE=${APPLHOME}/marian-dev/build-spm/spm_encode
-else
+elif [ `hostname -d` == "csc.fi" ]; then
   APPLHOME=/proj/memad/tools
   MOSESHOME=/proj/nlpl/software/moses/4.0-65c75ff/moses
   SPMENCODE=${APPLHOME}/marian-dev/build-spm/spm_encode
+else
+  MOSESHOME=${PWD}/mosesdecoder
+  SPMENCODE=${PWD}/marian-dev/build/spm_encode
 fi
 
 MOSESSCRIPTS=${MOSESHOME}/scripts

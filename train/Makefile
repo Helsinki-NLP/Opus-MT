@@ -281,9 +281,33 @@ finished:
 %-bpe:
 	${MAKE} WORKHOME=${shell realpath ${PWD}/work-bpe} \
 		PRE=tok \
+		MODELTYPE=transformer \
 		PRE_SRC=bpe${SRCBPESIZE:000=}k \
 		PRE_TRG=bpe${TRGBPESIZE:000=}k \
 	${@:-bpe=}
+
+%-bpe-align:
+	${MAKE} WORKHOME=${shell realpath ${PWD}/work-bpe-align} \
+		PRE=tok \
+		PRE_SRC=bpe${SRCBPESIZE:000=}k \
+		PRE_TRG=bpe${TRGBPESIZE:000=}k \
+	${@:-bpe-align=}
+
+%-bpememad:
+	${MAKE} WORKHOME=${shell realpath ${PWD}/work-bpe-memad} \
+		PRE=tok \
+		MODELTYPE=transformer \
+		PRE_SRC=bpe${SRCBPESIZE:000=}k \
+		PRE_TRG=bpe${TRGBPESIZE:000=}k \
+	${@:-bpememad=}
+
+%-bpeold:
+	${MAKE} WORKHOME=${shell realpath ${PWD}/work-bpe-old} \
+		PRE=tok \
+		MODELTYPE=transformer \
+		PRE_SRC=bpe${SRCBPESIZE:000=}k \
+		PRE_TRG=bpe${TRGBPESIZE:000=}k \
+	${@:-bpeold=}
 
 
 ## for the inbuilt sentence-piece segmentation:

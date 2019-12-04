@@ -24,7 +24,7 @@ endif
 	echo '#SBATCH -o ${DATASET}-${@:.submit=}.out.%j' >> $@
 	echo '#SBATCH -e ${DATASET}-${@:.submit=}.err.%j' >> $@
 	echo '#SBATCH --mem=${HPC_MEM}' >> $@
-	echo '#SBATCH --exclude=r18g05' >> $@
+#	echo '#SBATCH --exclude=r18g05' >> $@
 ifdef EMAIL
 	echo '#SBATCH --mail-type=END' >> $@
 	echo '#SBATCH --mail-user=${EMAIL}' >> $@
@@ -72,8 +72,9 @@ endif
 ifeq (${shell hostname --domain},bullx)
 	echo '#SBATCH --account=${CSCPROJECT}' >> $@
 	echo '#SBATCH --gres=nvme:${HPC_DISK}' >> $@
-	echo '#SBATCH --exclude=r05c49' >> $@
-	echo '#SBATCH --exclude=r07c51' >> $@
+#	echo '#SBATCH --exclude=r05c49' >> $@
+#	echo '#SBATCH --exclude=r07c51' >> $@
+	echo '#SBATCH --exclude=r06c50' >> $@
 endif
 	echo '#SBATCH -n ${HPC_CORES}' >> $@
 	echo '#SBATCH -N ${HPC_NODES}' >> $@

@@ -9,38 +9,52 @@ MODELSHOME = ${WORKHOME}/models
 DIST_PACKAGE = ${MODELSHOME}/${LANGSTR}/${DATASET}.zip
 
 
+## minimum BLEU score for models to be accepted as distribution package
+MIN_BLEU_SCORE = 20
 
 .PHONY: dist
 dist: ${DIST_PACKAGE}
 
 ${DIST_PACKAGE}: ${MODEL_FINAL}
-	touch ${WORKDIR}/source.tcmodel
-	if [ -e ${BPESRCMODEL} ]; then \
-	  cp ${BPESRCMODEL} ${WORKDIR}/source.bpe; \
-	elif [ -e ${SPMSRCMODEL} ]; then \
-	  cp ${SPMSRCMODEL} ${WORKDIR}/source.spm; \
-	fi
-	sed -e 's# - /.*/\([^/]*\)$$# - \1#' \
-	    -e 's/beam-size: [0-9]*$$/beam-size: 6/' \
-	    -e 's/mini-batch: [0-9]*$$/mini-batch: 1/' \
-	    -e 's/maxi-batch: [0-9]*$$/maxi-batch: 1/' \
-	    -e 's/relative-paths: false/relative-paths: true/' \
-	< ${MODEL_DECODER} > ${WORKDIR}/decoder.yml
-	cd ${WORKDIR} && zip ${notdir $@} \
+	${MAKE} $(TEST_EVALUATION)
+	${MAKE} $(TEST_COMPARISON)
+	if  [ `grep BLEU $(TEST_EVALUATION) | cut -f3 -d ' ' | cut -f1 -d '.'` -ge ${MIN_BLEU_SCORE} ]; then \
+	  touch ${WORKDIR}/source.tcmodel; \
+	  if [ -e ${BPESRCMODEL} ]; then \
+	    cp ${BPESRCMODEL} ${WORKDIR}/source.bpe; \
+	    cp ${BPETRGMODEL} ${WORKDIR}/target.bpe; \
+	    cp preprocess-bpe.sh ${WORKDIR}/preprocess.sh; \
+	    cp postprocess-bpe.sh ${WORKDIR}/postprocess.sh; \
+	  elif [ -e ${SPMSRCMODEL} ]; then \
+	    cp ${SPMSRCMODEL} ${WORKDIR}/source.spm; \
+	    cp ${SPMTRGMODEL} ${WORKDIR}/target.spm; \
+	    cp preprocess-spm.sh ${WORKDIR}/preprocess.sh; \
+	    cp postprocess-spm.sh ${WORKDIR}/postprocess.sh; \
+	  fi; \
+	  cp README LICENSE ${WORKDIR}/; \
+	  chmod +x ${WORKDIR}/preprocess.sh; \
+	  sed -e 's# - /.*/\([^/]*\)$$# - \1#' \
+	      -e 's/beam-size: [0-9]*$$/beam-size: 6/' \
+	      -e 's/mini-batch: [0-9]*$$/mini-batch: 1/' \
+	      -e 's/maxi-batch: [0-9]*$$/maxi-batch: 1/' \
+	      -e 's/relative-paths: false/relative-paths: true/' \
+	  < ${MODEL_DECODER} > ${WORKDIR}/decoder.yml; \
+	  cd ${WORKDIR} && zip ${notdir $@} \
+		README LICENSE \
 		${notdir ${MODEL_FINAL}} \
 		${notdir ${MODEL_VOCAB}} \
 		${notdir ${MODEL_VALIDLOG}} \
 		${notdir ${MODEL_TRAINLOG}} \
-		source.* decoder.yml
-	mkdir -p ${dir $@}
-	mv -f ${WORKDIR}/${notdir $@} ${@:.zip=}-${shell date +%F}.zip
-	rm -f $@
-	cd ${dir $@} && ln -s ${notdir ${@:.zip=}-${shell date +%F}.zip} ${notdir $@}
-	rm -f ${WORKDIR}/decoder.yml ${WORKDIR}/source.*
-	${MAKE} ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.eval
-	${MAKE} ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.compare
-	cp ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.eval $(@:.zip=-${shell date +%F}.eval.txt)
-	cp ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}.compare $(@:.zip=-${shell date +%F}.test.txt)
+		source.* target.* decoder.yml preprocess.sh postprocess.sh; \
+	  mkdir -p ${dir $@}; \
+	  mv -f ${WORKDIR}/${notdir $@} ${@:.zip=}-${shell date +%F}.zip; \
+	  cp $(TEST_EVALUATION) $(@:.zip=-${shell date +%F}.eval.txt); \
+	  cp $(TEST_COMPARISON) $(@:.zip=-${shell date +%F}.test.txt); \
+	  rm -f $@; \
+	  cd ${dir $@} && ln -s ${notdir ${@:.zip=}-${shell date +%F}.zip} ${notdir $@}; \
+	  rm -f ${WORKDIR}/decoder.yml ${WORKDIR}/source.* ${WORKDIR}/target.*; \
+	  rm -f ${WORKDIR}/preprocess.sh ${WORKDIR}/postprocess.sh; \
+	fi
 
 
 ##-----------------------------------
@@ -108,6 +122,48 @@ old-models-dist:
 
 
 
+## old models had slightly different naming conventions
+
+LASTSRC = ${lastword ${SRCLANGS}}
+LASTTRG = ${lastword ${TRGLANGS}}
+
+MODEL_OLD           = ${MODEL_SUBDIR}${DATASET}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.${LASTSRC}${LASTTRG}
+MODEL_OLD_BASENAME  = ${MODEL_OLD}.${MODELTYPE}.model${NR}
+MODEL_OLD_FINAL     = ${WORKDIR}/${MODEL_OLD_BASENAME}.npz.best-perplexity.npz
+MODEL_OLD_VOCAB     = ${WORKDIR}/${MODEL_OLD}.vocab.${MODEL_VOCABTYPE}
+MODEL_OLD_DECODER   = ${MODEL_OLD_FINAL}.decoder.yml
+MODEL_TRANSLATE     = ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}
+MODEL_OLD_TRANSLATE = ${WORKDIR}/${TESTSET}.${MODEL_OLD}${NR}.${MODELTYPE}.${SRC}.${TRG}
+MODEL_OLD_VALIDLOG  = ${MODEL_OLD}.${MODELTYPE}.valid${NR}.log
+MODEL_OLD_TRAINLOG  = ${MODEL_OLD}.${MODELTYPE}.train${NR}.log
+
+
+link-old-models:
+	if [ ! -e ${MODEL_FINAL} ]; then \
+	  if [ -e ${MODEL_OLD_FINAL} ]; then \
+	    ln -s ${MODEL_OLD_FINAL} ${MODEL_FINAL}; \
+	    ln -s ${MODEL_OLD_VOCAB} ${MODEL_VOCAB}; \
+	    ln -s ${MODEL_OLD_DECODER} ${MODEL_DECODER}; \
+	  fi \
+	fi
+	if [ ! -e ${MODEL_TRANSLATE} ]; then \
+	  if [ -e ${MODEL_OLD_TRANSLATE} ]; then \
+	    ln -s ${MODEL_OLD_TRANSLATE} ${MODEL_TRANSLATE}; \
+	  fi \
+	fi
+	if [ ! -e ${WORKDIR}/${MODEL_VALIDLOG} ]; then \
+	  if [ -e ${WORKDIR}/${MODEL_OLD_VALIDLOG} ]; then \
+	    ln -s ${WORKDIR}/${MODEL_OLD_VALIDLOG} ${WORKDIR}/${MODEL_VALIDLOG}; \
+	    ln -s ${WORKDIR}/${MODEL_OLD_TRAINLOG} ${WORKDIR}/${MODEL_TRAINLOG}; \
+	  fi \
+	fi
+	rm -f ${MODEL_TRANSLATE}.eval
+	rm -f ${MODEL_TRANSLATE}.compare
+
+
+
+
+
 
 ## upload to Object Storage
 ## Don't forget to run this before uploading!
@@ -127,11 +183,21 @@ EVALTRANSL = ${patsubst ${WORKHOME}/%.compare,${WORKHOME}/eval/%.test.txt,${wild
 
 scores: ${WORKHOME}/eval/scores.txt
 
+## this is for the multeval scores
+# ${WORKHOME}/eval/scores.txt: ${EVALSCORES}
+#	cd ${WORKHOME} && \
+#	grep base */*eval | cut -f1,2- -d '/' | cut -f1,6- -d '.' | \
+#	sed 's/-/    /' | sed 's/\//    /' | sed 's/ ([^)]*)//g' |\
+#	sed 's/.eval:baseline//' | sed "s/  */\t/g" | sort  > $@
+
 ${WORKHOME}/eval/scores.txt: ${EVALSCORES}
-	cd ${WORKHOME} && \
-	grep base */*eval | cut -f1,2- -d '/' | cut -f1,6- -d '.' | \
-	sed 's/-/    /' | sed 's/\//    /' | sed 's/ ([^)]*)//g' |\
-	sed 's/.eval:baseline//' | sed "s/  */\t/g" | sort  > $@
+	cd ${WORKHOME} && grep BLEU */*k${NR}.*eval | cut -f1 -d '/' | tr '-' "\t" > $@.1
+	cd ${WORKHOME} && grep BLEU */*k${NR}.*eval | tr '.' '/' | cut -f2,6,7 -d '/' | tr '/' "." > $@.2
+	cd ${WORKHOME} && grep BLEU */*k${NR}.*eval | cut -f3 -d ' ' > $@.3
+	cd ${WORKHOME} && grep chrF */*k${NR}.*eval | cut -f3 -d ' ' > $@.4
+	paste $@.1 $@.2 $@.3 $@.4 > $@
+	rm -f $@.1 $@.2 $@.3 $@.4
+
 
 ${EVALSCORES}: # ${WORKHOME}/eval/%.eval.txt: ${WORKHOME}/models/%.eval
 	mkdir -p ${dir $@}
