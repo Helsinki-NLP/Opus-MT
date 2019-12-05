@@ -5,7 +5,7 @@ Tools and resources for open translation services
 
 * based on MarianNMT
 * trained on OPUS data
-* [pre-trained downloadable translation models](http://opus.nlpl.eu/Opus-MT.php)
+* [pre-trained downloadable translation models](https://github.com/Helsinki-NLP/Opus-MT/tree/master/train/models)
 
 
 This repository includes
@@ -139,21 +139,53 @@ sudo service marian-opus-de+af+fy+nl-et+fi restart
 sudo service opusMT-opus-de+af+fy+nl-et+fi restart
 ```
 
-Edit the server configuration file `opusMT-servers.json` again to add the new service and restart the service:
+Edit the server configuration file `opusMT-servers.json` again to add the new service and restart the service. Each entry in the configuration file specifies a server running on some accessible machine. `localhost` is the local machine but other IP addresses can be listed here together with the port the translation server is listening at:
+
+```
+{
+    "localhost:20000" : {
+	"source-languages" : "fi",
+	"target-languages" : "en"
+    },
+    "192.168.1.14:21100" : {
+	"source-languages" : "fr",
+	"target-languages" : "et+fi"
+    }
+}
+```
+
+Multilingual models are specified with language IDs separated by `+` characters. If certain language pairs are served with multiple services then you will need to specify model names to make it possible to select specific models in the request:
+
+```
+{
+    "192.168.1.19:20004" : {
+	"source-languages" : "de",
+	"target-languages" : "fi"
+    },
+    "192.168.1.12:20008" : {
+        "model" : "wmt",
+	"source-languages" : "de",
+	"target-languages" : "fi"
+    }
+}
+```
+
+The default name of a model is `default` (if no name is given) and each language pair should have at least one default model that will be called if no specific model is specified. Finally, update the installation and restart the service after editing the configuration file.
+
 
 ```
 sudo make opusMT-router
 sudo service opusMT restart
 ```
 
-
+The default location of the configuration file is `/usr/local/share/opusMT/`.
 
 
 
 ## Public MT models
 
-We store public models at https://object.pouta.csc.fi/OPUS-MT
-Check the files in `models/`. They should be all compatible with the OPUS-MT services and you can install them by specifying the language pair. The installation script takes the latest model in that directory. For additional customisation you need to adjust the installation procedures (in the Makefile or elsewhere).
+We store public models at https://object.pouta.csc.fi/OPUS-MT-models
+They should be all compatible with the OPUS-MT services and you can install them by specifying the language pair. The installation script takes the latest model in that directory. For additional customisation you need to adjust the installation procedures (in the Makefile or elsewhere).
 
 
 

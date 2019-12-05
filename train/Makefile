@@ -1,11 +1,19 @@
 # -*-makefile-*-
 #
-# multi-source models with Marian
-# see https://arxiv.org/pdf/1706.04138.pdf
-# and https://marian-nmt.github.io/faq
+# train Opus-MT models using MarianNMT
 #
+#--------------------------------------------------------------------
 #
-# MT models using MarianNMT
+# (1) train NMT model
+#
+# make train .............. train NMT model for current language pair
+#
+# (2) translate and evaluate
+#
+# make translate .......... translate test set
+# make eval ............... evaluate
+#
+#--------------------------------------------------------------------
 #
 # general parameters / variables (see Makefile.config)
 #   SRCLANGS ............ set source language(s)      (en)
@@ -46,28 +54,6 @@
 # make NR=2 train-RL.submit
 # make NR=3 train-RL.submit
 #
-#
-#
-# finetune:
-#
-# make NR=1 finetune.submit  (same problem with vocab files as above!)
-# make NR=2 finetune.submit  (so, wait until the vocab files are created)
-# make NR=3 finetune.submit
-#
-# make NR=1 MODE=eval finetune.submit
-# ...
-# make MODE=eval-ensemble finetune.submit
-#
-#--------------------------------------------------------------------
-#
-# (1) train NMT model
-#
-# make train .............. train NMT model for current language pair
-#
-# (2) translate and evaluate
-#
-# make translate .......... translate test set
-# make eval ............... evaluate
 #
 #--------------------------------------------------------------------
 # train several versions of the same model (for ensembling)
@@ -117,7 +103,7 @@ include Makefile.slurm
 data:	${TRAIN_SRC}.${PRE_SRC}.gz ${TRAIN_TRG}.${PRE_TRG}.gz \
 	${DEV_SRC}.${PRE_SRC} ${DEV_TRG}.${PRE_TRG}
 	${MAKE} ${TEST_SRC}.${PRE_SRC} ${TEST_TRG}
-	${MAKE} ${TRAIN_BASE}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.src-trg.alg.gz
+	${MAKE} ${TRAIN_ALG}
 
 
 traindata: 	${TRAIN_SRC}.${PRE_SRC}.gz ${TRAIN_TRG}.${PRE_TRG}.gz
