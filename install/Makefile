@@ -37,6 +37,7 @@ ${PREFIX}/bin/marian-server: marian/build/marian-server
 	sudo ${INSTALL_DATA} marian/build/libmarian.a   ${PREFIX}/lib/libmarian.a
 
 
+# add libgoogle-perftools-dev instead of compiling from scratch
 
 .PHONY: prereqs
 prereqs: GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB
