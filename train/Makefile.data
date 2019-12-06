@@ -169,13 +169,20 @@ ${TRAIN_ALG}: 	${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE}.gz \
 
 %.${SRCEXT}.raw:
 	mkdir -p ${dir $@}
-	if [ -e ${OPUSHOME}/${patsubst %.${LANGPAIR}.${SRCEXT}.raw,%,${notdir $@}}/latest/moses/${LANGPAIR}.txt.zip ]; then \
-	  scp ${OPUSHOME}/${patsubst %.${LANGPAIR}.${SRCEXT}.raw,%,${notdir $@}}/latest/moses/${LANGPAIR}.txt.zip $@.zip; \
+	c=${patsubst %.${LANGPAIR}.${SRCEXT}.raw,%,${notdir $@}}; \
+	if [ -e ${OPUSHOME}/$$c/latest/moses/${LANGPAIR}.txt.zip ]; then \
+	  scp ${OPUSHOME}/$$c/latest/moses/${LANGPAIR}.txt.zip $@.zip; \
 	  unzip -d ${dir $@} $@.zip -x README LICENSE; \
-	  mv ${dir $@}${patsubst %.${LANGPAIR}.${SRCEXT}.raw,%,${notdir $@}}*.${LANGPAIR}.${SRCEXT} $@; \
-	  mv ${dir $@}${patsubst %.${LANGPAIR}.${SRCEXT}.raw,%,${notdir $@}}*.${LANGPAIR}.${TRGEXT} \
+	  mv ${dir $@}$$c*.${LANGPAIR}.${SRCEXT} $@; \
+	  mv ${dir $@}$$c*.${LANGPAIR}.${TRGEXT} \
 	     ${@:.${SRCEXT}.raw=.${TRGEXT}.raw}; \
 	  rm -f $@.zip ${@:.${SRCEXT}.raw=.xml} ${@:.${SRCEXT}.raw=.ids} ${dir $@}/README ${dir $@}/LICENSE; \
+	elif [ -e ${OPUSHOME}/$$c/latest/xml/${LANGPAIR}.xml.gz ]; then \
+	  echo "extract $$c (${LANGPAIR}) from OPUS"; \
+	  opus_read -rd ${OPUSHOME} -d $$c -s ${SRCEXT} -t ${TRGEXT} -wm moses -p raw > $@.tmp; \
+	  cut -f1 $@.tmp > $@; \
+	  cut -f2 $@.tmp > ${@:.${SRCEXT}.raw=.${TRGEXT}.raw}; \
+	  rm -f $@.tmp; \
 	else \
 	  touch $@; \
 	  touch ${@:.${SRCEXT}.raw=.${TRGEXT}.raw}; \
@@ -212,7 +219,7 @@ ${TRAIN_ALG}: 	${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE}.gz \
 
 ## add training data for each language combination
 ## and put it together in local space
-${LOCAL_TRAIN_SRC}:
+${LOCAL_TRAIN_SRC}: ${DEV_SRC} ${DEV_TRG}
 	mkdir -p ${dir $@}
 	rm -f ${LOCAL_TRAIN_SRC} ${LOCAL_TRAIN_TRG}
 	-for s in ${SRCLANGS}; do \
@@ -226,6 +233,13 @@ ${LOCAL_TRAIN_SRC}:
 	    fi \
 	  done \
 	done
+ifeq (${USE_REST_DEVDATA},1)
+	if [ -e ${DEV_SRC}.notused.gz ]; then \
+	  zcat ${DEV_SRC}.notused.gz >> ${LOCAL_TRAIN_SRC}; \
+	  zcat ${DEV_TRG}.notused.gz >> ${LOCAL_TRAIN_TRG}; \
+	fi
+endif
+
 
 # 	    ${MAKE} DATASET=${DATASET} SRC:=$$s TRG:=$$t add-to-local-train-data; \
 
@@ -300,13 +314,8 @@ endif
 ####################
 # development data
 ####################
-#
-# make it depending on training data
-# --> in case we need more data for development
-#     we can take it from training data
 
-
-${DEV_SRC}.shuffled.gz: ${TRAIN_SRC}.${PRE_SRC}.gz ${TRAIN_TRG}.${PRE_TRG}.gz
+${DEV_SRC}.shuffled.gz:
 	mkdir -p ${dir $@}
 	rm -f ${DEV_SRC} ${DEV_TRG}
 	-for s in ${SRCLANGS}; do \
@@ -321,65 +330,98 @@ ${DEV_SRC}.shuffled.gz: ${TRAIN_SRC}.${PRE_SRC}.gz ${TRAIN_TRG}.${PRE_TRG}.gz
 ## --> extract some data from the training data to be used as devdata
 
 ${DEV_SRC}: %: %.shuffled.gz
-	if (( `zcat $@.shuffled.gz | wc -l` < $$((${DEVMINSIZE} + ${DEVMINSIZE})) )); then \
-	  echo "Need more devdata - take some from traindata!"; \
-	  echo ".......... (1) extract top $$((${DEVSIZE} + ${TESTSIZE})) lines"; \
-	  echo "Too little dev/test data in ${DEVSET}!"                                   >> ${dir $@}/README; \
-	  echo "Add top $$((${DEVSIZE} + ${TESTSIZE})) lines from ${DATASET} to dev/test" >> ${dir $@}/README; \
-	  echo "and remove those lines from training data"                                >> ${dir $@}/README; \
-	  zcat ${TRAIN_SRC}.${PRE_SRC}.gz | \
-		head -$$((${DEVSIZE} + ${TESTSIZE})) | \
-		sed 's/\@\@ //g' > $@.extra.${SRC}; \
-	  zcat ${TRAIN_TRG}.${PRE_TRG}.gz | \
-		head -$$((${DEVSIZE} + ${TESTSIZE})) | \
-		sed 's/\@\@ //g' > $@.extra.${TRG}; \
-	  echo ".......... (2) remaining lines for training"; \
-	  zcat ${TRAIN_SRC}.${PRE_SRC}.gz | \
-		tail -n +$$((${DEVSIZE} + ${TESTSIZE} + 1)) | \
-		sed 's/\@\@ //g' | gzip -c > $@.remaining.${SRC}.gz; \
-	  zcat ${TRAIN_TRG}.${PRE_TRG}.gz | \
-		tail -n +$$((${DEVSIZE} + ${TESTSIZE} + 1)) | \
-		sed 's/\@\@ //g' | gzip -c > $@.remaining.${TRG}.gz; \
-	  mv -f $@.remaining.${SRC}.gz ${TRAIN_SRC}.${PRE_SRC}.gz; \
-	  mv -f $@.remaining.${TRG}.gz ${TRAIN_TRG}.${PRE_TRG}.gz; \
-	  echo ".......... (3) append to devdata"; \
-	  mv $@.shuffled.gz $@.oldshuffled.gz; \
-	  paste $@.extra.${SRC} $@.extra.${TRG} > $@.shuffled; \
-	  zcat $@.oldshuffled.gz >> $@.shuffled; \
-	  rm $@.oldshuffled.gz; \
-	  gzip -f $@.shuffled; \
-	  rm -f $@.extra.${SRC} $@.extra.${TRG}; \
-	fi
 ## if we extract test and dev data from the same data set
 ## ---> make sure that we do not have any overlap between the two data sets
 ## ---> reserve at least DEVMINSIZE data for dev data and keep the rest for testing
 ifeq (${DEVSET},${TESTSET})
 	if (( `zcat $@.shuffled.gz | wc -l` < $$((${DEVSIZE} + ${TESTSIZE})) )); then \
-	  echo "devset = top ${DEVMINSIZE} lines of ${notdir $@}.shuffled!"  >> ${dir $@}/README; \
-	  zcat $@.shuffled.gz | cut -f1 | head -${DEVMINSIZE} > ${DEV_SRC}; \
-	  zcat $@.shuffled.gz | cut -f2 | head -${DEVMINSIZE} > ${DEV_TRG}; \
-	  mkdir -p ${dir ${TEST_SRC}}; \
-	  echo "testset = top ${DEVMINSIZE} lines of ../val/${notdir $@}.shuffled!"  >> ${dir ${TEST_SRC}}/README; \
-	  zcat $@.shuffled.gz | cut -f1 | tail -n +$$((${DEVMINSIZE} + 1)) > ${TEST_SRC}; \
-	  zcat $@.shuffled.gz | cut -f2 | tail -n +$$((${DEVMINSIZE} + 1)) > ${TEST_TRG}; \
+	  if (( `zcat $@.shuffled.gz | wc -l` < $$((${DEVSMALLSIZE} + ${DEVMINSIZE})) )); then \
+	    echo "devset = top ${DEVMINSIZE} lines of ${notdir $@}.shuffled!"  >> ${dir $@}/README; \
+	    zcat $@.shuffled.gz | cut -f1 | head -${DEVMINSIZE} > ${DEV_SRC}; \
+	    zcat $@.shuffled.gz | cut -f2 | head -${DEVMINSIZE} > ${DEV_TRG}; \
+	    mkdir -p ${dir ${TEST_SRC}}; \
+	    echo "testset = top ${DEVMINSIZE} lines of ../val/${notdir $@}.shuffled!"  >> ${dir ${TEST_SRC}}/README; \
+	    zcat $@.shuffled.gz | cut -f1 | tail -n +$$((${DEVMINSIZE} + 1)) > ${TEST_SRC}; \
+	    zcat $@.shuffled.gz | cut -f2 | tail -n +$$((${DEVMINSIZE} + 1)) > ${TEST_TRG}; \
+	  else \
+	    echo "devset = top ${DEVSMALLSIZE} lines of ${notdir $@}.shuffled!"  >> ${dir $@}/README; \
+	    zcat $@.shuffled.gz | cut -f1 | head -${DEVSMALLSIZE} > ${DEV_SRC}; \
+	    zcat $@.shuffled.gz | cut -f2 | head -${DEVSMALLSIZE} > ${DEV_TRG}; \
+	    mkdir -p ${dir ${TEST_SRC}}; \
+	    echo "testset = top ${DEVSMALLSIZE} lines of ../val/${notdir $@}.shuffled!"  >> ${dir ${TEST_SRC}}/README; \
+	    zcat $@.shuffled.gz | cut -f1 | tail -n +$$((${DEVSMALLSIZE} + 1)) > ${TEST_SRC}; \
+	    zcat $@.shuffled.gz | cut -f2 | tail -n +$$((${DEVSMALLSIZE} + 1)) > ${TEST_TRG}; \
+	  fi; \
 	else \
 	  echo "devset = top ${DEVSIZE} lines of ${notdir $@}.shuffled!"  >> ${dir $@}/README; \
 	  zcat $@.shuffled.gz | cut -f1 | head -${DEVSIZE} > ${DEV_SRC}; \
 	  zcat $@.shuffled.gz | cut -f2 | head -${DEVSIZE} > ${DEV_TRG}; \
 	  mkdir -p ${dir ${TEST_SRC}}; \
-	  echo "testset = top ${DEVSIZE} lines of ../val/${notdir $@}.shuffled!"  >> ${dir ${TEST_SRC}}/README; \
-	  zcat $@.shuffled.gz | cut -f1 | tail -${TESTSIZE} > ${TEST_SRC}; \
-	  zcat $@.shuffled.gz | cut -f2 | tail -${TESTSIZE} > ${TEST_TRG}; \
+	  echo "testset = second top ${DEVSIZE} lines of ../val/${notdir $@}.shuffled!"  >> ${dir ${TEST_SRC}}/README; \
+	  zcat $@.shuffled.gz | cut -f1 | head -$$((${DEVSIZE} + ${TESTSIZE})) | tail -${TESTSIZE} > ${TEST_SRC}; \
+	  zcat $@.shuffled.gz | cut -f2 | head -$$((${DEVSIZE} + ${TESTSIZE})) | tail -${TESTSIZE} > ${TEST_TRG}; \
+	  zcat $@.shuffled.gz | cut -f1 | tail -n +$$((${DEVSIZE} + ${TESTSIZE})) | gzip -c > ${DEV_SRC}.notused.gz; \
+	  zcat $@.shuffled.gz | cut -f2 | tail -n +$$((${DEVSIZE} + ${TESTSIZE})) | gzip -c > ${DEV_TRG}.notused.gz; \
 	fi
 else
 	echo "devset = top ${DEVSIZE} lines of ${notdir $@}.shuffled!"  >> ${dir $@}/README
 	zcat $@.shuffled.gz | cut -f1 | head -${DEVSIZE} > ${DEV_SRC}
 	zcat $@.shuffled.gz | cut -f2 | head -${DEVSIZE} > ${DEV_TRG}
+	zcat $@.shuffled.gz | cut -f1 | tail -n +$$((${DEVSIZE} + 1)) | gzip -c > ${DEV_SRC}.notused.gz
+	zcat $@.shuffled.gz | cut -f2 | tail -n +$$((${DEVSIZE} + 1)) | gzip -c > ${DEV_TRG}.notused.gz
 endif
+
+#	  zcat $@.shuffled.gz | cut -f1 | tail -${TESTSIZE} > ${TEST_SRC}; \
+#	  zcat $@.shuffled.gz | cut -f2 | tail -${TESTSIZE} > ${TEST_TRG}; \
 
 
 ${DEV_TRG}: ${DEV_SRC}
 	@echo "done!"
+
+
+
+### OLD: extract data from training data as dev/test set if the devdata is too small
+### ---> this is confusing - skip this
+###
+### otherwise copy this directly after the target for ${DEV_SRC} above!
+### and add dependency on train-data for ${DEV_SRC}.shuffled.gz like this:
+### ${DEV_SRC}.shuffled.gz: ${TRAIN_SRC}.${PRE_SRC}.gz ${TRAIN_TRG}.${PRE_TRG}.gz
+### and remove dependency on dev-data for ${LOCAL_TRAIN_SRC}, change
+### ${LOCAL_TRAIN_SRC}: ${DEV_SRC} ${DEV_TRG}                 to
+### ${LOCAL_TRAIN_SRC}:
+#
+#	if (( `zcat $@.shuffled.gz | wc -l` < $$((${DEVMINSIZE} + ${DEVMINSIZE})) )); then \
+#	  echo "Need more devdata - take some from traindata!"; \
+#	  echo ".......... (1) extract top $$((${DEVSIZE} + ${TESTSIZE})) lines"; \
+#	  echo "Too little dev/test data in ${DEVSET}!"                                   >> ${dir $@}/README; \
+#	  echo "Add top $$((${DEVSIZE} + ${TESTSIZE})) lines from ${DATASET} to dev/test" >> ${dir $@}/README; \
+#	  echo "and remove those lines from training data"                                >> ${dir $@}/README; \
+#	  zcat ${TRAIN_SRC}.${PRE_SRC}.gz | \
+#		head -$$((${DEVSIZE} + ${TESTSIZE})) | \
+#		sed 's/\@\@ //g' > $@.extra.${SRC}; \
+#	  zcat ${TRAIN_TRG}.${PRE_TRG}.gz | \
+#		head -$$((${DEVSIZE} + ${TESTSIZE})) | \
+#		sed 's/\@\@ //g' > $@.extra.${TRG}; \
+#	  echo ".......... (2) remaining lines for training"; \
+#	  zcat ${TRAIN_SRC}.${PRE_SRC}.gz | \
+#		tail -n +$$((${DEVSIZE} + ${TESTSIZE} + 1)) | \
+#		sed 's/\@\@ //g' | gzip -c > $@.remaining.${SRC}.gz; \
+#	  zcat ${TRAIN_TRG}.${PRE_TRG}.gz | \
+#		tail -n +$$((${DEVSIZE} + ${TESTSIZE} + 1)) | \
+#		sed 's/\@\@ //g' | gzip -c > $@.remaining.${TRG}.gz; \
+#	  mv -f $@.remaining.${SRC}.gz ${TRAIN_SRC}.${PRE_SRC}.gz; \
+#	  mv -f $@.remaining.${TRG}.gz ${TRAIN_TRG}.${PRE_TRG}.gz; \
+#	  echo ".......... (3) append to devdata"; \
+#	  mv $@.shuffled.gz $@.oldshuffled.gz; \
+#	  paste $@.extra.${SRC} $@.extra.${TRG} > $@.shuffled; \
+#	  zcat $@.oldshuffled.gz >> $@.shuffled; \
+#	  rm $@.oldshuffled.gz; \
+#	  gzip -f $@.shuffled; \
+#	  rm -f $@.extra.${SRC} $@.extra.${TRG}; \
+#	fi
+
+
+
 
 
 add-to-dev-data: ${CLEAN_DEV_SRC}
