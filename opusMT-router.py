@@ -46,7 +46,7 @@ for h in opusMT_servers:
     srclangs = opusMT_servers[h]["source-languages"].split('+')
     trglangs = opusMT_servers[h]["target-languages"].split('+')
     model = 'default'
-    if model in opusMT_servers[h]:
+    if 'model' in opusMT_servers[h]:
         model = opusMT_servers[h]["model"]
     for s in srclangs:
         for t in trglangs:

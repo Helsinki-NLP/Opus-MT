@@ -7,6 +7,15 @@
 	"source-languages" : "fi",
 	"target-languages" : "en"
     },
+    "192.168.1.18:20005" : {
+	"source-languages" : "fi",
+	"target-languages" : "de"
+    },
+    "192.168.1.19:20000" : {
+	"model" : "goethe",
+	"source-languages" : "de",
+	"target-languages" : "fi"
+    },
     "192.168.1.19:20004" : {
 	"source-languages" : "de",
 	"target-languages" : "fi"
@@ -18,10 +27,6 @@
     "192.168.1.19:21001" : {
     	"source-languages" : "da+fo+is+no+nb+nn+sv",
     	"target-languages" : "et+fi"
-    },
-    "192.168.1.19:21004" : {
-    	"source-languages" : "de+af+fy+nl",
-    	"target-languages" : "fr"
     },
     "192.168.1.14:21100" : {
 	"source-languages" : "fr",

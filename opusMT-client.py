@@ -19,6 +19,7 @@ if __name__ == "__main__":
     parser.add_argument('-T', '--text', dest='text', action='store_true')
     parser.add_argument("-s", "--source-language", type=str, default='detect')
     parser.add_argument("-t", "--target-language", type=str, default='en')
+    parser.add_argument("-m", "--model", type=str, default='default')
     args = parser.parse_args()
 
     # open connection
@@ -32,7 +33,7 @@ if __name__ == "__main__":
         batch += line.decode('utf-8') if sys.version_info < (3, 0) else line
         if count == args.batch_size:
             # translate the batch
-            data = {'text': batch, 'source': args.source_language, 'target': args.target_language}
+            data = {'text': batch, 'source': args.source_language, 'target': args.target_language, 'model': args.model}
             # print("send batch " + json.dumps(data))
             ws.send(json.dumps(data))
             # print("send batch " + batch)
