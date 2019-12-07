@@ -521,12 +521,19 @@ endif
 	rm -f $@.input $@.output
 
 
+# %.eval: % ${TEST_TRG}
+#	grep . ${TEST_TRG} > $@.ref
+#	grep . $< > $@.sys
+#	cat $@.sys | sacrebleu $@.ref > $@
+#	cat $@.sys | sacrebleu --metrics=chrf --width=3 $@.ref >> $@
+#	rm -f $@.ref $@.sys
+
+
 %.eval: % ${TEST_TRG}
-	grep . ${TEST_TRG} > $@.ref
-	grep . $< > $@.sys
-	cat $@.sys | sacrebleu $@.ref > $@
-	cat $@.sys | sacrebleu --metrics=chrf --width=3 $@.ref >> $@
-	rm -f $@.ref $@.sys
+	paste ${TEST_SRC}.${PRE_SRC} ${TEST_TRG} | grep $$'.\t' | cut -f2 > $@.ref
+	cat $< | sacrebleu $@.ref > $@
+	cat $< | sacrebleu --metrics=chrf --width=3 $@.ref >> $@
+	rm -f $@.ref
 
 
 %.compare: %.eval
