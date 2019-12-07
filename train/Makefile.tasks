@@ -116,13 +116,37 @@ all2en:
 	  if [ "$$s" != "en" ]; then \
 	    if [ ! -e ${WORKHOME}/$$s-en/train.submit ]; then \
 	      ${MAKE} SRCLANGS=$$s TRGLANGS='en' data; \
-	      if [ `zcat ${WORKHOME}/$$s-en/train/*.src.${PRE_SRC}.gz | wc -l` -gt 1000000 ]; then \
+	      if [ `zcat ${WORKHOME}/$$s-en/train/*.src.clean.${PRE_SRC}.gz | wc -l` -gt 1000000 ]; then \
 		echo "$$s-en bigger than 1 million"; \
 		${MAKE} SRCLANGS=$$s TRGLANGS='en' HPC_CORES=1 HPC_MEM=4g train.submit-multigpu; \
-	      elif [ `zcat ${WORKHOME}/$$s-en/train/*.src.${PRE_SRC}.gz | wc -l` -gt 100000 ]; then \
+		${MAKE} SRCLANGS=$$s TRGLANGS='en' reverse-data-spm; \
+		${MAKE} TRGLANGS=$$s SRCLANGS='en' HPC_CORES=1 HPC_MEM=4g train.submit-multigpu; \
+	      elif [ `zcat ${WORKHOME}/$$s-en/train/*.src.clean.${PRE_SRC}.gz | wc -l` -gt 100000 ]; then \
 		echo "$$s-en bigger than 100k"; \
 		${MAKE} SRCLANGS=$$s TRGLANGS='en' \
 			MARIAN_VALID_FREQ=2500 \
+			MARIAN_EARLY_STOPPING=5 \
+			HPC_CORES=1 HPC_MEM=4g train.submit; \
+		${MAKE} SRCLANGS=$$s TRGLANGS='en' reverse-data-spm; \
+		${MAKE} TRGLANGS=$$s SRCLANGS='en' \
+			MARIAN_VALID_FREQ=2500 \
+			MARIAN_EARLY_STOPPING=5 \
+			HPC_CORES=1 HPC_MEM=4g train.submit; \
+	      elif [ `zcat ${WORKHOME}/$$s-en/train/*.src.clean.${PRE_SRC}.gz | wc -l` -gt 10000 ]; then \
+		echo "$$s-en bigger than 10k"; \
+		${MAKE} SRCLANGS=$$s TRGLANGS='en' \
+			MARIAN_WORKSPACE=3500 \
+			MARIAN_VALID_MINI_BATCH=4 \
+			MARIAN_DROPOUT=0.5 \
+			MARIAN_VALID_FREQ=1000 \
+			MARIAN_EARLY_STOPPING=5 \
+			HPC_CORES=1 HPC_MEM=4g train.submit; \
+		${MAKE} SRCLANGS=$$s TRGLANGS='en' reverse-data-spm; \
+		${MAKE} TRGLANGS=$$s SRCLANGS='en' \
+			MARIAN_WORKSPACE=3500 \
+			MARIAN_VALID_MINI_BATCH=4 \
+			MARIAN_DROPOUT=0.5 \
+			MARIAN_VALID_FREQ=1000 \
 			MARIAN_EARLY_STOPPING=5 \
 			HPC_CORES=1 HPC_MEM=4g train.submit; \
 	      else \
@@ -131,25 +155,27 @@ all2en:
 	    fi \
 	  fi \
 	done
-	for s in ${OPUSLANGS}; do \
-	  if [ "$$s" != "en" ]; then \
-	    if [ ! -e ${WORKHOME}/en-$$s/train.submit ]; then \
-	      ${MAKE} TRGLANGS=$$s SRCLANGS='en' data; \
-	      if [ `zcat ${WORKHOME}/en-$$s/train/*.src.${PRE_SRC}.gz | wc -l` -gt 1000000 ]; then \
-		echo "en-$$s bigger than 1 million"; \
-		${MAKE} TRGLANGS=$$s SRCLANGS='en' HPC_CORES=1 HPC_MEM=4g train.submit-multigpu; \
-	      elif [ `zcat ${WORKHOME}/en-$$s/train/*.src.${PRE_SRC}.gz | wc -l` -gt 100000 ]; then \
-		echo "en-$$s bigger than 100k"; \
-		${MAKE} TRGLANGS=$$s SRCLANGS='en' \
-			MARIAN_VALID_FREQ=2500 \
-			MARIAN_EARLY_STOPPING=5 \
-			HPC_CORES=1 HPC_MEM=4g train.submit; \
-	      else \
-		echo "en-$$s too small"; \
-	      fi \
-	    fi \
-	  fi \
-	done
+
+#	for s in ${OPUSLANGS}; do \
+#	  if [ "$$s" != "en" ]; then \
+#	    if [ ! -e ${WORKHOME}/en-$$s/train.submit ]; then \
+#	      ${MAKE} TRGLANGS=$$s SRCLANGS='en' data; \
+#	      if [ `zcat ${WORKHOME}/en-$$s/train/*.src.${PRE_SRC}.gz | wc -l` -gt 1000000 ]; then \
+#		echo "en-$$s bigger than 1 million"; \
+#		${MAKE} TRGLANGS=$$s SRCLANGS='en' HPC_CORES=1 HPC_MEM=4g train.submit-multigpu; \
+#	      elif [ `zcat ${WORKHOME}/en-$$s/train/*.src.${PRE_SRC}.gz | wc -l` -gt 100000 ]; then \
+#		echo "en-$$s bigger than 100k"; \
+#		${MAKE} TRGLANGS=$$s SRCLANGS='en' \
+#			MARIAN_VALID_FREQ=2500 \
+#			MARIAN_EARLY_STOPPING=5 \
+#			HPC_CORES=1 HPC_MEM=4g train.submit; \
+#	      else \
+#		echo "en-$$s too small"; \
+#	      fi \
+#	    fi \
+#	  fi \
+#	done
+
 
 enit:
 	${MAKE} SRCLANGS=en TRGLANGS=it traindata-spm

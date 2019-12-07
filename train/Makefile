@@ -100,13 +100,13 @@ include Makefile.slurm
 
 
 .PHONY: data
-data:	${TRAIN_SRC}.${PRE_SRC}.gz ${TRAIN_TRG}.${PRE_TRG}.gz \
+data:	${TRAIN_SRC}.clean.${PRE_SRC}.gz ${TRAIN_TRG}.clean.${PRE_TRG}.gz \
 	${DEV_SRC}.${PRE_SRC} ${DEV_TRG}.${PRE_TRG}
 	${MAKE} ${TEST_SRC}.${PRE_SRC} ${TEST_TRG}
 	${MAKE} ${TRAIN_ALG}
 
 
-traindata: 	${TRAIN_SRC}.${PRE_SRC}.gz ${TRAIN_TRG}.${PRE_TRG}.gz
+traindata: 	${TRAIN_SRC}.clean.${PRE_SRC}.gz ${TRAIN_TRG}.clean.${PRE_TRG}.gz
 tunedata: 	${TUNE_SRC}.${PRE_SRC} ${TUNE_TRG}.${PRE_TRG}
 devdata:	${DEV_SRC}.${PRE_SRC} ${DEV_TRG}.${PRE_TRG}
 testdata:	${TEST_SRC}.${PRE_SRC} ${TEST_TRG}
@@ -366,8 +366,8 @@ continue-datatrain:
 ## - no new vocabulary is created if the file already exists!
 ## - need to delete the file if you want to create a new one!
 
-${MODEL_VOCAB}:	${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE}.gz \
-		${TRAIN_TRG}.${PRE_TRG}${TRAINSIZE}.gz
+${MODEL_VOCAB}:	${TRAIN_SRC}.clean.${PRE_SRC}${TRAINSIZE}.gz \
+		${TRAIN_TRG}.clean.${PRE_TRG}${TRAINSIZE}.gz
 ifeq ($(wildcard ${MODEL_VOCAB}),)
 	mkdir -p ${dir $@}
 	${LOADMODS} && zcat $^ | ${MARIAN}/marian-vocab --max-size ${VOCABSIZE} > $@
@@ -384,8 +384,8 @@ endif
 
 ## train transformer model
 ${WORKDIR}/${MODEL}.transformer.model${NR}.done: \
-		${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE}.gz \
-		${TRAIN_TRG}.${PRE_TRG}${TRAINSIZE}.gz \
+		${TRAIN_SRC}.clean.${PRE_SRC}${TRAINSIZE}.gz \
+		${TRAIN_TRG}.clean.${PRE_TRG}${TRAINSIZE}.gz \
 		${DEV_SRC}.${PRE_SRC} ${DEV_TRG}.${PRE_TRG}
 	mkdir -p ${dir $@}
 	${LOADMODS} && ${MARIAN}/marian ${MARIAN_EXTRA} \
@@ -396,21 +396,22 @@ ${WORKDIR}/${MODEL}.transformer.model${NR}.done: \
         --vocabs ${MODEL_VOCAB} ${MODEL_VOCAB} \
         --mini-batch-fit \
 	-w ${MARIAN_WORKSPACE} \
-	--maxi-batch 500 \
+	--maxi-batch ${MARIAN_MAXI_BATCH} \
         --early-stopping ${MARIAN_EARLY_STOPPING} \
         --valid-freq ${MARIAN_VALID_FREQ} \
 	--save-freq ${MARIAN_SAVE_FREQ} \
 	--disp-freq ${MARIAN_DISP_FREQ} \
         --valid-sets ${word 3,$^} ${word 4,$^} \
         --valid-metrics perplexity \
-        --valid-mini-batch 16 \
+        --valid-mini-batch ${MARIAN_VALID_MINI_BATCH} \
         --beam-size 12 --normalize 1 \
         --log $(@:.model${NR}.done=.train${NR}.log) --valid-log $(@:.model${NR}.done=.valid${NR}.log) \
         --enc-depth 6 --dec-depth 6 \
         --transformer-heads 8 \
         --transformer-postprocess-emb d \
         --transformer-postprocess dan \
-        --transformer-dropout 0.1 --label-smoothing 0.1 \
+        --transformer-dropout ${MARIAN_DROPOUT} \
+	--label-smoothing 0.1 \
         --learn-rate 0.0003 --lr-warmup 16000 --lr-decay-inv-sqrt 16000 --lr-report \
         --optimizer-params 0.9 0.98 1e-09 --clip-norm 5 \
         --tied-embeddings-all \
@@ -432,8 +433,8 @@ ${WORKDIR}/${MODEL}.transformer.model${NR}.done: \
 
 ## train transformer model with guided alignment
 ${WORKDIR}/${MODEL}.transformer-align.model${NR}.done: \
-		${TRAIN_SRC}.${PRE_SRC}${TRAINSIZE}.gz \
-		${TRAIN_TRG}.${PRE_TRG}${TRAINSIZE}.gz \
+		${TRAIN_SRC}.clean.${PRE_SRC}${TRAINSIZE}.gz \
+		${TRAIN_TRG}.clean.${PRE_TRG}${TRAINSIZE}.gz \
 		${TRAIN_ALG} \
 		${DEV_SRC}.${PRE_SRC} ${DEV_TRG}.${PRE_TRG}
 	mkdir -p ${dir $@}
@@ -445,21 +446,22 @@ ${WORKDIR}/${MODEL}.transformer-align.model${NR}.done: \
         --vocabs ${MODEL_VOCAB} ${MODEL_VOCAB} \
         --mini-batch-fit \
 	-w ${MARIAN_WORKSPACE} \
-	--maxi-batch 500 \
+	--maxi-batch ${MARIAN_MAXI_BATCH} \
         --early-stopping ${MARIAN_EARLY_STOPPING} \
         --valid-freq ${MARIAN_VALID_FREQ} \
 	--save-freq ${MARIAN_SAVE_FREQ} \
 	--disp-freq ${MARIAN_DISP_FREQ} \
         --valid-sets ${word 4,$^} ${word 5,$^} \
         --valid-metrics perplexity \
-        --valid-mini-batch 16 \
+        --valid-mini-batch ${MARIAN_VALID_MINI_BATCH} \
         --beam-size 12 --normalize 1 \
         --log $(@:.model${NR}.done=.train${NR}.log) --valid-log $(@:.model${NR}.done=.valid${NR}.log) \
         --enc-depth 6 --dec-depth 6 \
         --transformer-heads 8 \
         --transformer-postprocess-emb d \
         --transformer-postprocess dan \
-        --transformer-dropout 0.1 --label-smoothing 0.1 \
+        --transformer-dropout ${MARIAN_DROPOUT} \
+	--label-smoothing 0.1 \
         --learn-rate 0.0003 --lr-warmup 16000 --lr-decay-inv-sqrt 16000 --lr-report \
         --optimizer-params 0.9 0.98 1e-09 --clip-norm 5 \
         --tied-embeddings-all \
