@@ -89,7 +89,7 @@ class Translate(WebSocket):
                     fromLang = langs[0]
                 srctxt = " ".join(tokens)
 
-        srctxt = srctxt.strip()
+        srctxt = srctxt.strip().replace("\n",' ')
         if not srctxt:
             self.sendMessage(json.dumps({'result': ""}, sort_keys=True, indent=4))
             return
