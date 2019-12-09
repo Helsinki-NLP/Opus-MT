@@ -89,6 +89,11 @@ class Translate(WebSocket):
                     fromLang = langs[0]
                 srctxt = " ".join(tokens)
 
+        srctxt = srctxt.strip()
+        if not srctxt:
+            self.sendMessage(json.dumps({'result': ""}, sort_keys=True, indent=4))
+            return
+
         if len(srctxt) > args.max_input_length:
             self.sendMessage(json.dumps({'result': 'ERROR: Input too long! Maximum length = {}'.format(args.max_input_length)}, sort_keys=True, indent=4))
             return
