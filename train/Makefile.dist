@@ -43,8 +43,9 @@ best_dist:
 	echo "------------------------------------------------"; \
 	echo "search best model for ${LANGSTR}"; \
 	for d in ${ALT_MODEL_DIR}; do \
-	  if ls work-$$d/${LANGSTR}/Tatoeba*.eval 1> /dev/null 2>&1; then \
-	    b=`grep 'BLEU+' work-$$d/${LANGSTR}/Tatoeba*.eval | cut -f3 -d' '`; \
+	  e=`ls work-$$d/${LANGSTR}/val/*.trg | sed 's/\.trg//'`; \
+	  if ls work-$$d/${LANGSTR}/$$e*.eval 1> /dev/null 2>&1; then \
+	    b=`grep 'BLEU+' work-$$d/${LANGSTR}/$$e*.eval | cut -f3 -d' '`; \
 	    if (( $$(echo "$$m-$$b < 1" |bc -l) )); then \
 	      echo "$$d ($$b) is better or not much worse than $$s ($$m)!"; \
 	      m=$$b; \

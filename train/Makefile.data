@@ -185,7 +185,7 @@ ${TRAIN_ALG}: 	${TRAIN_SRC}.clean.${PRE_SRC}${TRAINSIZE}.gz \
 	  rm -f $@.zip ${@:.${SRCEXT}.raw=.xml} ${@:.${SRCEXT}.raw=.ids} ${dir $@}/README ${dir $@}/LICENSE; \
 	elif [ -e ${OPUSHOME}/$$c/latest/xml/${LANGPAIR}.xml.gz ]; then \
 	  echo "extract $$c (${LANGPAIR}) from OPUS"; \
-	  opus_read -rd ${OPUSHOME} -d $$c -s ${SRCEXT} -t ${TRGEXT} -wm moses -p raw > $@.tmp; \
+	  opus_read -rd ${OPUSHOME} -d $$c -s ${SRC} -t ${TRG} -wm moses -p raw > $@.tmp; \
 	  cut -f1 $@.tmp > $@; \
 	  cut -f2 $@.tmp > ${@:.${SRCEXT}.raw=.${TRGEXT}.raw}; \
 	  rm -f $@.tmp; \
