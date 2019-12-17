@@ -22,7 +22,8 @@ scores: ${WORKHOME}/eval/scores.txt
 ## get the best model from all kind of alternative setups
 ## in the following sub directories (add prefix work-)
 
-ALT_MODEL_DIR = bpe-old bpe-memad bpe spm-noalign bpe-align spm
+# ALT_MODEL_DIR = bpe-old bpe-memad bpe spm-noalign bpe-align spm
+ALT_MODEL_DIR = spm
 
 best_dist_all:
 	for l in $(sort ${shell ls work* | grep -- '-' | grep -v old | grep -v work}); do \
@@ -36,6 +37,7 @@ best_dist_all:
 ## find the best model according to test set scores
 ## and make a distribution package from that model
 ## (BLEU needs to be above MIN_BLEU_SCORE)
+## NEW: don't trust models tested with GNOME test sets!
 
 best_dist:
 	@m=0;\
@@ -44,14 +46,16 @@ best_dist:
 	echo "search best model for ${LANGSTR}"; \
 	for d in ${ALT_MODEL_DIR}; do \
 	  e=`ls work-$$d/${LANGSTR}/val/*.trg | sed 's/\.trg//'`; \
-	  if ls work-$$d/${LANGSTR}/$$e*.eval 1> /dev/null 2>&1; then \
-	    b=`grep 'BLEU+' work-$$d/${LANGSTR}/$$e*.eval | cut -f3 -d' '`; \
-	    if (( $$(echo "$$m-$$b < 1" |bc -l) )); then \
-	      echo "$$d ($$b) is better or not much worse than $$s ($$m)!"; \
-	      m=$$b; \
-	      s=$$d; \
-	    else \
-	      echo "$$d ($$b) is  worse than $$s ($$m)!"; \
+	  if [ "$$e" != "GNOME" ]; then \
+	    if ls work-$$d/${LANGSTR}/$$e*.eval 1> /dev/null 2>&1; then \
+	      b=`grep 'BLEU+' work-$$d/${LANGSTR}/$$e*.eval | cut -f3 -d' '`; \
+	      if (( $$(echo "$$m-$$b < 1" |bc -l) )); then \
+	        echo "$$d ($$b) is better or not much worse than $$s ($$m)!"; \
+	        m=$$b; \
+	        s=$$d; \
+	      else \
+	        echo "$$d ($$b) is  worse than $$s ($$m)!"; \
+	      fi \
 	    fi \
 	  fi \
 	done; \

@@ -193,8 +193,8 @@ finished:
 	done
 
 # run something over all language pairs that have trained models
-## - make eval-all
-## - make dist-all
+## - make eval-allmodels
+## - make dist-allmodels
 %-allmodels:
 	for l in ${ALL_LANG_PAIRS}; do \
 	  if  [ `find ${WORKHOME}/$$l -name '${DATASET}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.*.npz' | wc -l` -gt 0 ]; then \
@@ -204,12 +204,13 @@ finished:
 	done
 
 
-## run something over all language pairs but make it possible to do it in parallel
+## run something over all language pairs but make it possible to do it in parallel, for example
+## - make dist-all-parallel
 %-all-parallel:
 	${MAKE} $(subst -all-parallel,,${patsubst %,$@__%-run-for-langpair,${ALL_LANG_PAIRS}})
 
 ## run a command that includes the langpair, for example
-##   make wordalign__en-da+sv-run  ...... runs wordalign with SRCLANGS="en" TRGLANGS="da sv"
+##   make wordalign__en-da+sv-run-for-langpair  ...... runs wordalign with SRCLANGS="en" TRGLANGS="da sv"
 ## What is this good for?
 ## ---> can run many lang-pairs in parallel instead of having a for loop and run sequencetially
 %-run-for-langpair:

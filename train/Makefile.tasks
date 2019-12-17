@@ -132,51 +132,52 @@ all2pivot:
 OPUSLANGS = aa ab ace ach acm acu ada ady aeb aed ae afb afh af agr aha aii ain ajg aka ake akl ak aln alt alz amh ami amu am ang an aoc aoz apc ara arc arh arn arq ar ary arz ase asf ast as ati atj avk av awa aym ay azb "az_IR az" bal bam ban bar bas ba bbc bbj bci bcl bem ber "be_tarask be" bfi bg bho bhw bh bin bi bjn bm bn bnt bo bpy brx br bsn bs btg bts btx bua bug bum bvl bvy bxr byn byv bzj bzs cab cac cak cat cay ca "cbk_zam cbk" cce cdo ceb ce chf chj chk cho chq chr chw chy ch cjk cjp cjy ckb ckt cku cmo cnh cni cop co "crh_latn crh" crp crs cr csb cse csf csg csl csn csr cs cto ctu cuk cu cv cycl cyo cy daf da de dga dhv dik din diq dje djk dng dop dsb dtp dty dua dv dws dyu dz ecs ee efi egl el eml enm eo es esn  et eu ewo ext fan fat fa fcs ff fil fi fj fkv fon foo fo fr frm frp frr fse fsl fuc ful fur fuv fy gaa gag gan ga gbi gbm gcf gcr gd gil glk gl gn gom gor gos got grc gr gsg gsm gss gsw guc gug gum gur guw gu gv gxx gym hai hak hau haw ha haz hb hch hds he hif hi hil him hmn hne hnj hoc ho hrx hr hsb hsh hsn ht hup hus hu hyw hy hz ia iba ibg ibo id ie ig ike ik ilo inh inl ins io iro ise ish iso is it iu izh jak jam jap ja jbo jdt jiv jmx jp jsl jv kaa kab kac kam kar kau ka kbd kbh kbp kea kek kg kha kik kin ki kjh kj kk kl kmb kmr km kn koi kok kon koo ko kpv kqn krc kri krl kr ksh kss ksw ks kum ku kvk kv kwn kwy kw kxi ky kzj lad lam la lbe lb ldn lez lfn lg lij lin liv li lkt lld lmo ln lou lo loz lrc lsp ltg lt lua lue lun luo lus luy lu lv lzh lzz mad mai mam map_bms mau max maz mco mcp mdf men me mfe mfs mgm mgr mg mhr mh mic min miq mi mk mlg ml mnc mni mnw mn moh mos mo mrj mrq mr "ms_MY ms" mt mus mvv mwl mww mxv myv my mzn mzy nah nan nap na nba "nb_NO nb nn_NO nn nog no_nb no" nch nci ncj ncs ncx ndc "nds_nl nds" nd new ne ngl ngt ngu ng nhg nhk nhn nia nij niu nlv nl nnh non nov npi nqo nrm nr nso nst nv nya nyk nyn nyu ny nzi oar oc ojb oj oke olo om orm orv or osx os ota ote otk pag pam pan pap pau pa pbb pcd pck pcm pdc pdt pes pfl pid pih pis pi plt pl pms pmy pnb pnt pon pot po ppk ppl prg prl prs pso psp psr ps "pt_br pt_BR pt_PT pt" pys quc que qug qus quw quy qu quz qvi qvz qya rap rar rcf rif rmn rms rmy rm rnd rn rom ro rsl rue run rup ru rw ry sah sat sa sbs scn sco sc sd seh se sfs sfw sgn sgs sg shi shn shs shy sh sid simple si sjn sk sl sma sml sm sna sn som son sop sot so sqk sq "sr_ME sr srp" srm srn ssp ss stq st sux su svk sv swa swc swg swh sw sxn syr szl "ta_LK ta" tcf tcy tc tdt tdx tet te "tg_TJ tg" thv th tig tir tiv ti tkl tk tlh tll "tl_PH tl" tly tmh tmp tmw tn tob tog toh toi toj toki top to tpi tpw trv tr tsc tss ts tsz ttj tt tum tvl tw tyv ty tzh tzl tzo udm ug uk umb urh "ur_PK ur" usp uz vec vep ve "vi_VN vi" vls vmw vo vro vsl wae wal war wa wba wes wls wlv wol wo wuu xal xho xh xmf xpe yao yap yaq ybb yi yor yo yua zab zai zam za zdj zea "cmn cn yue ze_zh zh_cn zh_CN zh_HK zh_tw zh_TW zh_yue zhs zht zh" zib zlm zne zpa zpg zsl zsm "zul zu" zza
 
 
-all2en:
+
+allopus2pivot:
 	for s in ${OPUSLANGS}; do \
-	  if [ "$$s" != "en" ]; then \
-	    if [ ! -e ${WORKHOME}/$$s-en/train.submit ]; then \
-	      ${MAKE} SRCLANGS=$$s TRGLANGS='en' data; \
-	      if [ `zcat ${WORKHOME}/$$s-en/train/*.src.clean.${PRE_SRC}.gz | wc -l` -gt 10000000 ]; then \
-		echo "$$s-en bigger than 10 million"; \
-		${MAKE} SRCLANGS=$$s TRGLANGS='en' HPC_CORES=1 HPC_MEM=4g train.submit-multigpu; \
-		${MAKE} SRCLANGS=$$s TRGLANGS='en' reverse-data-spm; \
-		${MAKE} TRGLANGS=$$s SRCLANGS='en' HPC_CORES=1 HPC_MEM=4g train.submit-multigpu; \
-	      elif [ `zcat ${WORKHOME}/$$s-en/train/*.src.clean.${PRE_SRC}.gz | wc -l` -gt 1000000 ]; then \
-		echo "$$s-en bigger than 1 million"; \
-		${MAKE} SRCLANGS=$$s TRGLANGS='en' \
+	  if [ "$$s" != "${PIVOT}" ]; then \
+	    if [ ! -e "${WORKHOME}/$$s-${PIVOT}/train.submit" ]; then \
+	      ${MAKE} SRCLANGS="$$s" TRGLANGS='${PIVOT}' data; \
+	      if [ `zcat "${WORKHOME}/$$s-${PIVOT}/train/*.src.clean.${PRE_SRC}.gz" | wc -l` -gt 10000000 ]; then \
+		echo "$$s-${PIVOT} bigger than 10 million"; \
+		${MAKE} SRCLANGS="$$s" TRGLANGS='${PIVOT}' HPC_CORES=1 HPC_MEM=4g train.submit-multigpu; \
+		${MAKE} SRCLANGS="$$s" TRGLANGS='${PIVOT}' reverse-data-spm; \
+		${MAKE} TRGLANGS="$$s" SRCLANGS='${PIVOT}' HPC_CORES=1 HPC_MEM=4g train.submit-multigpu; \
+	      elif [ `zcat "${WORKHOME}/$$s-${PIVOT}/train/*.src.clean.${PRE_SRC}.gz" | wc -l` -gt 1000000 ]; then \
+		echo "$$s-${PIVOT} bigger than 1 million"; \
+		${MAKE} SRCLANGS="$$s" TRGLANGS='${PIVOT}' \
 			MARIAN_VALID_FREQ=2500 \
 			HPC_CORES=1 HPC_MEM=4g train.submit; \
-		${MAKE} SRCLANGS=$$s TRGLANGS='en' reverse-data-spm; \
-		${MAKE} TRGLANGS=$$s SRCLANGS='en' \
+		${MAKE} SRCLANGS="$$s" TRGLANGS='${PIVOT}' reverse-data-spm; \
+		${MAKE} TRGLANGS="$$s" SRCLANGS='${PIVOT}' \
 			MARIAN_VALID_FREQ=2500 \
 			HPC_CORES=1 HPC_MEM=4g train.submit; \
-	      elif [ `zcat ${WORKHOME}/$$s-en/train/*.src.clean.${PRE_SRC}.gz | wc -l` -gt 100000 ]; then \
-		echo "$$s-en bigger than 100k"; \
-		${MAKE} SRCLANGS=$$s TRGLANGS='en' \
+	      elif [ `zcat "${WORKHOME}/$$s-${PIVOT}/train/*.src.clean.${PRE_SRC}.gz" | wc -l` -gt 100000 ]; then \
+		echo "$$s-${PIVOT} bigger than 100k"; \
+		${MAKE} SRCLANGS="$$s" TRGLANGS='${PIVOT}' \
 			MARIAN_VALID_FREQ=1000 \
 			MARIAN_WORKSPACE=5000 \
 			MARIAN_VALID_MINI_BATCH=8 \
 			MARIAN_EARLY_STOPPING=5 \
 			HPC_CORES=1 HPC_MEM=4g train.submit; \
-		${MAKE} SRCLANGS=$$s TRGLANGS='en' reverse-data-spm; \
-		${MAKE} TRGLANGS=$$s SRCLANGS='en' \
+		${MAKE} SRCLANGS="$$s" TRGLANGS='${PIVOT}' reverse-data-spm; \
+		${MAKE} TRGLANGS="$$s" SRCLANGS='${PIVOT}' \
 			MARIAN_VALID_FREQ=1000 \
 			MARIAN_WORKSPACE=5000 \
 			MARIAN_VALID_MINI_BATCH=8 \
 			MARIAN_EARLY_STOPPING=5 \
 			HPC_CORES=1 HPC_MEM=4g train.submit; \
-	      elif [ `zcat ${WORKHOME}/$$s-en/train/*.src.clean.${PRE_SRC}.gz | wc -l` -gt 10000 ]; then \
-		echo "$$s-en bigger than 10k"; \
-		${MAKE} SRCLANGS=$$s TRGLANGS='en' \
+	      elif [ `zcat "${WORKHOME}/$$s-${PIVOT}/train/*.src.clean.${PRE_SRC}.gz" | wc -l` -gt 10000 ]; then \
+		echo "$$s-${PIVOT} bigger than 10k"; \
+		${MAKE} SRCLANGS="$$s" TRGLANGS='${PIVOT}' \
 			MARIAN_WORKSPACE=3500 \
 			MARIAN_VALID_MINI_BATCH=4 \
 			MARIAN_DROPOUT=0.5 \
 			MARIAN_VALID_FREQ=1000 \
 			MARIAN_EARLY_STOPPING=5 \
 			HPC_CORES=1 HPC_MEM=4g train.submit; \
-		${MAKE} SRCLANGS=$$s TRGLANGS='en' reverse-data-spm; \
-		${MAKE} TRGLANGS=$$s SRCLANGS='en' \
+		${MAKE} SRCLANGS="$$s" TRGLANGS='${PIVOT}' reverse-data-spm; \
+		${MAKE} TRGLANGS="$$s" SRCLANGS='${PIVOT}' \
 			MARIAN_WORKSPACE=3500 \
 			MARIAN_VALID_MINI_BATCH=4 \
 			MARIAN_DROPOUT=0.5 \
@@ -184,31 +185,15 @@ all2en:
 			MARIAN_EARLY_STOPPING=5 \
 			HPC_CORES=1 HPC_MEM=4g train.submit; \
 	      else \
-		echo "$$s-en too small"; \
+		echo "$$s-${PIVOT} too small"; \
 	      fi \
 	    fi \
 	  fi \
 	done
 
-#	for s in ${OPUSLANGS}; do \
-#	  if [ "$$s" != "en" ]; then \
-#	    if [ ! -e ${WORKHOME}/en-$$s/train.submit ]; then \
-#	      ${MAKE} TRGLANGS=$$s SRCLANGS='en' data; \
-#	      if [ `zcat ${WORKHOME}/en-$$s/train/*.src.${PRE_SRC}.gz | wc -l` -gt 1000000 ]; then \
-#		echo "en-$$s bigger than 1 million"; \
-#		${MAKE} TRGLANGS=$$s SRCLANGS='en' HPC_CORES=1 HPC_MEM=4g train.submit-multigpu; \
-#	      elif [ `zcat ${WORKHOME}/en-$$s/train/*.src.${PRE_SRC}.gz | wc -l` -gt 100000 ]; then \
-#		echo "en-$$s bigger than 100k"; \
-#		${MAKE} TRGLANGS=$$s SRCLANGS='en' \
-#			MARIAN_VALID_FREQ=2500 \
-#			MARIAN_EARLY_STOPPING=5 \
-#			HPC_CORES=1 HPC_MEM=4g train.submit; \
-#	      else \
-#		echo "en-$$s too small"; \
-#	      fi \
-#	    fi \
-#	  fi \
-#	done
+all2en:
+	${MAKE} PIVOT=en allopus2pivot
+
 
 
 enit:
