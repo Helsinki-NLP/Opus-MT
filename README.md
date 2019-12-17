@@ -8,12 +8,12 @@ Tools and resources for open translation services
 * [pre-trained downloadable translation models](https://github.com/Helsinki-NLP/Opus-MT/tree/master/train/models)
 
 
-This repository includes
+This repository includes two setups:
 
-* scripts for training models (currently this only works in our work environment at CSC)
-* installation of the pre-requisites on recent Ubuntu distributions
-* server and client scripts for OPUS-MT services
-* A web application providing a web UI and api to work with multiple language pairs
+* Setup 1: a Tornado-based web application providing a web UI and api to work with multiple language pairs
+* Setup 2: a simple websocket service setup with some experimental API extensions
+
+There are also scripts for training models but those are currently only useful in the computing environment used by the University of Helsinki and CSC as the IT service providor.
 
 
 ## Installation of the Tornado-based Web-App
