@@ -11,19 +11,98 @@ Tools and resources for open translation services
 This repository includes
 
 * scripts for training models (currently this only works in our work environment at CSC)
-* installation of the pre-requisites on Ubuntu 14.04 or 16.04
+* installation of the pre-requisites on recent Ubuntu distributions
 * server and client scripts for OPUS-MT services
+* A web application providing a web UI and api to work with multiple language pairs
 
 
-## Installation
+## Installation of the Tornado-based Web-App
 
 Download the latest version from github:
 
-```
+```bash
 git clone https://github.com/Helsinki-NLP/Opus-MT.git
 ```
 
-Install pre-requisites (tested on Ubuntu 14.04 and 16.04, the installation requires sudo permissions):
+### Option 1: Manual setup
+
+Install Marian MT. Follow the documentation at https://marian-nmt.github.io/docs/
+After the installation, marian-server is expected to be present in path. If not place it in `/usr/local/bin`
+
+Install pre-requisites.
+Using a virtual environment is recommended.
+
+```bash
+pip install -r requirements.txt
+```
+
+Download the language models from http://opus.nlpl.eu/Opus-MT.php and place it in models directory.
+
+Then edits the services.json to point to that models.
+
+And start the webserver.
+```bash
+python server.py
+```
+
+By default, it will use port 8888. Launch your browser to localhost:8888 to get the web interface. The languages configured in services.json will be available.
+
+
+### Option 2: Using Docker
+
+
+```bash
+docker-compose up
+```
+
+And launch your browser to localhost:8888
+
+
+### Configuration
+
+The server.py program accepts a configuration file in json format. By default it try to use `config.json` in the current directory. But you can give a custom one using `-c` flag.
+
+An example configuration file looks like this:
+
+```json
+{
+    "en": {
+        "es": {
+            "configuration": "./models/en-es/decoder.yml",
+            "host": "localhost",
+            "port": "10001"
+        },
+        "fi": {
+            "configuration": "./models/en-fi/decoder.yml",
+            "host": "localhost",
+            "port": "10002"
+        },
+    }
+}
+
+```
+
+This example configuration can provide MT service for en->fs and en->fi language pairs.
+
+* `configuration` points to a yaml file containing the decoder configuration usable by `marian-server`. If this value is not provided, Opus-MT will assume that the service is already running in a remote host and post as given in other options. If value is provided a new sub process will be created using `marian-server`
+* `host`: The host where the server is running.
+* `port`: The port to be listen for `marian-server`
+
+
+
+
+
+
+
+## Installation of a websocket service on Ubuntu
+
+Download the latest version from github:
+
+```bash
+git clone https://github.com/Helsinki-NLP/Opus-MT.git
+```
+
+Install pre-requisites (tested on Ubuntu 14.04, 16.04 and 18.04, the installation requires sudo permissions):
 
 ```
 cd Opus-MT/install
@@ -58,7 +137,7 @@ sudo service opusMT-opus-fi-en restart
 sudo service opusMT restart
 ```
 
-## Translating text
+### Translating text
 
 The translation service is provided as a websocket service. The `opusMT-client.py` implements a script that demonstrates how to call the API. Youe can test the service by piping plain text to the client script using the socket of the running server:
 
@@ -110,7 +189,7 @@ It returns an error message in the `result` field if the language pair is not su
 
 
 
-## Setup other language pairs:
+### Setup other language pairs:
 
 
 Set SRC_LANGS, TRG_LANGS, MARIAN_PORT and OPUSMT_PORT.

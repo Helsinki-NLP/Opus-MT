@@ -1,0 +1,49 @@
+<html lang="en">
+
+  <head>
+    <title>{{ title }}</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link id="theme-style" rel="stylesheet" href="{{ static_url('style.css') }}">
+    <script src="{{ static_url('translate.js') }}"></script>
+  </head>
+
+  <body>
+    <header>
+      <h1>Opus MT</h1>
+      <p>Machine Translation using OPUS-MT data models and Marian Neural MT engine.</p>
+    </header>
+
+    <main class="container">
+      <progress id="progress"></progress>
+      <div class="source-container">
+        <select id="from">
+          {% for lang in source_langs %}
+          <option value="{{lang}}">{{ escape(lang) }}</option>
+          {% end %}
+        </select>
+        <textarea id="source_content"></textarea>
+      </div>
+      <div class="actions">
+        <button onclick="postData()">>></button>
+      </div>
+      <div class="target-container">
+        <select id="to">
+          {% for lang in target_langs %}
+          <option value="{{lang}}">{{ escape(lang) }}</option>
+          {% end %}
+        </select>
+        <textarea id="target_content" readonly></textarea>
+      </div>
+    </main>
+    <footer>
+      <p>
+        <a href="http://opus.nlpl.eu">OPUS MT</a> provides pre-trained neural translation models trained on OPUS data.
+        These models can seamlessly run with the OPUS-MT transation servers that can be installed from our <a
+          href="https://github.com/Helsinki-NLP/OPUS-MT">OPUS-MT github repository</a>. The translation service is powered by <a href="https://marian-nmt.github.io">Marian Neural MT engine</a>
+      </p>
+    </footer>
+  </body>
+
+</html>

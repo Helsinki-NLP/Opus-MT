@@ -1,0 +1,67 @@
+body {
+  font-family: "Segoe UI", Helvetica, Arial, "Lucida Grande", sans-serif;
+  color: #242424;
+  font-size: 14px;
+  margin: 0;
+}
+
+header {
+  padding: 1em;
+  background: #494d55;
+  color: #ffffff;
+  border-top: 5px solid #900000;
+}
+
+a {
+  color: #900000;
+}
+
+footer {
+  padding: 1em;
+  font-size: 1em;
+}
+
+h1 {
+  margin: 0;
+  padding: 10px 0;
+}
+
+.container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 1em;
+}
+
+.actions,
+.source-container,
+.target-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.actions {
+  align-self: center;
+}
+
+#source_content,
+#target_content {
+  width: 45vw;
+  min-width: 320px;
+  height: 50vh;
+  padding: 1em;
+  font-size: 1.2em;
+  resize: none;
+}
+
+select,
+button {
+  padding: 10px;
+}
+
+progress {
+  height: 4px;
+  width: 100%;
+  display: none;
+}

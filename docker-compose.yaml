@@ -4,7 +4,7 @@ services:
   opus-mt:
     build: .
     volumes:
-      - /usr/local/share/opusMT/models
+      - .:/usr/src/app
     ports:
-      - 4000:8080
-    command: service marian-opus-fi-en status
+      - 8888:80
+
