@@ -21,23 +21,25 @@ RUN set -eux; \
 		intel-mkl-64bit-2019.5-075; \
 	rm -f GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB;
 
-RUN set -eux; \
-	pip3 install SimpleWebSocketServer; \
-	pip3 install mosestokenizer pycld2 sqlitedict;
-
 # Install Marian MT
 RUN set -eux; \
 	git clone https://github.com/marian-nmt/marian-dev marian; \
 	cd marian; \
 	git checkout 1.8.0; \
-	cmake . -DCMAKE_BUILD_TYPE=Release -DCOMPILE_CUDA=off -DUSE_STATIC_LIBS=on; \
+	# Choose CPU or GPU(CUDA) from below lines.
+	# cmake . -DCMAKE_BUILD_TYPE=Release -DCOMPILE_CUDA=on -DUSE_STATIC_LIBS=on; \
+	cmake . -DCMAKE_BUILD_TYPE=Release -DCOMPILE_CPU=on -DCOMPILE_CUDA=off -DUSE_STATIC_LIBS=on; \
 	make -j 2 install;
 
-COPY . Opus-MT
+COPY . .
 
-# Build Opus-MT, install services
-RUN make -C Opus-MT all; \
-	install -m 755 marian/marian /usr/local/bin/; \
+# Install python requirements.
+
+RUN set -eux; \
+	pip3 install -r requirements.txt
+
+# install services
+RUN install -m 755 marian/marian /usr/local/bin/; \
 	install -m 755 marian/marian-server /usr/local/bin/; \
 	install -m 755 marian/marian-server /usr/local/bin/; \
 	install -m 755 marian/marian-vocab /usr/local/bin/; \
@@ -46,4 +48,5 @@ RUN make -C Opus-MT all; \
 	install -m 755 marian/marian-conv /usr/local/bin/; \
 	install -m 644 marian/libmarian.a  /usr/local/lib/;
 
-CMD [ "service", "marian-opus-fi-en", "status" ]
+EXPOSE 80
+CMD python3 server.py -c services.json -p 80
