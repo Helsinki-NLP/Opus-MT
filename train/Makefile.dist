@@ -45,7 +45,8 @@ best_dist:
 	echo "------------------------------------------------"; \
 	echo "search best model for ${LANGSTR}"; \
 	for d in ${ALT_MODEL_DIR}; do \
-	  e=`ls work-$$d/${LANGSTR}/val/*.trg | sed 's/\.trg//'`; \
+	  e=`ls work-$$d/${LANGSTR}/val/*.trg | xargs basename | sed 's/\.trg//'`; \
+	  echo "evaldata = $$e"; \
 	  if [ "$$e" != "GNOME" ]; then \
 	    if ls work-$$d/${LANGSTR}/$$e*.eval 1> /dev/null 2>&1; then \
 	      b=`grep 'BLEU+' work-$$d/${LANGSTR}/$$e*.eval | cut -f3 -d' '`; \

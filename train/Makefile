@@ -197,9 +197,18 @@ finished:
 ## - make dist-allmodels
 %-allmodels:
 	for l in ${ALL_LANG_PAIRS}; do \
-	  if  [ `find ${WORKHOME}/$$l -name '${DATASET}${TRAINSIZE}.${PRE_SRC}-${PRE_TRG}.*.npz' | wc -l` -gt 0 ]; then \
+	  if  [ `find ${WORKHOME}/$$l -name '*.${PRE_SRC}-${PRE_TRG}.*.npz' | wc -l` -gt 0 ]; then \
 	    ${MAKE} SRCLANGS="`echo $$l | cut -f1 -d'-' | sed 's/\\+/ /g'`" \
 		    TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" ${@:-allmodels=}; \
+	  fi \
+	done
+
+## only bilingual models
+%-allbilingual:
+	for l in ${ALL_BILINGUAL_MODELS}; do \
+	  if  [ `find ${WORKHOME}/$$l -name '*.${PRE_SRC}-${PRE_TRG}.*.npz' | wc -l` -gt 0 ]; then \
+	    ${MAKE} SRCLANGS="`echo $$l | cut -f1 -d'-' | sed 's/\\+/ /g'`" \
+		    TRGLANGS="`echo $$l | cut -f2 -d'-' | sed 's/\\+/ /g'`" ${@:-allbilingual=}; \
 	  fi \
 	done
 
