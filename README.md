@@ -36,7 +36,7 @@ Using a virtual environment is recommended.
 pip install -r requirements.txt
 ```
 
-Download the language models from http://opus.nlpl.eu/Opus-MT.php and place it in models directory.
+Download the translation models from https://github.com/Helsinki-NLP/Opus-MT/tree/master/train/models and place it in models directory.
 
 Then edits the services.json to point to that models.
 
