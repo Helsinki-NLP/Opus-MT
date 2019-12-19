@@ -266,6 +266,7 @@ The default location of the configuration file is `/usr/local/share/opusMT/`.
 We store public models at https://github.com/Helsinki-NLP/Opus-MT/tree/master/train/models
 They should be all compatible with the OPUS-MT services and you can install them by specifying the language pair. The installation script takes the latest model in that directory. For additional customisation you need to adjust the installation procedures (in the Makefile or elsewhere).
 
+There are also development versions of models, which are often a bit more experimental and of low quality. But there are additional language pairs and they can be downloaded from https://github.com/Helsinki-NLP/Opus-MT/tree/master/train/work-spm/models
 
 
 
