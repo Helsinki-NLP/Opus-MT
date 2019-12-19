@@ -63,7 +63,8 @@ best_dist:
 	echo "------------------------------------------------"; \
 	if [ "$$s" != "" ]; then \
 	  if (( $$(echo "$$m > ${MIN_BLEU_SCORE}" |bc -l) )); then \
-	    ${MAKE} MODELSHOME=${PWD}/models dist-$$s; \
+	    ${MAKE} MODELSHOME=${PWD}/models \
+		MODELS_URL=https://object.pouta.csc.fi/OPUS-MT-models dist-$$s; \
 	  fi; \
 	fi
 
@@ -75,11 +76,14 @@ best_dist:
 # 	if  [ `grep BLEU $(TEST_EVALUATION) | cut -f3 -d ' ' | cut -f1 -d '.'` -ge ${MIN_BLEU_SCORE} ]; then \
 
 DATE = ${shell date +%F}
-MODELS_URL = https://object.pouta.csc.fi/OPUS-MT-models
+MODELS_URL = https://object.pouta.csc.fi/OPUS-MT-dev
+SKIP_DIST_EVAL = 0
 
 ${DIST_PACKAGE}: ${MODEL_FINAL}
+ifneq (${SKIP_DIST_EVAL},1)
 	@${MAKE} $(TEST_EVALUATION)
 	@${MAKE} $(TEST_COMPARISON)
+endif
 	@mkdir -p ${dir $@}
 	@touch ${WORKDIR}/source.tcmodel
 	@echo "# $(notdir ${@:.zip=})-${DATE}.zip" > ${WORKDIR}/README.md
@@ -104,19 +108,22 @@ ${DIST_PACKAGE}: ${MODEL_FINAL}
 		>> ${WORKDIR}/README.md; \
 	fi
 	@echo "* download: [$(notdir ${@:.zip=})-${DATE}.zip](${MODELS_URL}/${LANGSTR}/$(notdir ${@:.zip=})-${DATE}.zip)" >> ${WORKDIR}/README.md
-	@echo "* test set translations: [$(notdir ${@:.zip=})-${DATE}.test.txt](${MODELS_URL}/${LANGSTR}/$(notdir ${@:.zip=})-${DATE}.test.txt)" >> ${WORKDIR}/README.md
-	@echo "* test set scores: [$(notdir ${@:.zip=})-${DATE}.eval.txt](${MODELS_URL}/${LANGSTR}/$(notdir ${@:.zip=})-${DATE}.eval.txt)" >> ${WORKDIR}/README.md
-	@echo '' >> ${WORKDIR}/README.md
-	@echo '## Benchmarks' >> ${WORKDIR}/README.md
-	@echo '' >> ${WORKDIR}/README.md
-	@cd ${WORKDIR} && grep -H BLEU *k${NR}.*eval | \
-		tr '.' '/' | cut -f1,5,6 -d '/' | tr '/' "." > $@.1
-	@cd ${WORKDIR} && grep BLEU *k${NR}.*eval | cut -f3 -d ' ' > $@.2
-	@cd ${WORKDIR} && grep chrF *k${NR}.*eval | cut -f3 -d ' ' > $@.3
-	@echo '| testset               | BLEU  | chr-F |' >> ${WORKDIR}/README.md
-	@echo '|-----------------------|-------|-------|' >> ${WORKDIR}/README.md
-	@paste $@.1 $@.2 $@.3 | sed  "s/\t/ 	| /g;s/^/| /;s/$$/ |/" >> ${WORKDIR}/README.md
-	@rm -f $@.1 $@.2 $@.3
+	if [ -e $(TEST_EVALUATION) ]; then \
+	  echo "* test set translations: [$(notdir ${@:.zip=})-${DATE}.test.txt](${MODELS_URL}/${LANGSTR}/$(notdir ${@:.zip=})-${DATE}.test.txt)" >> ${WORKDIR}/README.md; \
+	  echo "* test set scores: [$(notdir ${@:.zip=})-${DATE}.eval.txt](${MODELS_URL}/${LANGSTR}/$(notdir ${@:.zip=})-${DATE}.eval.txt)" >> ${WORKDIR}/README.md; \
+	  echo '' >> ${WORKDIR}/README.md; \
+	  echo '## Benchmarks' >> ${WORKDIR}/README.md; \
+	  echo '' >> ${WORKDIR}/README.md; \
+	  cd ${WORKDIR}; \
+	  grep -H BLEU *k${NR}.*eval | \
+		tr '.' '/' | cut -f1,5,6 -d '/' | tr '/' "." > $@.1; \
+	  grep BLEU *k${NR}.*eval | cut -f3 -d ' ' > $@.2; \
+	  grep chrF *k${NR}.*eval | cut -f3 -d ' ' > $@.3; \
+	  echo '| testset               | BLEU  | chr-F |' >> README.md; \
+	  echo '|-----------------------|-------|-------|' >> README.md; \
+	  paste $@.1 $@.2 $@.3 | sed  "s/\t/ 	| /g;s/^/| /;s/$$/ |/" >> README.md; \
+	  rm -f $@.1 $@.2 $@.3; \
+	fi
 	@cat ${WORKDIR}/README.md >> ${dir $@}README.md
 	@echo '' >> ${dir $@}README.md
 	@cp LICENSE ${WORKDIR}/
@@ -136,8 +143,10 @@ ${DIST_PACKAGE}: ${MODEL_FINAL}
 		source.* target.* decoder.yml preprocess.sh postprocess.sh
 	@mkdir -p ${dir $@}
 	@mv -f ${WORKDIR}/${notdir $@} ${@:.zip=}-${DATE}.zip
-	@cp $(TEST_EVALUATION) ${@:.zip=}-${DATE}.eval.txt
-	@cp $(TEST_COMPARISON) ${@:.zip=}-${DATE}.test.txt
+	if [ -e $(TEST_EVALUATION) ]; then \
+	  cp $(TEST_EVALUATION) ${@:.zip=}-${DATE}.eval.txt; \
+	  cp $(TEST_COMPARISON) ${@:.zip=}-${DATE}.test.txt; \
+	fi
 	@rm -f $@
 	@cd ${dir $@} && ln -s $(notdir ${@:.zip=})-${DATE}.zip ${notdir $@}
 	@rm -f ${WORKDIR}/decoder.yml ${WORKDIR}/source.* ${WORKDIR}/target.*
@@ -157,8 +166,8 @@ EVALTRANSL = ${patsubst ${WORKHOME}/%.compare,${WORKHOME}/eval/%.test.txt,${wild
 #	source project_2000661-openrc.sh
 #
 # - make upload ......... released models = all sub-dirs in models/
-# - make upload-models .. trained models in current WORKHOME
-# - make upload-scores .. score file with benchmark results
+# - make upload-models .. trained models in current WORKHOME to OPUS-MT-dev
+# - make upload-scores .. score file with benchmark results to OPUS-MT-eval
 # - make upload-eval .... benchmark tests from models in WORKHOME
 # - make upload-images .. images of VMs that run OPUS-MT
 
@@ -167,8 +176,8 @@ upload:
 	swift post OPUS-MT-models --read-acl ".r:*"
 
 upload-models:
-	cd ${WORKHOME} && swift upload OPUS-MT --changed --skip-identical models
-	swift post OPUS-MT --read-acl ".r:*"
+	cd ${WORKHOME} && swift upload OPUS-MT-dev --changed --skip-identical models
+	swift post OPUS-MT-dev --read-acl ".r:*"
 
 upload-scores: ${WORKHOME}/eval/scores.txt
 	cd ${WORKHOME} && swift upload OPUS-MT-eval --changed --skip-identical eval/scores.txt
