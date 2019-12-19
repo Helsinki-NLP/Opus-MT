@@ -2,21 +2,29 @@
     "en": {
         "es": {
             "configuration": "./models/en-es/decoder.yml",
-            "bpe": "./models/en-es/source.bpe",
+            "sourcebpe": "./models/en-es/source.bpe",
             "host": "localhost",
             "port": "10001"
         },
         "fi": {
             "configuration": "./models/en-fi/decoder.yml",
-            "bpe": "./models/en-es/source.bpe",
+            "sourcebpe": "./models/en-fi/source.bpe",
             "host": "localhost",
             "port": "10002"
         },
         "ml": {
             "configuration": "./models/en-ml/decoder.yml",
-            "bpe": "./models/en-es/source.bpe",
+            "sourcebpe": "./models/en-ml/source.bpe",
+            "targetbpe": "./models/en-ml/target.bpe",
             "host": "localhost",
             "port": "10003"
+        },
+        "mr": {
+            "configuration": "./models/en-mr/decoder.yml",
+            "sourcespm": "./models/en-mr/source.spm",
+            "targetspm": "./models/en-mr/target.spm",
+            "host": "localhost",
+            "port": "10004"
         }
     }
 }

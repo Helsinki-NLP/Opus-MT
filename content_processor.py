@@ -1,27 +1,37 @@
 
 from apply_bpe import BPE
 from mosestokenizer import MosesSentenceSplitter, MosesPunctuationNormalizer, MosesTokenizer, MosesDetokenizer
-import sentencepiece as spm
+import sentencepiece
 import codecs
 
 
 class ContentProcessor():
     def __init__(self,  srclang,
-            targetlang, bpe=None,spm=None):
-        self.bpe = None
-        self.spm = None
+            targetlang, sourcebpe=None, targetbpe=None,sourcespm=None,targetspm=None):
+        self.bpe_source = None
+        self.bpe_target = None
+        self.sp_processor_source = None
+        self.sp_processor_target = None
         self.sentences=[]
         # load BPE model for pre-processing
-        if bpe:
-            # print("load BPE codes from " + bpe, flush=True)
-            BPEcodes = codecs.open(bpe, encoding='utf-8')
-            self.bpe = BPE(BPEcodes)
+        if sourcebpe:
+            # print("load BPE codes from " + sourcebpe, flush=True)
+            BPEcodes = codecs.open(sourcebpe, encoding='utf-8')
+            self.bpe_source = BPE(BPEcodes)
+        if targetbpe:
+            # print("load BPE codes from " + targetbpe, flush=True)
+            BPEcodes = codecs.open(targetbpe, encoding='utf-8')
+            self.bpe_target = BPE(BPEcodes)
 
         # load SentencePiece model for pre-processing
-        if spm:
-            # print("load sentence piece model from " + spm, flush=True)
-            self.spm = spm.SentencePieceProcessor()
-            self.spm.Load(spm)
+        if sourcespm:
+            # print("load sentence piece model from " + sourcespm, flush=True)
+            self.sp_processor_source = sentencepiece.SentencePieceProcessor()
+            self.sp_processor_source.Load(sourcespm)
+        if targetspm:
+            # print("load sentence piece model from " + targetspm, flush=True)
+            self.sp_processor_target = sentencepiece.SentencePieceProcessor()
+            self.sp_processor_target.Load(targetspm)
 
         # pre- and post-processing tools
         self.tokenizer = None
@@ -31,10 +41,10 @@ class ContentProcessor():
         # print("start pre- and post-processing tools")
         self.sentence_splitter = MosesSentenceSplitter(srclang)
         self.normalizer = MosesPunctuationNormalizer(srclang)
-        if bpe:
+        if self.bpe_source:
             self.tokenizer = MosesTokenizer(srclang)
 
-        if bpe:
+        if self.bpe_source:
             self.detokenizer = MosesDetokenizer(targetlang)
 
     def preprocess(self, srctxt):
@@ -45,10 +55,10 @@ class ContentProcessor():
                 # print('raw sentence: ' + s, flush=True)
                 tokenized = ' '.join(self.tokenizer(s))
                 # print('tokenized sentence: ' + tokenized, flush=True)
-                segmented = self.bpe.process_line(tokenized)
-            elif self.spm:
+                segmented = self.bpe_source.process_line(tokenized)
+            elif self.sp_processor_source:
                 print('raw sentence: ' + s, flush=True)
-                segmented = ' '.join(self.spm.EncodeAsPieces(s))
+                segmented = ' '.join(self.sp_processor_source.EncodeAsPieces(s))
                 # print(segmented, flush=True)
             self.sentences.append(segmented)
         return self.sentences
@@ -60,11 +70,12 @@ class ContentProcessor():
             # print(received, flush=True)
 
             # undo segmentation
-            if self.bpe:
+            if self.bpe_source:
                 translated = received[0].replace('@@ ','')
-            elif self.spm:
+            elif self.sp_processor_target:
+                translated = self.sp_processor_target.DecodePieces(received[0].split(' '))
+            else:
                 translated = received[0].replace(' ','').replace('▁',' ').strip()
-                # translated = sp.DecodePieces(received[0].split(' '))
 
             alignment = ''
             if len(received) == 2:
@@ -79,7 +90,7 @@ class ContentProcessor():
                             fixedLinks.append('-'.join(ids))
                 alignment = ' '.join(fixedLinks)
 
-            if self.bpe:
+            if self.detokenizer:
                 detokenized = self.detokenizer(translated.split())
             else:
                 detokenized = translated

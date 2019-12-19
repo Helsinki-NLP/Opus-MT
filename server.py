@@ -19,8 +19,10 @@ class TranslatorWorker():
         self.contentprocessor=ContentProcessor(
             srclang,
             targetlang,
-            bpe=self.service.get('bpe'),
-            spm=self.service.get('spm')
+            sourcebpe=self.service.get('sourcebpe'),
+            targetbpe=self.service.get('targetbpe'),
+            sourcespm=self.service.get('sourcespm'),
+            targetspm=self.service.get('targetspm')
         )
         self.ws_url = "ws://{}:{}/translate".format(
             self.service['host'], self.service['port'])
