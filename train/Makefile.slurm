@@ -74,7 +74,7 @@ ifeq (${shell hostname --domain},bullx)
 	echo '#SBATCH --gres=nvme:${HPC_DISK}' >> $@
 #	echo '#SBATCH --exclude=r05c49' >> $@
 #	echo '#SBATCH --exclude=r07c51' >> $@
-	echo '#SBATCH --exclude=r06c50' >> $@
+#	echo '#SBATCH --exclude=r06c50' >> $@
 endif
 	echo '#SBATCH -n ${HPC_CORES}' >> $@
 	echo '#SBATCH -N ${HPC_NODES}' >> $@
