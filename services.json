@@ -8,14 +8,15 @@
         },
         "fi": {
             "configuration": "./models/en-fi/decoder.yml",
-            "sourcebpe": "./models/en-fi/source.bpe",
+            "sourcespm": "./models/en-fi/source.spm",
+            "targetspm": "./models/en-fi/target.spm",
             "host": "localhost",
             "port": "10002"
         },
         "ml": {
             "configuration": "./models/en-ml/decoder.yml",
-            "sourcebpe": "./models/en-ml/source.bpe",
-            "targetbpe": "./models/en-ml/target.bpe",
+            "sourcespm": "./models/en-ml/source.spm",
+            "targetspm": "./models/en-ml/target.spm",
             "host": "localhost",
             "port": "10003"
         },

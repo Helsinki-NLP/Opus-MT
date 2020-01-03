@@ -2,8 +2,6 @@
 from apply_bpe import BPE
 from mosestokenizer import MosesSentenceSplitter, MosesPunctuationNormalizer, MosesTokenizer, MosesDetokenizer
 import sentencepiece
-import codecs
-
 
 class ContentProcessor():
     def __init__(self,  srclang,
@@ -16,11 +14,11 @@ class ContentProcessor():
         # load BPE model for pre-processing
         if sourcebpe:
             # print("load BPE codes from " + sourcebpe, flush=True)
-            BPEcodes = codecs.open(sourcebpe, encoding='utf-8')
+            BPEcodes = open(sourcebpe, 'r', encoding="utf-8")
             self.bpe_source = BPE(BPEcodes)
         if targetbpe:
             # print("load BPE codes from " + targetbpe, flush=True)
-            BPEcodes = codecs.open(targetbpe, encoding='utf-8')
+            BPEcodes = open(targetbpe, 'r', encoding="utf-8")
             self.bpe_target = BPE(BPEcodes)
 
         # load SentencePiece model for pre-processing
