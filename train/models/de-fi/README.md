@@ -27,7 +27,25 @@
 
 | testset               | BLEU  | chr-F |
 |-----------------------|-------|-------|
-| goethe.de.fi 	| 39.26	|	|
+| goethe.de.fi 	        | 39.26	|	|
+
+
+# goethe-2020-01-07.zip
+
+* dataset: opus+goethe
+* model: transformer
+* pre-processing: normalization + tokenization + BPE
+* download: [goethe-2019-11-15.zip](https://object.pouta.csc.fi/OPUS-MT-models/de-fi/goethe-2020-01-07.zip)
+* info: trained on OPUS and fine-tuned for 3 epochs on data from the Goethe Institute without duplicates
+
+## Benchmarks
+
+| testset               | BLEU  | chr-F |
+|-----------------------|-------|-------|
+| goethe.de.fi 	        | 38.57	|	|
+
+
+
 # opus-2020-01-08.zip
 
 * dataset: opus

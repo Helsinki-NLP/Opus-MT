@@ -205,8 +205,10 @@ allopus2pivot:
 allopus:
 	for s in ${OPUSLANGS}; do \
 	  for t in ${OPUSLANGS}; do \
-	    echo "${MAKE} WALLTIME=72 SRCLANGS="$$s" SRCLANGS="$$t" bilingual-dynamic"; \
-	    ${MAKE} WALLTIME=72 SRCLANGS="$$s" TRGLANGS="$$t" bilingual-dynamic; \
+	    if [ ! -e "${WORKHOME}/$$s-$$t/train.submit" ]; then \
+	      echo "${MAKE} WALLTIME=72 SRCLANGS=\"$$s\" SRCLANGS=\"$$t\" bilingual-dynamic"; \
+	      ${MAKE} WALLTIME=72 SRCLANGS="$$s" TRGLANGS="$$t" bilingual-dynamic; \
+	    fi \
 	  done \
 	done
 
