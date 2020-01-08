@@ -110,17 +110,21 @@ bilingual-dynamic:
 	  if [ `zcat ${WORKHOME}/${LANGSTR}/train/*.src.clean.${PRE_SRC}.gz | wc -l` -gt 10000000 ]; then \
 	    echo "${LANGSTR} bigger than 10 million"; \
 	    ${MAKE} HPC_CORES=1 HPC_MEM=8g train.submit-multigpu; \
-	    ${MAKE} reverse-data-spm; \
-	    ${MAKE} TRGLANGS="${SRCLANGS}" SRCLANGS='${TRGLANGS}' HPC_CORES=1 HPC_MEM=8g train.submit-multigpu; \
+	    if [ "${SRCLANGS}" != "${TRGLANGS}" ]; then \
+	      ${MAKE} reverse-data-spm; \
+	      ${MAKE} TRGLANGS="${SRCLANGS}" SRCLANGS='${TRGLANGS}' HPC_CORES=1 HPC_MEM=8g train.submit-multigpu; \
+	    fi; \
 	  elif [ `zcat ${WORKHOME}/${LANGSTR}/train/*.src.clean.${PRE_SRC}.gz | wc -l` -gt 1000000 ]; then \
 	    echo "${LANGSTR} bigger than 1 million"; \
 	    ${MAKE} \
 	    	MARIAN_VALID_FREQ=2500 \
 	    	HPC_CORES=1 HPC_MEM=4g train.submit; \
-	    ${MAKE} reverse-data-spm; \
-	    ${MAKE} TRGLANGS="${SRCLANGS}" SRCLANGS='${TRGLANGS}' \
+	    if [ "${SRCLANGS}" != "${TRGLANGS}" ]; then \
+	      ${MAKE} reverse-data-spm; \
+	      ${MAKE} TRGLANGS="${SRCLANGS}" SRCLANGS='${TRGLANGS}' \
 	    	MARIAN_VALID_FREQ=2500 \
 	    	HPC_CORES=1 HPC_MEM=4g train.submit; \
+	    fi; \
 	  elif [ `zcat ${WORKHOME}/${LANGSTR}/train/*.src.clean.${PRE_SRC}.gz | wc -l` -gt 100000 ]; then \
 	    echo "${LANGSTR} bigger than 100k"; \
 	    ${MAKE} \
@@ -129,13 +133,15 @@ bilingual-dynamic:
 	    	MARIAN_VALID_MINI_BATCH=8 \
 	    	MARIAN_EARLY_STOPPING=5 \
 	    	HPC_CORES=1 HPC_MEM=4g train.submit; \
-	    ${MAKE} reverse-data-spm; \
-	    ${MAKE} TRGLANGS="${SRCLANGS}" SRCLANGS='${TRGLANGS}' \
+	    if [ "${SRCLANGS}" != "${TRGLANGS}" ]; then \
+	      ${MAKE} reverse-data-spm; \
+	      ${MAKE} TRGLANGS="${SRCLANGS}" SRCLANGS='${TRGLANGS}' \
 	    	MARIAN_VALID_FREQ=1000 \
 	    	MARIAN_WORKSPACE=5000 \
 	    	MARIAN_VALID_MINI_BATCH=8 \
 	    	MARIAN_EARLY_STOPPING=5 \
 	    	HPC_CORES=1 HPC_MEM=4g train.submit; \
+	    fi; \
 	  elif [ `zcat ${WORKHOME}/${LANGSTR}/train/*.src.clean.${PRE_SRC}.gz | wc -l` -gt 10000 ]; then \
 	    echo "${LANGSTR} bigger than 10k"; \
 	    ${MAKE} \
@@ -145,14 +151,16 @@ bilingual-dynamic:
 	    	MARIAN_VALID_FREQ=1000 \
 	    	MARIAN_EARLY_STOPPING=5 \
 	    	HPC_CORES=1 HPC_MEM=4g train.submit; \
-	    ${MAKE} reverse-data-spm; \
-	    ${MAKE} TRGLANGS="${SRCLANGS}" SRCLANGS='${TRGLANGS}' \
+	    if [ "${SRCLANGS}" != "${TRGLANGS}" ]; then \
+	      ${MAKE} reverse-data-spm; \
+	      ${MAKE} TRGLANGS="${SRCLANGS}" SRCLANGS='${TRGLANGS}' \
 	    	MARIAN_WORKSPACE=3500 \
 	    	MARIAN_VALID_MINI_BATCH=4 \
 	    	MARIAN_DROPOUT=0.5 \
 	    	MARIAN_VALID_FREQ=1000 \
 	    	MARIAN_EARLY_STOPPING=5 \
 	    	HPC_CORES=1 HPC_MEM=4g train.submit; \
+	    fi; \
 	  else \
 	    echo "${LANGSTR} too small"; \
 	  fi \

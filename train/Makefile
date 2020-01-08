@@ -502,7 +502,7 @@ ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.ensemble.${SRC}.${TRG}: ${TEST_
 			${WORKDIR}/${MODEL}.vocab.yml \
 		${MARIAN_DECODER_FLAGS} > $@.output
 ifeq (${PRE_TRG},spm${TRGBPESIZE:000=}k)
-	sed 's/ //g;s/▁/ /g' < $@.output > $@
+	sed 's/ //g;s/▁/ /g' < $@.output | sed 's/^ *//;s/ *$$//' > $@
 else
 	sed 's/\@\@ //g;s/ \@\@//g;s/ \@\-\@ /-/g' < $@.output |\
 	$(TOKENIZER)/detokenizer.perl -l ${TRG} > $@
@@ -523,7 +523,7 @@ ${WORKDIR}/${TESTSET}.${MODEL}${NR}.${MODELTYPE}.${SRC}.${TRG}: ${TEST_SRC}.${PR
 		-d ${MARIAN_GPUS} \
 		${MARIAN_DECODER_FLAGS} > $@.output
 ifeq (${PRE_TRG},spm${TRGBPESIZE:000=}k)
-	sed 's/ //g;s/▁/ /g' < $@.output > $@
+	sed 's/ //g;s/▁/ /g' < $@.output | sed 's/^ *//;s/ *$$//' > $@
 else
 	sed 's/\@\@ //g;s/ \@\@//g;s/ \@\-\@ /-/g' < $@.output |\
 	$(TOKENIZER)/detokenizer.perl -l ${TRG} > $@
