@@ -624,6 +624,12 @@ endif
 	$(TOKENIZER)/normalize-punctuation.perl |\
 	sed 's/  */ /g;s/^ *//g;s/ *$$//g' > $@
 
+%.norm.gz: %.gz
+	$(LOAD_MOSES) zcat $< |\
+	$(TOKENIZER)/replace-unicode-punctuation.perl |\
+	$(TOKENIZER)/remove-non-printing-char.perl |\
+	$(TOKENIZER)/normalize-punctuation.perl |\
+	sed 's/  */ /g;s/^ *//g;s/ *$$//g' | gzip -c > $@
 
 
 ## increase max number of tokens to 250

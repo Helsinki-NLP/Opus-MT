@@ -150,9 +150,12 @@ resume:
 
 ## testset dir for all test sets in this language pair
 ## and all trokenized test sets that can be found in that directory
-TESTSET_DIR  = ${PWD}/testsets/${SRC}-${TRG}
-TESTSETS     = $(patsubst ${TESTSET_DIR}/%.${SRC}.tok.gz,%,${wildcard ${TESTSET_DIR}/*.${SRC}.tok.gz})
-TESTSETS_PRE = $(patsubst %.gz,%.${PRE}.gz,${sort $(subst .${PRE},,${wildcard ${TESTSET_DIR}/*.${SRC}.gz})})
+TESTSET_HOME    = ${PWD}/testsets
+TESTSET_DIR     = ${TESTSET_HOME}/${SRC}-${TRG}
+# TESTSETS      = $(patsubst ${TESTSET_DIR}/%.${SRC}.tok.gz,%,${wildcard ${TESTSET_DIR}/*.${SRC}.tok.gz})
+TESTSETS        = $(patsubst ${TESTSET_DIR}/%.${SRC}.gz,%,${wildcard ${TESTSET_DIR}/*.${SRC}.gz})
+TESTSETS_PRESRC = $(patsubst %.gz,%.${PRE}.gz,${sort $(subst .${PRE},,${wildcard ${TESTSET_DIR}/*.${SRC}.gz})})
+TESTSETS_PRETRG = $(patsubst %.gz,%.${PRE}.gz,${sort $(subst .${PRE},,${wildcard ${TESTSET_DIR}/*.${TRG}.gz})})
 
 ## eval all available test sets
 eval-testsets:
@@ -162,7 +165,11 @@ eval-testsets:
 	  done \
 	done
 
-%-testsets-langpair: ${TESTSETS_PRE}
+eval-heldout:
+	${MAKE} TESTSET_HOME=${HELDOUT_DIR} eval-testsets
+
+%-testsets-langpair: ${TESTSETS_PRESRC} ${TESTSETS_PRETRG}
+	@echo "testsets: ${TESTSET_DIR}/*.${SRC}.gz"
 	for t in ${TESTSETS}; do \
 	  ${MAKE} TESTSET=$$t ${@:-testsets-langpair=}; \
 	done
