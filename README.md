@@ -5,7 +5,7 @@ Tools and resources for open translation services
 
 * based on MarianNMT
 * trained on OPUS data
-* [pre-trained downloadable translation models](https://github.com/Helsinki-NLP/Opus-MT/tree/master/train/models)
+* [pre-trained downloadable translation models](https://github.com/Helsinki-NLP/Opus-MT-train/tree/master/train/models)
 
 
 This repository includes two setups:
@@ -36,7 +36,7 @@ Using a virtual environment is recommended.
 pip install -r requirements.txt
 ```
 
-Download the translation models from https://github.com/Helsinki-NLP/Opus-MT/tree/master/train/models and place it in models directory.
+Download the translation models from https://github.com/Helsinki-NLP/Opus-MT-train/tree/master/train/models and place it in models directory.
 
 Then edits the services.json to point to that models.
 
@@ -263,14 +263,14 @@ The default location of the configuration file is `/usr/local/share/opusMT/`.
 
 ## Public MT models
 
-We store public models at https://github.com/Helsinki-NLP/Opus-MT/tree/master/train/models
+We store public models at https://github.com/Helsinki-NLP/Opus-MT-train/tree/master/train/models
 They should be all compatible with the OPUS-MT services and you can install them by specifying the language pair. The installation script takes the latest model in that directory. For additional customisation you need to adjust the installation procedures (in the Makefile or elsewhere).
 
-There are also development versions of models, which are often a bit more experimental and of low quality. But there are additional language pairs and they can be downloaded from https://github.com/Helsinki-NLP/Opus-MT/tree/master/train/work-spm/models
+There are also development versions of models, which are often a bit more experimental and of low quality. But there are additional language pairs and they can be downloaded from https://github.com/Helsinki-NLP/Opus-MT-train/tree/master/train/work-spm/models
 
 
 
 ## Train MT models
 
-There is a Makefile for training new models from OPUS data in `Opus-MT/train` but this is heavily customized for the work environment at CSC and the University of Helsinki projects. This will (hopefully) be more generic in the future to be able to run in different environments and setups as well.
+There is a Makefile for training new models from OPUS data in the [Opus-MT-train](https://github.com/Helsinki-NLP/Opus-MT-train) repository but this is heavily customized for the work environment at CSC and the University of Helsinki projects. This will (hopefully) be more generic in the future to be able to run in different environments and setups as well.
 
