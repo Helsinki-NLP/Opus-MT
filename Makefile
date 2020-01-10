@@ -157,14 +157,26 @@ update-model:
 .PHONY: download-model
 download-model: ${NMT_MODEL}
 
+## OLD: this stops at 1000 entries ...:
+#	wget -O model-list.txt ${MODEL_REPO}
+#	wget -O model.zip \
+#		${MODEL_REPO}/`tr "<>" "\n\n" < model-list.txt | \
+#		grep '${SRC_LANGS}-${TRG_LANGS}/${DATASET}' |\
+#		sort | tail -1`
+
+
+test-download:
+	make MODEL_HOME=. fetch-model
+
+fetch-model: ${NMT_MODEL}
+
 ## download the last model for the given language pair and dataset
 ## TODO: check whether at least one exists!
+
 ${NMT_MODEL}:
-	wget -O model-list.txt ${MODEL_REPO}
+	wget -O model-list.txt ${MODEL_REPO}/index.txt
 	wget -O model.zip \
-		${MODEL_REPO}/`tr "<>" "\n\n" < model-list.txt | \
-		grep '${SRC_LANGS}-${TRG_LANGS}/${DATASET}' |\
-		sort | tail -1`
+		${MODEL_REPO}/`grep '^${SRC_LANGS}-${TRG_LANGS}/${DATASET}-.*\.zip' model-list.txt | sort | tail -1`
 	mkdir -p model
 	cd model && unzip ../model.zip
 	mkdir -p ${dir $@}

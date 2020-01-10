@@ -174,10 +174,16 @@ EVALTRANSL = ${patsubst ${WORKHOME}/%.compare,${WORKHOME}/eval/%.test.txt,${wild
 upload:
 	cd models && swift upload OPUS-MT-models --changed --skip-identical *
 	swift post OPUS-MT-models --read-acl ".r:*"
+	swift list OPUS-MT-models > index.txt
+	swift upload OPUS-MT-models index.txt
+	rm -f index.txt
 
 upload-models:
 	cd ${WORKHOME} && swift upload OPUS-MT-dev --changed --skip-identical models
 	swift post OPUS-MT-dev --read-acl ".r:*"
+	swift list OPUS-MT-dev > index.txt
+	swift upload OPUS-MT-dev index.txt
+	rm -f index.txt
 
 upload-scores: ${WORKHOME}/eval/scores.txt
 	cd ${WORKHOME} && swift upload OPUS-MT-eval --changed --skip-identical eval/scores.txt
