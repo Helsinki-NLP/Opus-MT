@@ -289,6 +289,22 @@ There are also development versions of models, which are often a bit more experi
 
 There is a Makefile for training new models from OPUS data in the [Opus-MT-train](https://github.com/Helsinki-NLP/Opus-MT-train) repository but this is heavily customized for the work environment at CSC and the University of Helsinki projects. This will (hopefully) be more generic in the future to be able to run in different environments and setups as well.
 
+
+## To-Do and wish list
+
+* more languages and language pairs
+* better and more multilingual models
+* optimize translation performance
+* add backtranslation data
+* domain-specific models
+* GPU enabled container
+* dockerized fine-tuning
+* document-level models
+* load-balancing and other service optimisations
+* public MT service network
+* feedback loop and personalisation
+
+
 ## Links
 
 * [OPUS-translator](https://github.com/Helsinki-NLP/OPUS-translator): implementation of a simple on-line translation interface
