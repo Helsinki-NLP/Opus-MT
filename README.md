@@ -4,12 +4,12 @@ Tools and resources for open translation services
 
 * based on [Marian-NMT](https://marian-nmt.github.io/)
 * trained on [OPUS](http://opus.nlpl.eu/) data
-* [pre-trained downloadable translation models](https://github.com/Helsinki-NLP/Opus-MT-train/tree/master/models)
+* [pre-trained downloadable translation models](https://github.com/Helsinki-NLP/Opus-MT-train/tree/master/models) ([matrix view](http://opus.nlpl.eu/Opus-MT/))
 
 
 This repository includes two setups:
 
-* Setup 1: a Tornado-based web application providing a web UI and api to work with multiple language pairs
+* Setup 1: a Tornado-based web application providing a web UI and api to work with multiple language pairs (developed by [Santhosh Thottingal](https://github.com/santhoshtr) and his team at the wikimedia foundation)
 * Setup 2: a simple websocket service setup with some experimental API extensions
 
 There are also scripts for training models but those are currently only useful in the computing environment used by the University of Helsinki and CSC as the IT service providor.
