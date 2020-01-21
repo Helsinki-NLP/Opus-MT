@@ -2,8 +2,8 @@
 
 Tools and resources for open translation services
 
-* based on MarianNMT
-* trained on OPUS data
+* based on [Marian-NMT](https://marian-nmt.github.io/)
+* trained on [OPUS](http://opus.nlpl.eu/) data
 * [pre-trained downloadable translation models](https://github.com/Helsinki-NLP/Opus-MT-train/tree/master/models)
 
 
@@ -14,6 +14,22 @@ This repository includes two setups:
 
 There are also scripts for training models but those are currently only useful in the computing environment used by the University of Helsinki and CSC as the IT service providor.
 
+There is no dedicated publication yet about OPUS-MT but, please, cite the following paper if you find the software and the models useful:
+
+```
+@InProceedings{TIEDEMANN12.463,
+  author = {J{\"o}rg Tiedemann},
+  title = {Parallel {D}ata, {T}ools and {I}nterfaces in {OPUS}},
+  booktitle = {Proceedings of the Eight International Conference on Language Resources and Evaluation (LREC'12)},
+  year = {2012},
+  month = {May},
+  date = {23-25},
+  address = {Istanbul, Turkey},
+  editor = {Nicoletta Calzolari (Conference Chair) and Khalid Choukri and Thierry Declerck and Mehmet Ugur Dogan and Bente Maegaard and Joseph Mariani and Jan Odijk and Stelios Piperidis},
+  publisher = {European Language Resources Association (ELRA)},
+  isbn = {978-2-9517408-7-7}
+ }
+ ```
 
 ## Installation of the Tornado-based Web-App
 
@@ -273,3 +289,13 @@ There are also development versions of models, which are often a bit more experi
 
 There is a Makefile for training new models from OPUS data in the [Opus-MT-train](https://github.com/Helsinki-NLP/Opus-MT-train) repository but this is heavily customized for the work environment at CSC and the University of Helsinki projects. This will (hopefully) be more generic in the future to be able to run in different environments and setups as well.
 
+## Links
+
+* [OPUS-translator](https://github.com/Helsinki-NLP/OPUS-translator): implementation of a simple on-line translation interface
+* [fiskmö](https://blogs.helsinki.fi/fiskmo-project/): a project on the devlopment of resources and tools for translating between Finnish and Swedish
+* [fiskmö-trados](https://github.com/Helsinki-NLP/fiskmo-trados): an implementation of an NMT plugin for Trados Studio that can run OPUS-MT models
+
+
+## Acknowledgements
+
+The work is supported by the [FoTran project](https://www.helsinki.fi/en/researchgroups/natural-language-understanding-with-cross-lingual-grounding), funded by the European Research Council (ERC) under the European Union’s Horizon 2020 research and innovation programme (grant agreement No 771113), and the [MeMAD project](https://memad.eu/), funded by the European Union’s Horizon 2020 Research and Innovation Programme under grant agreement No 780069. We are also greatful for the generous computational resources provided by [CSC -- IT Center for Science](https://www.csc.fi/), Finland.
