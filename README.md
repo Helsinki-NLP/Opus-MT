@@ -11,7 +11,7 @@ Tools and resources for open translation services
 
 This repository includes two setups:
 
-* Setup 1: a Tornado-based web application providing a web UI and api to work with multiple language pairs (developed by [Santhosh Thottingal](https://github.com/santhoshtr) and his team at the wikimedia foundation)
+* Setup 1: a [Tornado](https://www.tornadoweb.org)-based web application providing a web UI and api to work with multiple language pairs (developed by [Santhosh Thottingal](https://github.com/santhoshtr) and his team at the wikimedia foundation)
 * Setup 2: a simple websocket service setup with some experimental API extensions
 
 There are also scripts for training models but those are currently only useful in the computing environment used by the University of Helsinki and CSC as the IT service providor.
@@ -290,6 +290,14 @@ There are also development versions of models, which are often a bit more experi
 ## Train MT models
 
 There is a Makefile for training new models from OPUS data in the [Opus-MT-train](https://github.com/Helsinki-NLP/Opus-MT-train) repository but this is heavily customized for the work environment at CSC and the University of Helsinki projects. This will (hopefully) be more generic in the future to be able to run in different environments and setups as well.
+
+
+## Known issues
+
+* Some (older) test results are not reliable as they use software localisation data (namely GNOME system messages) with a large overlap with other localisation data (i.e. Ubuntu system messages) that are included in the training data
+* All current models are trained without filtering, data augmentation (like backfanslation) and domain adaptation and other optimisation procedures
+* Most models are trained with a maximum of 72 training hours on 1 or 4 GPUs; not all of them converged before this time limit
+* Validation and early stopping is based on automatically selected validation data, often from Tatoeba; the validation data is not representative for many applications
 
 
 ## To-Do and wish list
