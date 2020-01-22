@@ -4,6 +4,8 @@ Tools and resources for open translation services
 
 * based on [Marian-NMT](https://marian-nmt.github.io/)
 * trained on [OPUS](http://opus.nlpl.eu/) data
+* mainly [SentencePiece](https://github.com/google/sentencepiece)-based segmentation
+* mostly trained with guided alignment based on [eflomal](https://github.com/robertostling/eflomal) wordalignments 
 * [pre-trained downloadable translation models](https://github.com/Helsinki-NLP/Opus-MT-train/tree/master/models) ([matrix view](http://opus.nlpl.eu/Opus-MT/))
 
 
