@@ -294,8 +294,9 @@ There is a Makefile for training new models from OPUS data in the [Opus-MT-train
 
 ## Known issues
 
+* most automatic evaluations are made on simple and short sentences from the Tatoeba data collection; those scores will be too optimistic when running the models with other more realistic data sets
 * Some (older) test results are not reliable as they use software localisation data (namely GNOME system messages) with a large overlap with other localisation data (i.e. Ubuntu system messages) that are included in the training data
-* All current models are trained without filtering, data augmentation (like backfanslation) and domain adaptation and other optimisation procedures
+* All current models are trained without filtering, data augmentation (like backfanslation) and domain adaptation and other optimisation procedures; there is no quality control besides of the automatic evaluation based on automatically selected test sets; for some language pairs there are at least also benchmark scores from official WMT test sets
 * Most models are trained with a maximum of 72 training hours on 1 or 4 GPUs; not all of them converged before this time limit
 * Validation and early stopping is based on automatically selected validation data, often from Tatoeba; the validation data is not representative for many applications
 
