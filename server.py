@@ -9,14 +9,15 @@ import websocket
 from tornado import web, ioloop, queues, gen, process
 from content_processor import ContentProcessor
 
+
 class TranslatorWorker():
 
-    def __init__(self, srclang,targetlang,service):
+    def __init__(self, srclang, targetlang, service):
         self.q = queues.Queue()
         # Service definition
         self.service = service
         self.p = None
-        self.contentprocessor=ContentProcessor(
+        self.contentprocessor = ContentProcessor(
             srclang,
             targetlang,
             sourcebpe=self.service.get('sourcebpe'),
@@ -44,25 +45,38 @@ class TranslatorWorker():
 
     def translate(self, srctxt):
         ws = websocket.create_connection(self.ws_url)
-        sentences= self.contentprocessor.preprocess(srctxt)
-        translatedSentences=[]
+        sentences = self.contentprocessor.preprocess(srctxt)
+        translatedSentences = []
         for sentence in sentences:
             ws.send(sentence)
-            translatedSentences.append( ws.recv() )
+            translatedSentences.append(ws.recv())
         ws.close()
-        translation=self.contentprocessor.postprocess(translatedSentences)
+        translation = self.contentprocessor.postprocess(translatedSentences)
         return ' '.join(translation)
 
 
 class ApiHandler(web.RequestHandler):
-    def initialize(self, worker_pool):
+    def initialize(self, api, config, worker_pool):
         self.worker_pool = worker_pool
+        self.config = config
+        self.api = api
         self.worker = None
         self.args = {}
 
     def prepare_args(self):
         if self.request.headers['Content-Type'] == 'application/json':
             self.args = json.loads(self.request.body)
+
+    def get(self):
+        if self.api == 'languages':
+            languages = {}
+            for source_lang in self.config:
+                languages[source_lang] = []
+                targetLangs = self.config[source_lang]
+                for target_lang in targetLangs:
+                    languages[source_lang].append(target_lang)
+
+            return self.write(dict(languages=languages))
 
     def post(self):
         self.prepare_args()
@@ -78,20 +92,10 @@ class ApiHandler(web.RequestHandler):
 
 class MainHandler(web.RequestHandler):
     def initialize(self, config):
-        self.source_langs = []
-        self.target_langs = []
-        for source_lang in config:
-            targetLangs = config[source_lang]
-            for target_lang in targetLangs:
-                self.source_langs.append(source_lang)
-                self.target_langs.append(target_lang)
-        # Remove duplicates
-        self.source_langs = list(set(self.source_langs))
-        self.target_langs = list(set(self.target_langs))
+        self.config = config
 
     def get(self):
-        self.render("index.template.html",
-                    title="Opus MT", source_langs=self.source_langs, target_langs=self.target_langs)
+        self.render("index.template.html", title="Opus MT")
 
 
 def initialize_workers(config):
@@ -101,7 +105,8 @@ def initialize_workers(config):
         for target_lang in targetLangs:
             lang_pair = "{}-{}".format(source_lang, target_lang)
             decoder_config = targetLangs[target_lang]
-            worker_pool[lang_pair] = TranslatorWorker(source_lang, target_lang,decoder_config)
+            worker_pool[lang_pair] = TranslatorWorker(
+                source_lang, target_lang, decoder_config)
 
     return worker_pool
 
@@ -119,7 +124,10 @@ def make_app(args):
     worker_pool = initialize_workers(services)
     handlers = [
         (r"/", MainHandler, dict(config=services)),
-        (r"/api", ApiHandler, dict(worker_pool=worker_pool))
+        (r"/api/translate", ApiHandler,
+         dict(api='translate', config=services, worker_pool=worker_pool)),
+        (r"/api/languages", ApiHandler,
+         dict(api='languages', config=services, worker_pool=worker_pool))
     ]
     application = web.Application(handlers, debug=False, **settings)
     return application
