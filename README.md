@@ -7,11 +7,12 @@ Tools and resources for open translation services
 * mainly [SentencePiece](https://github.com/google/sentencepiece)-based segmentation
 * mostly trained with guided alignment based on [eflomal](https://github.com/robertostling/eflomal) wordalignments 
 * [pre-trained downloadable translation models](https://github.com/Helsinki-NLP/Opus-MT-train/tree/master/models) ([matrix view](http://opus.nlpl.eu/Opus-MT/))
+* demo translation interface available from https://opusmt.wmflabs.org/
 
 
 This repository includes two setups:
 
-* Setup 1: a [Tornado](https://www.tornadoweb.org)-based web application providing a web UI and api to work with multiple language pairs (developed by [Santhosh Thottingal](https://github.com/santhoshtr) and his team at the wikimedia foundation)
+* Setup 1: a [Tornado](https://www.tornadoweb.org)-based web application providing a web UI and api to work with multiple language pairs (developed by [Santhosh Thottingal](https://github.com/santhoshtr) and his team at the wikimedia foundation); en example instance is available here: https://opusmt.wmflabs.org/
 * Setup 2: a simple websocket service setup with some experimental API extensions
 
 There are also scripts for training models but those are currently only useful in the computing environment used by the University of Helsinki and CSC as the IT service providor.
