@@ -46,10 +46,8 @@ class TranslatorWorker():
     def translate(self, srctxt):
         ws = websocket.create_connection(self.ws_url)
         sentences = self.contentprocessor.preprocess(srctxt)
-        translatedSentences = []
-        for sentence in sentences:
-            ws.send(sentence)
-            translatedSentences.append(ws.recv())
+        ws.send('\n'.join(sentences))
+        translatedSentences= ws.recv().split('\n')
         ws.close()
         translation = self.contentprocessor.postprocess(translatedSentences)
         return ' '.join(translation)
