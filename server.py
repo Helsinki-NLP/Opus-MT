@@ -35,8 +35,16 @@ class TranslatorWorker():
         process.Subprocess.initialize()
         self.p = process.Subprocess(['marian-server', '-c',
                                      self.service['configuration'],
-                                     '--quiet-translation',
-                                     '-p', self.service['port']])
+                                     '-p', self.service['port'],
+                                     '--allow-unk',
+                                     # enables translation with a mini-batch size of 64, i.e. translating 64 sentences at once, with a beam-size of 6.
+                                     '-b', '6',
+                                     '--mini-batch', '64',
+                                     # use a length-normalization weight of 0.6 (this usually increases BLEU a bit).
+                                     '--normalize', '0.6',
+                                     '--maxi-batch-sort', 'src',
+                                     '--maxi-batch', '100',
+                                      ])
         self.p.set_exit_callback(self.on_exit)
         ret = yield self.p.wait_for_exit()
 
@@ -46,10 +54,8 @@ class TranslatorWorker():
     def translate(self, srctxt):
         ws = websocket.create_connection(self.ws_url)
         sentences = self.contentprocessor.preprocess(srctxt)
-        translatedSentences = []
-        for sentence in sentences:
-            ws.send(sentence)
-            translatedSentences.append(ws.recv())
+        ws.send('\n'.join(sentences))
+        translatedSentences= ws.recv().split('\n')
         ws.close()
         translation = self.contentprocessor.postprocess(translatedSentences)
         return ' '.join(translation)
