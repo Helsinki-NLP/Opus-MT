@@ -9,6 +9,7 @@ RUN set -eux; \
 		ca-certificates git wget gnupg build-essential lsb-release g++ \
 		automake autogen libtool cmake-data cmake unzip \
 		libboost-all-dev libblas-dev libopenblas-dev libz-dev libssl-dev \
+		libprotobuf17 protobuf-compiler libprotobuf-dev \
 		python3-dev python3-pip python3-setuptools python3-websocket;
 
 # Install Intel libraries
@@ -23,12 +24,12 @@ RUN set -eux; \
 
 # Install Marian MT
 RUN set -eux; \
-	git clone https://github.com/marian-nmt/marian-dev marian; \
+	git clone https://github.com/marian-nmt/marian marian; \
 	cd marian; \
-	git checkout 1.8.0; \
+	git checkout 1.9.0; \
 	# Choose CPU or GPU(CUDA) from below lines.
-	# cmake . -DCMAKE_BUILD_TYPE=Release -DCOMPILE_CUDA=on -DUSE_STATIC_LIBS=on; \
-	cmake . -DCMAKE_BUILD_TYPE=Release -DCOMPILE_CPU=on -DCOMPILE_CUDA=off -DUSE_STATIC_LIBS=on; \
+	# cmake . -DCOMPILE_SERVER=on -DUSE_SENTENCEPIECE=on -DCOMPILE_CUDA=on -DUSE_STATIC_LIBS=on; \
+	cmake . -DCOMPILE_SERVER=on -DUSE_SENTENCEPIECE=on -DCOMPILE_CPU=on -DCOMPILE_CUDA=off -DUSE_STATIC_LIBS=on; \
 	make -j 2 install;
 
 COPY . .
