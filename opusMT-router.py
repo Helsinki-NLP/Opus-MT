@@ -50,8 +50,10 @@ for h in opusMT_servers:
         model = opusMT_servers[h]["model"]
     for s in srclangs:
         for t in trglangs:
-            print(" - serving " + s + t + '-' + model)
-            opusMT[s+'-'+t+'-'+model] = h
+            key = s+'-'+t+'-'+model
+            if (not key in opusMT) or (len(srclangs) == 1 and len(trglangs) == 1):
+                print(" - serving " + s + t + '-' + model)
+                opusMT[key] = h
 
 
 
