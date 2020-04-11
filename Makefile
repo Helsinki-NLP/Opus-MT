@@ -176,7 +176,7 @@ fetch-model: ${NMT_MODEL}
 ${NMT_MODEL}:
 	wget -O model-list.txt ${MODEL_REPO}/index.txt
 	wget -O model.zip \
-		${MODEL_REPO}/`grep '^${SRC_LANGS}-${TRG_LANGS}/${DATASET}-.*\.zip' model-list.txt | sort | tail -1`
+		${MODEL_REPO}/`grep '^${SRC_LANGS}-${TRG_LANGS}/${DATASET}\(-\|\+bt\).*\.zip' model-list.txt | sort | tail -1`
 	mkdir -p model
 	cd model && unzip ../model.zip
 	mkdir -p ${dir $@}
