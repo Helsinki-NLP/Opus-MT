@@ -116,6 +116,16 @@ romance-server:
 	${MAKE} SRC_LANGS="ca+es+fr+ga+it+la+oc+pt_br+pt" TRG_LANGS="ca+es+fr+ga+it+la+oc+pt_br+pt" \
 		MARIAN_PORT=11005 OPUSMT_PORT=21005 opusMT-server
 
+celtic-english-server:
+	${MAKE} SRC_LANGS="ga+cy+br+gd+kw+gv" TRG_LANGS="en" \
+		DATASET=opus+techiaith \
+		MARIAN_PORT=11050 OPUSMT_PORT=21050 opusMT-server
+
+english-celtic-server:
+	${MAKE} TRG_LANGS="ga+cy+br+gd+kw+gv" SRC_LANGS="en" \
+		DATASET=opus+techiaith \
+		MARIAN_PORT=11051 OPUSMT_PORT=21051 opusMT-server
+
 
 
 french-etfi-server:
