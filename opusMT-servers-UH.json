@@ -41,8 +41,8 @@
     	"target-languages" : "en"
     },
     "192.168.1.21:21051" : {
-	"source-languages" : "en"
-    	"target-languages" : "ga+cy+br+gd+kw+gv",
+	"source-languages" : "en",
+    	"target-languages" : "ga+cy+br+gd+kw+gv"
     },
     "192.168.1.22:21004" : {
     	"source-languages" : "de+af+fy+nl",
