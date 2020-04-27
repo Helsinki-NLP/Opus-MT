@@ -145,6 +145,14 @@ english-celtic-update: update-model-english-celtic
 # 		DATASET=opus+techiaith \
 # 		MARIAN_PORT=11051 OPUSMT_PORT=21051 opusMT-server
 
+sami-server: opusMT-server-sami
+%-sami:
+	${MAKE} SRC_LANGS="se+sma+smj+smn+sms+vep+et+fi+kv+krl+nb+no+nn+ru+sv+en" \
+		TRG_LANGS="se+sma+smj+smn+sms+vep+et+fi+kv+krl+nb+no+nn+ru+sv+en" \
+		DATASET=opus+giella \
+		MARIAN_PORT=12000 OPUSMT_PORT=22000 ${@:-sami=}
+
+# se+sma+smj+smn+sms-fi+nb+no+nn+ru+sv+en
 
 
 french-etfi-server:
