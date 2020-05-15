@@ -117,6 +117,43 @@ romance-server:
 		MARIAN_PORT=11005 OPUSMT_PORT=21005 opusMT-server
 
 
+celtic-english-server: opusMT-server-celtic-english
+english-celtic-server: opusMT-server-english-celtic
+celtic-english-update: update-model-celtic-english
+english-celtic-update: update-model-english-celtic
+
+
+
+%-celtic-english:
+	${MAKE} SRC_LANGS="ga+cy+br+gd+kw+gv" TRG_LANGS="en" \
+		DATASET=opus+techiaith \
+		MARIAN_PORT=11050 OPUSMT_PORT=21050 ${@:-celtic-english=}
+
+%-english-celtic:
+	${MAKE} TRG_LANGS="ga+cy+br+gd+kw+gv" SRC_LANGS="en" \
+		DATASET=opus+techiaith \
+		MARIAN_PORT=11051 OPUSMT_PORT=21051 ${@:-english-celtic=}
+
+
+# celtic-english-server:
+# 	${MAKE} SRC_LANGS="ga+cy+br+gd+kw+gv" TRG_LANGS="en" \
+# 		DATASET=opus+techiaith \
+# 		MARIAN_PORT=11050 OPUSMT_PORT=21050 opusMT-server
+
+# english-celtic-server:
+# 	${MAKE} TRG_LANGS="ga+cy+br+gd+kw+gv" SRC_LANGS="en" \
+# 		DATASET=opus+techiaith \
+# 		MARIAN_PORT=11051 OPUSMT_PORT=21051 opusMT-server
+
+sami-server: opusMT-server-sami
+%-sami:
+	${MAKE} SRC_LANGS="se+sma+smj+smn+sms+vep+et+fi+kv+krl+nb+no+nn+ru+sv+en" \
+		TRG_LANGS="se+sma+smj+smn+sms+vep+et+fi+kv+krl+nb+no+nn+ru+sv+en" \
+		DATASET=opus+giella \
+		MARIAN_PORT=12000 OPUSMT_PORT=22000 ${@:-sami=}
+
+# se+sma+smj+smn+sms-fi+nb+no+nn+ru+sv+en
+
 
 french-etfi-server:
 	${MAKE} SRC_LANGS="fr" TRG_LANGS="et+fi" MARIAN_PORT=11100 OPUSMT_PORT=21100 opusMT-server
@@ -142,9 +179,9 @@ install-opusMT-router: /etc/init.d/opusMT
 
 .PHONY: update-model
 update-model:
-	mv ${OPUSMT_CACHE} ${OPUSMT_CACHE}.${shell date +%F}
-	mv ${NMT_MODEL} ${NMT_MODEL}.${shell date +%F}
-	mv ${NMT_VOCAB} ${NMT_VOCAB}.${shell date +%F}
+	-mv ${OPUSMT_CACHE} ${OPUSMT_CACHE}.${shell date +%F}
+	-mv ${NMT_MODEL} ${NMT_MODEL}.${shell date +%F}
+	-mv ${NMT_VOCAB} ${NMT_VOCAB}.${shell date +%F}
 	if [ -e ${BPEMODEL} ]; then \
 	  mv ${BPEMODEL} ${BPEMODEL}.${shell date +%F}; \
 	elif [ -e ${SPMMODEL} ]; then \
@@ -172,11 +209,14 @@ fetch-model: ${NMT_MODEL}
 
 ## download the last model for the given language pair and dataset
 ## TODO: check whether at least one exists!
+## TODO: this always prefers +bt models even if they are not the last one
+
+MODEL_PATTERN = ${DATASET}\(-\|\+bt\).*\.zip
 
 ${NMT_MODEL}:
 	wget -O model-list.txt ${MODEL_REPO}/index.txt
 	wget -O model.zip \
-		${MODEL_REPO}/`grep '^${SRC_LANGS}-${TRG_LANGS}/${DATASET}-.*\.zip' model-list.txt | sort | tail -1`
+		${MODEL_REPO}/`grep '^${SRC_LANGS}-${TRG_LANGS}/${MODEL_PATTERN}' model-list.txt | sort | tail -1`
 	mkdir -p model
 	cd model && unzip ../model.zip
 	mkdir -p ${dir $@}

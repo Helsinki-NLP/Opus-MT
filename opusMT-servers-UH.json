@@ -11,7 +11,7 @@
 	"source-languages" : "fi",
 	"target-languages" : "de"
     },
-    "192.168.1.19:20000" : {
+    "192.168.1.19:20006" : {
 	"model" : "goethe",
 	"source-languages" : "de",
 	"target-languages" : "fi"
@@ -36,6 +36,18 @@
 	"source-languages" : "et+fi",
 	"target-languages" : "fr"
     },
+    "192.168.1.21:21050" : {
+    	"source-languages" : "ga+cy+br+gd+kw+gv",
+    	"target-languages" : "en"
+    },
+    "192.168.1.21:21051" : {
+	"source-languages" : "en",
+    	"target-languages" : "ga+cy+br+gd+kw+gv"
+    },
+    "192.168.1.21:22000" : {
+	"source-languages" : "se+sma+smj+smn+sms+vep+et+fi+kv+krl+nb+no+nn+ru+sv+en",
+    	"target-languages" : "se+sma+smj+smn+sms+vep+et+fi+kv+krl+nb+no+nn+ru+sv+en"
+    },    
     "192.168.1.22:21004" : {
     	"source-languages" : "de+af+fy+nl",
     	"target-languages" : "de+af+fy+nl"
