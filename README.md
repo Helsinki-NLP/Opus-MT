@@ -20,17 +20,12 @@ There are also [scripts for training models](https://github.com/Helsinki-NLP/Opu
 There is no dedicated publication yet about OPUS-MT but, please, cite the following paper if you find the software and the models useful:
 
 ```
-@InProceedings{TIEDEMANN12.463,
-  author = {J{\"o}rg Tiedemann},
-  title = {Parallel {D}ata, {T}ools and {I}nterfaces in {OPUS}},
-  booktitle = {Proceedings of the Eight International Conference on Language Resources and Evaluation (LREC'12)},
-  year = {2012},
-  month = {May},
-  date = {23-25},
-  address = {Istanbul, Turkey},
-  editor = {Nicoletta Calzolari (Conference Chair) and Khalid Choukri and Thierry Declerck and Mehmet Ugur Dogan and Bente Maegaard and Joseph Mariani and Jan Odijk and Stelios Piperidis},
-  publisher = {European Language Resources Association (ELRA)},
-  isbn = {978-2-9517408-7-7}
+@InProceedings{TiedemannThottingal:EAMT2020,
+  author = {J{\"o}rg Tiedemann and Santhosh Thottingal},
+  title = {{OPUS-MT} — {B}uilding open translation services for the {W}orld},
+  booktitle = {Proceedings of the 22nd Annual Conferenec of the European Association for Machine Translation (EAMT)},
+  year = {2020},
+  address = {Lisbon, Portugal}
  }
  ```
 
