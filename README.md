@@ -148,11 +148,12 @@ There is a Makefile for training new models from OPUS data in the [Opus-MT-train
 * feedback loop and personalisation
 
 
-## Links
+## Links and related work
 
 * [OPUS-translator](https://github.com/Helsinki-NLP/OPUS-translator): implementation of a simple on-line translation interface
 * [fiskmö](https://blogs.helsinki.fi/fiskmo-project/): a project on the devlopment of resources and tools for translating between Finnish and Swedish
 * [fiskmö-trados](https://github.com/Helsinki-NLP/fiskmo-trados): an implementation of an NMT plugin for Trados Studio that can run OPUS-MT models
+* [pre-trained multilingual models](https://github.com/bzhangGo/zero/tree/master/docs/multilingual_laln_lalt#pretrained-multilingual-models-many-to-many) trained on [OPUS-100](https://github.com/EdinburghNLP/opus-100-corpus) using the [zero](https://github.com/bzhangGo/zero) toolkit
 
 
 ## Acknowledgements
