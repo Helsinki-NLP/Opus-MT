@@ -27,10 +27,8 @@ RUN set -eux; \
 	git clone https://github.com/marian-nmt/marian marian; \
 	cd marian; \
 	git checkout 1.9.0; \
-	# Choose CPU or GPU(CUDA) from below lines.
-	# cmake . -DCOMPILE_SERVER=on -DUSE_SENTENCEPIECE=on -DCOMPILE_CUDA=on -DUSE_STATIC_LIBS=on; \
-	cmake . -DCOMPILE_SERVER=on -DUSE_SENTENCEPIECE=on -DCOMPILE_CPU=on -DCOMPILE_CUDA=off -DUSE_STATIC_LIBS=on; \
-	make -j 2 install;
+	cmake . -DCOMPILE_SERVER=on -DUSE_SENTENCEPIECE=on -DCOMPILE_CPU=on -DCOMPILE_CUDA=off;  \
+	make -j4;
 
 COPY . .
 
