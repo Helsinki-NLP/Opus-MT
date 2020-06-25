@@ -88,6 +88,13 @@ defi-server:
 fide-server:
 	${MAKE} SRC_LANGS=fi TRG_LANGS=de MARIAN_PORT=10005 OPUSMT_PORT=20005 opusMT-server
 
+frfi-server:
+	${MAKE} SRC_LANGS=fr TRG_LANGS=fi MARIAN_PORT=11100 OPUSMT_PORT=21100 opusMT-server
+
+fifr-server:
+	${MAKE} SRC_LANGS=fi TRG_LANGS=fr MARIAN_PORT=11101 OPUSMT_PORT=21101 opusMT-server
+
+
 
 ## special server for the Goethe Institute
 defi-goethe-server:

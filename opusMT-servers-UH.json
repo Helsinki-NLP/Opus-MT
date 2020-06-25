@@ -30,10 +30,10 @@
     },
     "192.168.1.14:21100" : {
 	"source-languages" : "fr",
-	"target-languages" : "et+fi"
+	"target-languages" : "fi"
     },
     "192.168.1.14:21101" : {
-	"source-languages" : "et+fi",
+	"source-languages" : "fi",
 	"target-languages" : "fr"
     },
     "192.168.1.21:21050" : {
