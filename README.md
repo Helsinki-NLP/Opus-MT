@@ -17,7 +17,7 @@ This repository includes two setups:
 
 There are also [scripts for training models](https://github.com/Helsinki-NLP/Opus-MT-train) but those are currently only useful in the computing environment used by the University of Helsinki and CSC as the IT service providor.
 
-There is no dedicated publication yet about OPUS-MT but, please, cite the following paper if you find the software and the models useful:
+Please, cite the following paper if you use OPUS-MT software and models:
 
 ```
 @InProceedings{TiedemannThottingal:EAMT2020,
