@@ -3,9 +3,12 @@
 #
 
 ## model parameters
-DATASET   = opus
-SRC_LANGS = fi
-TRG_LANGS = en
+DATASET   ?= opus
+SRC       ?= fi
+TRG       ?= en
+
+SRC_LANGS ?= ${SRC}
+TRG_LANGS ?= ${TRG}
 
 LANGPAIR = ${SRC_LANGS}-${TRG_LANGS}
 
@@ -44,10 +47,11 @@ OPUSMT_DEV_SERVER = ${BINDIR}/opusMT-server-cached-dev.py
 
 ## server port and marian NMT parameters
 ## (beam size 2 and normalisation 1)
-ROUTER_PORT = 8080
-OPUSMT_PORT = 20000
-MARIAN_PORT = 10000
-MARIAN_PARA = -b2 -n1
+PORT        ?= 10000
+ROUTER_PORT ?= 8080
+OPUSMT_PORT ?= ${PORT}
+MARIAN_PORT ?= ${shell echo $$((${PORT} + 10000))}
+MARIAN_PARA ?= -b2 -n1
 DEFAULT_SOURCE_LANG = ${firstword ${subst +, ,${SRC_LANGS}}}
 DEFAULT_TARGET_LANG = ${lastword ${subst +, ,${TRG_LANGS}}}
 
@@ -60,6 +64,9 @@ INSTALL_DATA = ${INSTALL} -m 644
 
 .PHONY: all
 all: opusMT-server opusMT-router
+
+.PHONY: install
+install: opusMT-server
 
 
 ## install the OPUS-MT server with hard-coded URLs for the services running
@@ -298,9 +305,10 @@ ${NMT_MODEL}:
 	rm -f ${notdir $@}
 #	systemctl daemon-reload
 	service ${notdir $@} restart
-	sleep 10
+	sleep 5
 
 
+remove remove-service: remove-marian-service remove-opusMT-service
 remove-services: remove-marian-service remove-opusMT-service remove-opusMT-router
 
 remove-opusMT-router:
