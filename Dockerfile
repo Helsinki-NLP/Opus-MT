@@ -10,7 +10,8 @@ RUN set -eux; \
 		automake autogen libtool cmake-data cmake unzip \
 		libboost-all-dev libblas-dev libopenblas-dev libz-dev libssl-dev \
 		libprotobuf17 protobuf-compiler libprotobuf-dev \
-		python3-dev python3-pip python3-setuptools python3-websocket;
+		python3-dev python3-pip python3-setuptools python3-websocket\
+		pkg-config;
 
 # Install Intel libraries
 RUN set -eux; \
@@ -23,31 +24,29 @@ RUN set -eux; \
 	rm -f GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB;
 
 # Install Marian MT
+# COMPILE_CPU and COMPILE_CUDA control CPU and GPU, respectively.
 RUN set -eux; \
 	git clone https://github.com/marian-nmt/marian marian; \
 	cd marian; \
 	git checkout 1.9.0; \
-	# Choose CPU or GPU(CUDA) from below lines.
-	# cmake . -DCOMPILE_SERVER=on -DUSE_SENTENCEPIECE=on -DCOMPILE_CUDA=on -DUSE_STATIC_LIBS=on; \
-	cmake . -DCOMPILE_SERVER=on -DUSE_SENTENCEPIECE=on -DCOMPILE_CPU=on -DCOMPILE_CUDA=off -DUSE_STATIC_LIBS=on; \
-	make -j 2 install;
+	cmake . -DCOMPILE_SERVER=on -DUSE_SENTENCEPIECE=on -DCOMPILE_CPU=on -DCOMPILE_CUDA=off; \
+	make -j4; \
+	install -m 755 marian /usr/local/bin/; \
+	install -m 755 marian-server /usr/local/bin/; \
+	install -m 755 marian-vocab /usr/local/bin/; \
+	install -m 755 marian-decoder /usr/local/bin/; \
+	install -m 755 marian-scorer /usr/local/bin/; \
+	install -m 755 marian-conv /usr/local/bin/; \
+	install -m 644 libmarian.a  /usr/local/lib/;
 
 COPY . .
 
 # Install python requirements.
 
+# First wheel, because the others won't work without it set up.
 RUN set -eux; \
+	pip3 install wheel; \
 	pip3 install -r requirements.txt
-
-# install services
-RUN install -m 755 marian/marian /usr/local/bin/; \
-	install -m 755 marian/marian-server /usr/local/bin/; \
-	install -m 755 marian/marian-server /usr/local/bin/; \
-	install -m 755 marian/marian-vocab /usr/local/bin/; \
-	install -m 755 marian/marian-decoder /usr/local/bin/; \
-	install -m 755 marian/marian-scorer /usr/local/bin/; \
-	install -m 755 marian/marian-conv /usr/local/bin/; \
-	install -m 644 marian/libmarian.a  /usr/local/lib/;
 
 EXPOSE 80
 CMD python3 server.py -c services.json -p 80
