@@ -41,8 +41,6 @@ class ContentProcessor():
         self.normalizer = MosesPunctuationNormalizer(srclang)
         if self.bpe_source:
             self.tokenizer = MosesTokenizer(srclang)
-
-        if self.bpe_source:
             self.detokenizer = MosesDetokenizer(targetlang)
 
     def preprocess(self, srctxt):
@@ -58,6 +56,8 @@ class ContentProcessor():
                 print('raw sentence: ' + s, flush=True)
                 segmented = ' '.join(self.sp_processor_source.EncodeAsPieces(s))
                 # print(segmented, flush=True)
+            else:
+                raise RuntimeError("No tokenization / segmentation method defines, can't preprocess")
             self.sentences.append(segmented)
         return self.sentences
 
