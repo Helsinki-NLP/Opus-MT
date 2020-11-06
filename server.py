@@ -102,8 +102,10 @@ class ApiHandler(web.RequestHandler):
             return
         self.worker = self.worker_pool[lang_pair]
         translation = self.worker.translate(self.args['source'])
-        self.write(dict(translation=translation))
-
+        if config.elg:
+            self.write({"response": {"type": "texts", "texts": [{"content": translation}]}})
+        else:
+            self.write(dict(translation=translation))
 
 class MainHandler(web.RequestHandler):
     def initialize(self, config):
