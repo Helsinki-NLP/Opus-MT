@@ -1,3 +1,8 @@
+
+# NEWS AND ANNOUNCEMENTS
+
+Unfortunately, the data server is still down and the IT service is working on the issue. The pre-trained models are, therefore, not available at the moment. Sorry! Hopefully, everything will be up and running again later this week. Apologies for the inconvenience!
+
 <img src="https://github.com/Helsinki-NLP/Opus-MT/blob/master/img/opus_mt.png" width="250" alt="OPUS-MT"/>
 
 Tools and resources for open translation services
