@@ -1,7 +1,9 @@
 let languages = {}
 const AUTONYMS = {
     as: 'অসমীয়া',
+    bcl: 'Bikol Sentral',
     bn: 'বাংলা',
+    br: 'brezhoneg',
     cy: 'Cymraeg',
     en: 'English',
     es: 'español',
