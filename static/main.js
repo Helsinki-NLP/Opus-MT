@@ -9,9 +9,12 @@ const AUTONYMS = {
     es: 'español',
     fi: 'suomi',
     fr: 'français',
+    mai: 'मैथिली',
     ml: 'മലയാളം',
     mr: 'मराठी',
-    or: 'ଓଡ଼ିଆ'
+    or: 'ଓଡ଼ିଆ',
+    ts: 'Xitsonga',
+    war: 'Winaray'
 }
 function doTranslate() {
     document.getElementById('progress').style.display = "block";
