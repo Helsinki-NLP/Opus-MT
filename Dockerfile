@@ -48,5 +48,9 @@ RUN set -eux; \
 	pip3 install wheel; \
 	pip3 install -r requirements.txt
 
-EXPOSE 80
-CMD python3 server.py -c services.json -p 80
+RUN set -eux; \
+	bash fetch-models.sh; \
+	python3 write_configuration.py > services.json;
+
+EXPOSE 8888
+CMD python3 server.py -c services.json -p 8888 --elg

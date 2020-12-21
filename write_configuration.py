@@ -1,11 +1,10 @@
 import os
-import sys
 import json
 
-rootdir = sys.argv[1]
 configuration = {}
 port = 10001
 host = "localhost"
+rootdir = "models"
 
 for dirname in os.listdir(rootdir):
     try:

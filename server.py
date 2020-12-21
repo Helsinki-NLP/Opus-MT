@@ -86,12 +86,12 @@ class ApiHandler(web.RequestHandler):
 
     def post(self):
         self.prepare_args()
-        if config.elg:
+        if self.config.elg:
             lang_pair = "{}-{}".format(self.args['params']['from'], self.args['params']['to'])
         else:
             lang_pair = "{}-{}".format(self.args['from'], self.args['to'])
         if lang_pair not in self.worker_pool:
-            if config.elg:
+            if self.config.elg:
                 i18n_err_obj = { "code": "elg.request.property.unsupported",
                                  "text": "Language pair {0} not supported",
                                  "params": lang_pair}
@@ -102,7 +102,7 @@ class ApiHandler(web.RequestHandler):
             return
         self.worker = self.worker_pool[lang_pair]
         translation = self.worker.translate(self.args['source'])
-        if config.elg:
+        if self.config.elg:
             self.write({"response": {"type": "texts", "texts": [{"content": translation}]}})
         else:
             self.write(dict(translation=translation))
