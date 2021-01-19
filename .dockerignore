@@ -1,4 +1,3 @@
-ockerfile*
 docker-compose*
 .dockerignore
 .git
