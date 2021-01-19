@@ -86,26 +86,15 @@ class ApiHandler(web.RequestHandler):
 
     def post(self):
         self.prepare_args()
-        if self.config.elg:
-            lang_pair = "{}-{}".format(self.args['params']['from'], self.args['params']['to'])
-        else:
-            lang_pair = "{}-{}".format(self.args['from'], self.args['to'])
+        lang_pair = "{}-{}".format(self.args['from'], self.args['to'])
         if lang_pair not in self.worker_pool:
-            if self.config.elg:
-                i18n_err_obj = { "code": "elg.request.property.unsupported",
-                                 "text": "Language pair {0} not supported",
-                                 "params": lang_pair}
-                self.write({"failure": { "errors": [i18n_err_obj] }})
-            else:
-                self.write(
-                    dict(error="Language pair {} not suppported".format(lang_pair)))
+            self.write(
+                dict(error="Language pair {} not suppported".format(lang_pair)))
             return
         self.worker = self.worker_pool[lang_pair]
         translation = self.worker.translate(self.args['source'])
-        if self.config.elg:
-            self.write({"response": {"type": "texts", "texts": [{"content": translation}]}})
-        else:
-            self.write(dict(translation=translation))
+        self.write(dict(translation=translation))
+
 
 class MainHandler(web.RequestHandler):
     def initialize(self, config):
@@ -157,8 +146,6 @@ if __name__ == "__main__":
                         help='Port the server will listen on')
     parser.add_argument('-c', '--config', type=str, default="services.json",
                         help='MT server configurations')
-    parser.add_argument('--elg', action="store_true",
-                        help='Run as an European Language Grid endpoint')
     args = parser.parse_args()
     application = make_app(args)
     application.listen(args.port)
