@@ -16,6 +16,7 @@ install: ${PREFIX}/bin/marian-server
 
 marian:
 	git clone https://github.com/marian-nmt/marian
+	cd marian && git checkout 1.9.0
 
 marian/build/marian-server: marian
 	sudo ${MAKE} /swapfile
@@ -23,18 +24,20 @@ marian/build/marian-server: marian
 	${MAKE} gperftools
 	mkdir -p ${dir $@}
 	cd ${dir $@} && \
-	cmake .. -DCMAKE_BUILD_TYPE=Release -DCOMPILE_CUDA=off -DUSE_STATIC_LIBS=on
-	${MAKE} -C ${dir $@}
+	cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_STATIC_LIBS=on -DCOMPILE_SERVER=on -DUSE_SENTENCEPIECE=on -DCOMPILE_CPU=on -DCOMPILE_CUDA=off
+	${MAKE} -C ${dir $@} -j4
 
 
 ${PREFIX}/bin/marian-server: marian/build/marian-server
-	sudo ${INSTALL_BIN} marian/build/marian         ${PREFIX}/bin/marian
-	sudo ${INSTALL_BIN} marian/build/marian-server  ${PREFIX}/bin/marian-server
-	sudo ${INSTALL_BIN} marian/build/marian-vocab   ${PREFIX}/bin/marian-vocab
-	sudo ${INSTALL_BIN} marian/build/marian-decoder ${PREFIX}/bin/marian-decoder
-	sudo ${INSTALL_BIN} marian/build/marian-scorer  ${PREFIX}/bin/marian-scorer
-	sudo ${INSTALL_BIN} marian/build/marian-conv    ${PREFIX}/bin/marian-conv
-	sudo ${INSTALL_DATA} marian/build/libmarian.a   ${PREFIX}/lib/libmarian.a
+	sudo ${INSTALL_BIN} $< $@
+
+#	sudo ${INSTALL_BIN} marian/build/marian         ${PREFIX}/bin/marian
+#	sudo ${INSTALL_BIN} marian/build/marian-server  ${PREFIX}/bin/marian-server
+#	sudo ${INSTALL_BIN} marian/build/marian-vocab   ${PREFIX}/bin/marian-vocab
+#	sudo ${INSTALL_BIN} marian/build/marian-decoder ${PREFIX}/bin/marian-decoder
+#	sudo ${INSTALL_BIN} marian/build/marian-scorer  ${PREFIX}/bin/marian-scorer
+#	sudo ${INSTALL_BIN} marian/build/marian-conv    ${PREFIX}/bin/marian-conv
+#	sudo ${INSTALL_DATA} marian/build/libmarian.a   ${PREFIX}/lib/libmarian.a
 
 
 # add libgoogle-perftools-dev instead of compiling from scratch

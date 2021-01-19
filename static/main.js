@@ -1,15 +1,20 @@
 let languages = {}
 const AUTONYMS = {
     as: 'অসমীয়া',
+    bcl: 'Bikol Sentral',
     bn: 'বাংলা',
+    br: 'brezhoneg',
     cy: 'Cymraeg',
     en: 'English',
     es: 'español',
     fi: 'suomi',
     fr: 'français',
+    mai: 'मैथिली',
     ml: 'മലയാളം',
     mr: 'मराठी',
-    or: 'ଓଡ଼ିଆ'
+    or: 'ଓଡ଼ିଆ',
+    ts: 'Xitsonga',
+    war: 'Winaray'
 }
 function doTranslate() {
     document.getElementById('progress').style.display = "block";
