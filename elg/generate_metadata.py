@@ -6,7 +6,7 @@ def append_elements(root, elements):
     for e in elements:
         root.append(copy.deepcopy(e))
 
-write_metadata_record_identifier = False
+write_metadata_record_identifier = True
 
 ms_namespace_uri = "http://w3id.org/meta-share/meta-share/"
 xsi_namespace_uri = "http://www.w3.org/2001/XMLSchema-instance"
@@ -76,7 +76,7 @@ metadata.append(Element("compliesWith", "http://w3id.org/meta-share/meta-share/E
 
 described_entity = etree.SubElement(metadata, "DescribedEntity", nsmap = namespace_map)
 language_resource = etree.SubElement(described_entity, "LanguageResource", nsmap = namespace_map)
-language_resource.append(Element("resourceName", "OPUS-MT: Open neural machine translation", attribs = lang_en))
+language_resource.append(Element("resourceName", "OPUS-MT: Open neural machine translation", attribs = lang_en, nsmap=namespace_map))
 language_resource.append(Element("resourceShortName", "OPUS-MT", attribs = lang_en))
 language_resource.append(Element("description", "Multilingual machine translation using neural networks.", attribs = lang_en))
 language_resource.append(Element("version", "v1.0.0"))
@@ -92,8 +92,8 @@ function = etree.SubElement(tool_service, "function", nsmap = namespace_map)
 function.append(Element("LTClassRecommended", "http://w3id.org/meta-share/omtd-share/MachineTranslation"))
 software_distribution = etree.SubElement(tool_service, "SoftwareDistribution", nsmap = namespace_map)
 software_distribution.append(Element("SoftwareDistributionForm", "http://w3id.org/meta-share/meta-share/dockerImage"))
-software_distribution.append(Element("dockerDownloadLocation", "MISSING"))
-software_distribution.append(Element("executionLocation", "MISSING, Add here the REST endpoint at which the LT tool is exposed within the Docker image."))
+software_distribution.append(Element("dockerDownloadLocation", "https://hub.docker.com/repository/docker/traubert/opus-mt-elg:0.1"))
+software_distribution.append(Element("executionLocation", "http://localhost:8888/translate"))
 
 licence_terms = etree.SubElement(software_distribution, "licenceTerms", nsmap = namespace_map)
 licence_terms.append(Element("licenceTermsName", "MIT License", attribs = lang_en))
@@ -109,16 +109,14 @@ tool_service.append(Element("languageDependent", "true"))
 input_content_resource = etree.SubElement(tool_service, "inputContentResource")
 input_content_resource.append(Element("processingResourceType", "http://w3id.org/meta-share/meta-share/userInputText"))
 input_content_resource.append(make_language("fi", region = "FI"))
-input_content_resource.append(make_language("sv", region = "FI"))
-input_content_resource.append(make_language("sv", region = "SE"))
+input_content_resource.append(make_language("en", region = "GB"))
 input_content_resource.append(Element("mediaType", "http://w3id.org/meta-share/meta-share/text"))
 input_content_resource.append(Element("characterEncoding", "http://w3id.org/meta-share/meta-share/UTF-8"))
 
 output_content_resource = etree.SubElement(tool_service, "outputContentResource")
 output_content_resource.append(Element("processingResourceType", "http://w3id.org/meta-share/meta-share/userOutputText"))
 output_content_resource.append(make_language("fi", region = "FI"))
-output_content_resource.append(make_language("sv", region = "FI"))
-output_content_resource.append(make_language("sv", region = "SE"))
+output_content_resource.append(make_language("en", region = "GB"))
 output_content_resource.append(Element("mediaType", "http://w3id.org/meta-share/meta-share/text"))
 output_content_resource.append(Element("characterEncoding", "http://w3id.org/meta-share/meta-share/UTF-8"))
 
