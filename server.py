@@ -60,6 +60,13 @@ class TranslatorWorker():
         translation = self.contentprocessor.postprocess(translatedSentences)
         return ' '.join(translation)
 
+    def ready(self):
+        try:
+            ws = websocket.create_connection(self.ws_url)
+            ws.close()
+        except ConnectionError:
+            return False
+        return True
 
 class ApiHandler(web.RequestHandler):
     def initialize(self, api, config, worker_pool):
@@ -74,7 +81,12 @@ class ApiHandler(web.RequestHandler):
             self.args = json.loads(self.request.body)
 
     def get(self):
-        if self.api == 'languages':
+        if self.api == 'ready':
+            if all(map(lambda x: x.ready(), self.worker_pool.values())):
+                self.set_status(200)
+            else:
+                self.set_status(500, "Translation server(s) not responding")
+        elif self.api == 'languages':
             languages = {}
             for source_lang in self.config:
                 languages[source_lang] = []
@@ -132,6 +144,8 @@ def make_app(args):
         (r"/", MainHandler, dict(config=services)),
         (r"/api/translate", ApiHandler,
          dict(api='translate', config=services, worker_pool=worker_pool)),
+        (r"/api/ready", ApiHandler,
+         dict(api='ready', config=services, worker_pool=worker_pool)),
         (r"/api/languages", ApiHandler,
          dict(api='languages', config=services, worker_pool=worker_pool))
     ]
