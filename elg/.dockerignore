@@ -1,0 +1,4 @@
+fetch-models.sh
+generate_metadata.py
+*.xml
+
