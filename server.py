@@ -83,7 +83,7 @@ class ApiHandler(web.RequestHandler):
     def get(self):
         if self.api == 'ready':
             if all(map(lambda x: x.ready(), self.worker_pool.values())):
-                self.set_status(200)
+                self.set_status(204)
             else:
                 self.set_status(500, "Translation server(s) not responding")
         elif self.api == 'languages':
