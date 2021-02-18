@@ -105,6 +105,8 @@ language_resource.append(Element(ms("resourceName"), "OPUS-MT: Open neural machi
 language_resource.append(Element(ms("resourceShortName"), "OPUS-MT", attribs = lang_en))
 language_resource.append(Element(ms("description"), "Multilingual machine translation using neural networks.", attribs = lang_en))
 language_resource.append(Element(ms("version"), version))
+intended_application = etree.SubElement(language_resource, ms("intendedApplication"), nsmap=namespace_map)
+intended_application.append(Element(ms("LTClassRecommended"), "http://w3id.org/meta-share/omtd-share/MachineTranslation"))
 additional_info = etree.SubElement(language_resource, ms("additionalInfo"), nsmap = namespace_map)
 additional_info.append(Element(ms("landingPage"), "https://github.com/Helsinki-NLP/Opus-MT"))
 language_resource.append(Element(ms("keyword"), "machine translation", attribs = lang_en))
@@ -119,6 +121,7 @@ software_distribution = etree.SubElement(tool_service, ms("SoftwareDistribution"
 software_distribution.append(Element(ms("SoftwareDistributionForm"), "http://w3id.org/meta-share/meta-share/dockerImage"))
 software_distribution.append(Element(ms("dockerDownloadLocation"), docker_location))
 software_distribution.append(Element(ms("executionLocation"), f"http://localhost:8888/elg/translate/{source_langcode}/{target_langcode}"))
+software_distribution.append(Element(ms("additionalHwRequirements"), "limits_memory: 1536Mi"))
 
 licence_terms = etree.SubElement(software_distribution, ms("licenceTerms"), nsmap = namespace_map)
 licence_terms.append(Element(ms("licenceTermsName"), "MIT License", attribs = lang_en))
@@ -142,7 +145,7 @@ output_content_resource.append(Element(ms("processingResourceType"), "http://w3i
 output_content_resource.append(make_language(target_langcode, region = target_region))
 output_content_resource.append(Element(ms("mediaType"), "http://w3id.org/meta-share/meta-share/text"))
 output_content_resource.append(Element(ms("characterEncoding"), "http://w3id.org/meta-share/meta-share/UTF-8"))
-
+tool_service.append(Element(ms("trl"), "http://w3id.org/meta-share/meta-share/trl5"))
 tool_service.append(Element(ms("evaluated"), "false"))
 
 with open(f"OPUS-MT-{source_langcode}-{target_langcode}.xml", "w") as xml_fobj:
