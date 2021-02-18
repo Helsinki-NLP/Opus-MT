@@ -118,7 +118,7 @@ function.append(Element(ms("LTClassRecommended"), "http://w3id.org/meta-share/om
 software_distribution = etree.SubElement(tool_service, ms("SoftwareDistribution"), nsmap = namespace_map)
 software_distribution.append(Element(ms("SoftwareDistributionForm"), "http://w3id.org/meta-share/meta-share/dockerImage"))
 software_distribution.append(Element(ms("dockerDownloadLocation"), docker_location))
-software_distribution.append(Element(ms("executionLocation"), "http://localhost:8888/elg/translate"))
+software_distribution.append(Element(ms("executionLocation"), f"http://localhost:8888/elg/translate/{source_langcode}/{target_langcode}"))
 
 licence_terms = etree.SubElement(software_distribution, ms("licenceTerms"), nsmap = namespace_map)
 licence_terms.append(Element(ms("licenceTermsName"), "MIT License", attribs = lang_en))
