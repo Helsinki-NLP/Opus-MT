@@ -57,20 +57,20 @@ def Element(name, text = None, **kwargs):
     return retval
 
 def make_language(_id, **kwargs):
-    language = Element("language")
+    language = Element(ms("language"))
     subtags = []
     if 'script' in kwargs:
         subtags.append(kwargs['script'])
-        language.append(Element("scriptId", kwargs['script']))
+        language.append(Element(ms("scriptId"), kwargs['script']))
     if 'region' in kwargs and kwargs['region']:
         subtags.append(kwargs['region'])
-        language.append(Element("regionId", kwargs['region']))
+        language.append(Element(ms("regionId"), kwargs['region']))
     if 'variant' in kwargs:
         subtags.append(kwargs['variant'])
-        language.append(Element("variantId", kwargs['variant']))
+        language.append(Element(ms("variantId"), kwargs['variant']))
     tag = '-'.join([_id] + subtags)
-    language.append(Element("languageId", _id))
-    language.append(Element("languageTag", tag))
+    language.append(Element(ms("languageId"), _id))
+    language.append(Element(ms("languageTag"), tag))
     return language
 
 metadata = etree.Element(ms("MetadataRecord"),
