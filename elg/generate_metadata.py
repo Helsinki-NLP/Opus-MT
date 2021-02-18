@@ -143,7 +143,7 @@ output_content_resource.append(make_language(target_langcode, region = target_re
 output_content_resource.append(Element(ms("mediaType"), "http://w3id.org/meta-share/meta-share/text"))
 output_content_resource.append(Element(ms("characterEncoding"), "http://w3id.org/meta-share/meta-share/UTF-8"))
 
-tool_service.append(Element("evaluated", "false"))
+tool_service.append(Element(ms("evaluated"), "false"))
 
 with open(f"OPUS-MT-{source_langcode}-{target_langcode}.xml", "w") as xml_fobj:
     xml_fobj.write(str(etree.tostring(metadata, xml_declaration = True, encoding = 'utf-8', pretty_print = True), encoding = "utf-8"))
