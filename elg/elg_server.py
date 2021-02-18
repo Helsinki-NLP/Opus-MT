@@ -6,6 +6,7 @@ from server import ApiHandler, TranslatorWorker, initialize_workers, settings
 
 class ElgApiHandler(ApiHandler):
 
+    
     def post(self, src_lang, target_lang):
         self.prepare_args()
         lang_pair = "{}-{}".format(src_lang, target_lang)
@@ -19,7 +20,11 @@ class ElgApiHandler(ApiHandler):
         # TODO there should be better error handling here, to catch any
         # exceptions raised by the worker and render them as a proper i18n
         # error response with a 500 HTTP response code
-        translation = self.worker.translate(self.args['content'])
+        
+        def translate_nonempty_line(line):
+            return self.worker.translate(line) if line.strip() else line
+        
+        translation = '\n'.join(map(translate_nonempty_line, self.args['content'].splitlines()))
         self.write({"response": {"type": "texts", "texts": [{"content": translation}]}})
         
     def get(self):
