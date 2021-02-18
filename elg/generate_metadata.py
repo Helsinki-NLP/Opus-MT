@@ -146,7 +146,7 @@ output_content_resource.append(Element(ms("characterEncoding"), "http://w3id.org
 tool_service.append(Element(ms("evaluated"), "false"))
 
 with open(f"OPUS-MT-{source_langcode}-{target_langcode}.xml", "w") as xml_fobj:
-    xml_fobj.write(str(etree.tostring(metadata, xml_declaration = True, doctype='<?xml version="1.0" encoding="UTF-8"?>', encoding = 'utf-8', pretty_print = True), encoding = "utf-8"))
+    xml_fobj.write(str(etree.tostring(metadata, xml_declaration = False, doctype='<?xml version="1.0" encoding="UTF-8"?>', encoding = 'utf-8', pretty_print = True), encoding = "utf-8"))
 
 if not os.path.exists("models.txt"):
     with open("models.txt", "w") as models_fobj:
