@@ -33,4 +33,4 @@ while read line; do
     rm "$(basename $line)"
 done < models.txt
 IMAGE_NAME=$(< image-name.txt)
-sudo docker build . -t "$IMAGE_NAME"
+sudo docker build . -t helsinkinlp/"$IMAGE_NAME"
