@@ -1,4 +1,4 @@
-fetch-models.sh
+*.sh
+*.md
 generate_metadata.py
 *.xml
-
