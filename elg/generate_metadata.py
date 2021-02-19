@@ -3,6 +3,7 @@ import copy
 from lxml import etree
 import argparse
 import os
+import iso639
 
 argparser = argparse.ArgumentParser('Write ELG metadata and configuration information to local directory')
 argparser.add_argument('--source-lang', action="store", required=True)
@@ -24,6 +25,8 @@ source_langcode = args.source_lang
 source_region = args.source_region
 target_langcode = args.target_lang
 target_region = args.target_region
+source_langname = iso639.to_name(source_langcode)
+target_langname = iso639.to_name(target_langcode)
 
 def append_elements(root, elements):
     for e in elements:
@@ -101,8 +104,8 @@ metadata.append(Element(ms("compliesWith"), "http://w3id.org/meta-share/meta-sha
 
 described_entity = etree.SubElement(metadata, ms("DescribedEntity"), nsmap = namespace_map)
 language_resource = etree.SubElement(described_entity, ms("LanguageResource"), nsmap = namespace_map)
-language_resource.append(Element(ms("resourceName"), "OPUS-MT: Open neural machine translation", attribs = lang_en, nsmap=namespace_map))
-language_resource.append(Element(ms("resourceShortName"), "OPUS-MT", attribs = lang_en))
+language_resource.append(Element(ms("resourceName"), f"OPUS-MT: {source_langname}-{target_langname} machine translation", attribs = lang_en, nsmap=namespace_map))
+language_resource.append(Element(ms("resourceShortName"), f"OPUS-MT {source_langcode}-{target_langcode}", attribs = lang_en))
 language_resource.append(Element(ms("description"), "Multilingual machine translation using neural networks.", attribs = lang_en))
 language_resource.append(Element(ms("version"), version))
 intended_application = etree.SubElement(language_resource, ms("intendedApplication"), nsmap=namespace_map)
