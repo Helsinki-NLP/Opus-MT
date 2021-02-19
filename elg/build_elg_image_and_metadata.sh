@@ -34,3 +34,5 @@ while read line; do
 done < models.txt
 IMAGE_NAME=$(< image-name.txt)
 sudo docker build . -t helsinkinlp/"$IMAGE_NAME"
+sudo docker login
+sudo docker push helsinkinlp/"$IMAGE_NAME"
