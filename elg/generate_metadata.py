@@ -13,7 +13,12 @@ argparser.add_argument('--target-region', action="store")
 argparser.add_argument('--version', action="store", default="1.0")
 args = argparser.parse_args()
 langpair = tuple(sorted((args.source_lang, args.target_lang)))
-    
+
+# Probably due to an ELG bug, information about the metadata apparently
+# must not be present in the metadata for a tool, as opposed to a project
+# or organization
+tool_metadata = True
+
 responsible_person_surname = "Hardwick"
 responsible_person_given_name = "Sam"
 responsible_person_email = "sam.hardwick@iki.fi"
@@ -31,8 +36,6 @@ target_langname = iso639.to_name(target_langcode)
 def append_elements(root, elements):
     for e in elements:
         root.append(copy.deepcopy(e))
-
-write_metadata_record_identifier = False
 
 ms_namespace_uri = "http://w3id.org/meta-share/meta-share/"
 xsi_namespace_uri = "http://www.w3.org/2001/XMLSchema-instance"
@@ -80,27 +83,26 @@ metadata = etree.Element(ms("MetadataRecord"),
                          { xsi_schemaLocation_qualified_name: xsi_schemaLocation },
                          nsmap=namespace_map)
 
-if write_metadata_record_identifier:
+if not tool_metadata:
     metadata.append(etree.Element(ms("MetadataRecordIdentifier"),
                                   { etree.QName(ms_namespace_uri, "MetadataRecordIdentifierScheme"): "http://w3id.org/meta-share/meta-share/elg" },
                                   nsmap = namespace_map))
-
-creation_date = etree.SubElement(metadata, ms("metadataCreationDate"))
-creation_date.text = time.strftime("%Y-%m-%d")
-
-responsible_person = [
+    responsible_person = [
     Element(ms("actorType"), "Person"),
     Element(ms("surname"), responsible_person_surname, attribs = lang_en),
     Element(ms("givenName"), responsible_person_given_name, attribs = lang_en),
     Element(ms("email"), responsible_person_email)
     ]
 
-creator = etree.SubElement(metadata, ms("metadataCreator"))
-append_elements(creator, responsible_person)
-curator = etree.SubElement(metadata, ms("metadataCurator"))
-append_elements(curator, responsible_person)
+    creator = etree.SubElement(metadata, ms("metadataCreator"))
+    append_elements(creator, responsible_person)
+    curator = etree.SubElement(metadata, ms("metadataCurator"))
+    append_elements(curator, responsible_person)
+    
+    metadata.append(Element(ms("compliesWith"), "http://w3id.org/meta-share/meta-share/ELG-SHARE"))
 
-metadata.append(Element(ms("compliesWith"), "http://w3id.org/meta-share/meta-share/ELG-SHARE"))
+creation_date = etree.SubElement(metadata, ms("metadataCreationDate"))
+creation_date.text = time.strftime("%Y-%m-%d")
 
 described_entity = etree.SubElement(metadata, ms("DescribedEntity"), nsmap = namespace_map)
 language_resource = etree.SubElement(described_entity, ms("LanguageResource"), nsmap = namespace_map)
