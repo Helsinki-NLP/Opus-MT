@@ -145,7 +145,7 @@ input_content_resource.append(make_language(source_langcode, region = source_reg
 input_content_resource.append(Element(ms("mediaType"), "http://w3id.org/meta-share/meta-share/text"))
 input_content_resource.append(Element(ms("characterEncoding"), "http://w3id.org/meta-share/meta-share/UTF-8"))
 
-output_content_resource = etree.SubElement(tool_service, ms("outputContentResource"))
+output_content_resource = etree.SubElement(tool_service, ms("outputResource"))
 output_content_resource.append(Element(ms("processingResourceType"), "http://w3id.org/meta-share/meta-share/userOutputText"))
 output_content_resource.append(make_language(target_langcode, region = target_region))
 output_content_resource.append(Element(ms("mediaType"), "http://w3id.org/meta-share/meta-share/text"))
