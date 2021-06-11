@@ -1,4 +1,8 @@
 {
+    "192.168.1.32:25000" : {
+	"source-languages" : "en",
+	"target-languages" : "bcl"
+    },    
     "192.168.1.18:20000" : {
 	"source-languages" : "en",
 	"target-languages" : "fi"
