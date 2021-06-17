@@ -3,6 +3,7 @@ import json
 
 configuration = {}
 port = 10001
+conf2port = {}
 host = "localhost"
 rootdir = "models"
 
@@ -39,9 +40,12 @@ for dirname in os.listdir(rootdir):
         for target in targets:
             vals = dict((sourcetok, targettok))
             vals["host"] = host
-            vals["port"] = str(port)
-            port += 1
-            vals["configuration"] = os.path.join(dirname, "decoder.yml")
+            model_conf = os.path.join(dirname, "decoder.yml")
+            if model_conf not in conf2port:
+                conf2port[model_conf] = str(port)
+                port += 1
+            vals["port"] = conf2port[model_conf]
+            vals["configuration"] = model_conf
             if source not in configuration:
                 configuration[source] = {target: vals}
             else:
