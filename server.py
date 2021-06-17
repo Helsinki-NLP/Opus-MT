@@ -9,14 +9,11 @@ import websocket
 from tornado import web, ioloop, queues, gen, process
 from content_processor import ContentProcessor
 
+class TranslatorInterface():
+    """An interface to a single, possibly multilingual, model."""
 
-class TranslatorWorker():
-
-    def __init__(self, srclang, targetlang, service):
-        self.q = queues.Queue()
-        # Service definition
+    def __init__(self, srclang, targetlang, service, model):
         self.service = service
-        self.p = None
         self.contentprocessor = ContentProcessor(
             srclang,
             targetlang,
@@ -25,17 +22,39 @@ class TranslatorWorker():
             sourcespm=self.service.get('sourcespm'),
             targetspm=self.service.get('targetspm')
         )
-        self.ws_url = "ws://{}:{}/translate".format(
-            self.service['host'], self.service['port'])
-        if self.service['configuration']:
-            self.run()
+        self.worker = model
+        # becomes nonempty if there are multiple target languages
+        self.preamble = ""
+
+    def translate(self, text):
+        sentences = self.contentprocessor.preprocess(text)
+        translatedSentences = self.worker.translate(self.preamble + '\n'.join(sentences))
+        translation = self.contentprocessor.postprocess(translatedSentences)
+        return ' '.join(translation)
+
+    def ready(self):
+        return self.worker != None and self.worker.ready()
+
+    def on_exit(self):
+        if self.worker != None:
+            self.worker.on_exit()
+
+class TranslatorWorker():
+    """Provides a running instance of marian-server."""
+
+    def __init__(self, host, port, configuration):
+        self.host = host
+        self.port = port
+        self.configuration = configuration
+        self.ws_url = "ws://{}:{}/translate".format(host, port)
+        self.run()
 
     @gen.coroutine
     def run(self):
         process.Subprocess.initialize()
         self.p = process.Subprocess(['marian-server', '-c',
-                                     self.service['configuration'],
-                                     '-p', self.service['port'],
+                                     self.configuration,
+                                     '-p', self.port,
                                      '--allow-unk',
                                      # enables translation with a mini-batch size of 64, i.e. translating 64 sentences at once, with a beam-size of 6.
                                      '-b', '6',
@@ -51,14 +70,12 @@ class TranslatorWorker():
     def on_exit(self):
         print("Process exited")
 
-    def translate(self, srctxt):
+    def translate(self, sentences):
         ws = websocket.create_connection(self.ws_url)
-        sentences = self.contentprocessor.preprocess(srctxt)
-        ws.send('\n'.join(sentences))
-        translatedSentences= ws.recv().split('\n')
+        ws.send(sentences)
+        translatedSentences = ws.recv().split('\n')
         ws.close()
-        translation = self.contentprocessor.postprocess(translatedSentences)
-        return ' '.join(translation)
+        return translatedSentences
 
     def ready(self):
         try:
@@ -118,13 +135,20 @@ class MainHandler(web.RequestHandler):
 
 def initialize_workers(config):
     worker_pool = {}
+    models = {}
     for source_lang in config:
         targetLangs = config[source_lang]
         for target_lang in targetLangs:
             lang_pair = "{}-{}".format(source_lang, target_lang)
-            decoder_config = targetLangs[target_lang]
-            worker_pool[lang_pair] = TranslatorWorker(
-                source_lang, target_lang, decoder_config)
+            pair_config = targetLangs[target_lang]
+            if pair_config['configuration'] not in models:
+                models[pair_config['configuration']] = TranslatorWorker(
+                    pair_config['host'], pair_config['port'], pair_config['configuration'])
+            worker_pool[lang_pair] = TranslatorInterface(
+                source_lang, target_lang, pair_config, models[pair_config['configuration']])
+            # Multi-target models have to be told which language to translate to
+            if len(targetLangs) > 1:
+                worker_pool[lang_pair].preamble = ">>{}<< ".format(target_lang)
 
     return worker_pool
 
