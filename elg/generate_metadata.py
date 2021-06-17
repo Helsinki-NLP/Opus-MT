@@ -63,6 +63,7 @@ def Element(name, text = None, **kwargs):
     return retval
 
 def make_language(_id, **kwargs):
+    _id = iso639.to_iso639_1(_id)
     language = Element(ms("language"))
     subtags = []
     if 'script' in kwargs:
@@ -109,6 +110,28 @@ language_resource = etree.SubElement(described_entity, ms("LanguageResource"), n
 language_resource.append(Element(ms("resourceName"), f"OPUS-MT: {source_langname}-{target_langname} machine translation", attribs = lang_en, nsmap=namespace_map))
 language_resource.append(Element(ms("resourceShortName"), f"OPUS-MT {source_langcode}-{target_langcode}", attribs = lang_en))
 language_resource.append(Element(ms("description"), "Multilingual machine translation using neural networks.", attribs = lang_en))
+
+resource_provider = etree.SubElement(language_resource, ms("resourceProvider"), nsmap = namespace_map)
+resource_provider_organization = etree.SubElement(resource_provider, ms("Organization"), nsmap = namespace_map)
+resource_provider_organization.append(Element(ms("actorType"), "Organisation", nsmap=namespace_map))
+resource_provider_organization.append(Element(ms("organizationName"), "University of Helsinki", attribs = lang_en, nsmap=namespace_map))
+resource_provider_organization.append(Element(ms("website"), "http://www.helsinki.fi", nsmap=namespace_map))
+
+resource_creator = etree.SubElement(language_resource, ms("resourceCreator"), nsmap = namespace_map)
+resource_creator_organization = etree.SubElement(resource_creator, ms("Organization"), nsmap = namespace_map)
+resource_creator_organization.append(Element(ms("actorType"), "Organisation", nsmap=namespace_map))
+resource_creator_organization.append(Element(ms("organizationName"), "Opus-MT Team", attribs = lang_en, nsmap=namespace_map))
+resource_creator_organization.append(Element(ms("website"), "https://github.com/Helsinki-NLP/Opus-MT", nsmap=namespace_map))
+
+funding_project = etree.SubElement(language_resource, ms("fundingProject"), nsmap = namespace_map)
+funding_project.append(Element(ms("projectName"), "Open Translation Models, Tools and Services", attribs = lang_en, nsmap=namespace_map))
+project_identifier = etree.Element(ms("ProjectIdentifier"),
+                                   { etree.QName(ms_namespace_uri, "ProjectIdentifierScheme"): "http://w3id.org/meta-share/meta-share/other" },
+                                   nsmap = {'ms': ms_namespace_uri})
+project_identifier.text = "Opus-MT"
+funding_project.append(project_identifier)
+funding_project.append(Element(ms("website"), "https://github.com/Helsinki-NLP/Opus-MT", nsmap=namespace_map))
+
 language_resource.append(Element(ms("version"), version))
 intended_application = etree.SubElement(language_resource, ms("intendedApplication"), nsmap=namespace_map)
 intended_application.append(Element(ms("LTClassRecommended"), "http://w3id.org/meta-share/omtd-share/MachineTranslation"))
@@ -131,6 +154,7 @@ software_distribution.append(Element(ms("additionalHwRequirements"), "limits_mem
 licence_terms = etree.SubElement(software_distribution, ms("licenceTerms"), nsmap = namespace_map)
 licence_terms.append(Element(ms("licenceTermsName"), "MIT License", attribs = lang_en))
 licence_terms.append(Element(ms("licenceTermsURL"), "https://spdx.org/licenses/MIT.html"))
+licence_terms.append(Element(ms("conditionOfUse"), "http://w3id.org/meta-share/meta-share/other"))
 licence_identifier = etree.Element(ms("LicenceIdentifier"),
                                    { etree.QName(ms_namespace_uri, "LicenceIdentifierScheme"): "http://w3id.org/meta-share/meta-share/SPDX" },
                                    nsmap = {'ms': ms_namespace_uri})
@@ -146,7 +170,7 @@ input_content_resource.append(Element(ms("mediaType"), "http://w3id.org/meta-sha
 input_content_resource.append(Element(ms("characterEncoding"), "http://w3id.org/meta-share/meta-share/UTF-8"))
 
 output_content_resource = etree.SubElement(tool_service, ms("outputResource"))
-output_content_resource.append(Element(ms("processingResourceType"), "http://w3id.org/meta-share/meta-share/userOutputText"))
+output_content_resource.append(Element(ms("processingResourceType"), "http://w3id.org/meta-share/meta-share/outputText"))
 output_content_resource.append(make_language(target_langcode, region = target_region))
 output_content_resource.append(Element(ms("mediaType"), "http://w3id.org/meta-share/meta-share/text"))
 output_content_resource.append(Element(ms("characterEncoding"), "http://w3id.org/meta-share/meta-share/UTF-8"))
