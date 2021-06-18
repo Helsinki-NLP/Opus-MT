@@ -9,9 +9,9 @@ You have to be registered as a provider with ELG (meaning, have an account in th
 Almost everything is done by the bash script `build_elg_image_and_metadata.sh`. It is configured as follows:
 
 1. Model selection
-   * If the directory models/ exists, it is used as-is. It should contain subdirectories like deu-eng/, with README.md included. The script will parse the READMEs and discover all the language pairs the models provide. 
+   * If the directory `models/` exists, it is used as-is. It should contain subdirectories like `deu-eng/`, with `README.md` included. The script will parse the READMEs and discover all the language pairs the models provide. 
    * If it doesn't, you can write a file `models.txt` with one URL per line, indicating download locations for Opus-MT or Tatoeba models. These are automatically downloaded and unzipped, and we proceed as above.
-2. Docker image name. You can supply this as an argument, eg. opus-mt-elg-deu-eng, but there's a reasonable default (alphabetically sort all language ids and construct a name from them).
+2. Docker image name. You can supply this as an argument, eg. `opus-mt-elg-deu-eng`, but there's a reasonable default (alphabetically sort all language ids and construct a name from them).
 
 The script will also count how many models are in the image, and write into the metadata an amount of memory that should be enough for running them simultaneously (768M per model).
 
