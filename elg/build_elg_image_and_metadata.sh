@@ -42,6 +42,11 @@ done
 echo "Ended up with pairs: ${PAIRS}"
 echo
 
+IMAGE_NAME="opus-mt-elg-"$(echo $LANGS | tr ' ' '\n' | sort -u | tr '\n' ' ' | xargs | tr ' ' '-')
+if [[ "$#" -ge 1 ]]; then
+    IMAGE_NAME=$1
+fi
+
 if ls *.xml 1> /dev/null 2>&1; then
     read -p "There are stale xml files present. Delete them? [y/n] " yn
     case $yn in
@@ -53,20 +58,15 @@ for pair in $PAIRS; do
     src_lang_opt="--source-lang $(echo $pair | cut --delimiter="-" -f1)"
     tgt_lang_opt="--target-lang $(echo $pair | cut --delimiter="-" -f2)"
     # src_region and tgt_region aren't used in Tatoeba, but generate_metadata knows about them
-    python3 generate_metadata.py --version $MODEL_VERSION \
+    python3 generate_metadata.py --version $MODEL_VERSION --image-name ${IMAGE_NAME} \
 	    $src_lang_opt $tgt_lang_opt $src_region_opt $trg_region_opt
 done
+rm metadata_for_elg.zip
 zip metadata_for_elg.zip *.xml
 rm -f *.xml
 echo "Wrote metadata in metadata_for_elg.zip"
 
-IMAGE_NAME="opus-mt-elg-"$(echo $LANGS | tr ' ' '\n' | sort -u | tr '\n' ' ' | xargs | tr ' ' '-')
-if [[ "$#" -ge 1 ]]; then
-    IMAGE_NAME=$1
-fi
-
 IMAGE_NAME="helsinkinlp/$IMAGE_NAME:$MODEL_VERSION"
-
 echo "Building with name "$IMAGE_NAME
 
 cd ..

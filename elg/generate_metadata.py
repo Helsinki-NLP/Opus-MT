@@ -10,6 +10,7 @@ argparser.add_argument('--source-lang', action="store", required=True)
 argparser.add_argument('--target-lang', action="store", required=True)
 argparser.add_argument('--source-region', action="store")
 argparser.add_argument('--target-region', action="store")
+argparser.add_argument('--image-name', action="store", required=True)
 argparser.add_argument('--version', action="store", default="1.0")
 args = argparser.parse_args()
 langpair = tuple(sorted((args.source_lang, args.target_lang)))
@@ -22,10 +23,9 @@ tool_metadata = True
 responsible_person_surname = "Hardwick"
 responsible_person_given_name = "Sam"
 responsible_person_email = "sam.hardwick@iki.fi"
-model_location = 'https://object.pouta.csc.fi/OPUS-MT-models/{}-{}/opus-2019-12-04.zip'
 version = args.version
-imagename = f"opus-mt-elg-{langpair[0]}-{langpair[1]}"
-docker_location = f"https://hub.docker.com/repository/docker/helsinkinlp/{imagename}:{version}"
+image_name = args.image_name
+docker_location = f"https://hub.docker.com/repository/docker/helsinkinlp/{image_name}:{version}"
 source_langcode = args.source_lang
 source_region = args.source_region
 target_langcode = args.target_lang
@@ -179,12 +179,3 @@ tool_service.append(Element(ms("evaluated"), "false"))
 
 with open(f"OPUS-MT-{source_langcode}-{target_langcode}.xml", "w") as xml_fobj:
     xml_fobj.write(str(etree.tostring(metadata, xml_declaration = False, doctype='<?xml version="1.0" encoding="UTF-8"?>', encoding = 'utf-8', pretty_print = True), encoding = "utf-8"))
-
-if not os.path.exists("models.txt"):
-    with open("models.txt", "w") as models_fobj:
-        models_fobj.write(model_location.format(source_langcode, target_langcode) + '\n')
-        models_fobj.write(model_location.format(target_langcode, source_langcode) + '\n')
-
-if not os.path.exists("image-name.txt"):
-    with open("image-name.txt", "w") as imagename_fobj:
-        imagename_fobj.write(f"{imagename}:{version}\n")
