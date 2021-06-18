@@ -41,7 +41,6 @@ COPY requirements.txt .
 # Install python requirements.  First we upgrade to the latest pip so it can
 # support "manylinux2014" binary wheels.
 
-# First wheel, because the others won't work without it set up.
 RUN set -eux; \
         python3 -mvenv venv ; venv/bin/pip install --upgrade pip ; \
 	venv/bin/pip install -r requirements.txt
@@ -72,4 +71,4 @@ COPY . .
 EXPOSE 80
 
 # Run using the virtual environment Python
-CMD ["venv/bin/python", "server.py", "-c", "services.json", "-p", "80"]
+CMD ["venv/bin/python3", "server.py", "-c", "services.json", "-p", "80"]
