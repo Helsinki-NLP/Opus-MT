@@ -2,3 +2,4 @@
 *.md
 generate_metadata.py
 *.xml
+.gitignore
