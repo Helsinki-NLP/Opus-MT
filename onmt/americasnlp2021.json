@@ -1,0 +1,15 @@
+{
+    "models_root": ".",
+    "models": [
+        {
+            "id": 0,
+            "model": "modelB-100dev-170k.pt",
+            "timeout": 600,
+            "on_timeout": "to_cpu",
+            "load": true,
+            "opt": {
+                "beam_size": 5
+            }
+        }
+    ]
+}

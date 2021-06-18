@@ -152,11 +152,13 @@ There is a Makefile for training new models from OPUS data in the [Opus-MT-train
 ## Links and related work
 
 * [OPUS-translator](https://github.com/Helsinki-NLP/OPUS-translator): implementation of a simple on-line translation interface
+* [OPUS-CAT](https://github.com/Helsinki-NLP/OPUS-CAT): an implementation of an NMT plugin for Trados Studio that can run OPUS-MT models
 * [fiskmö](https://blogs.helsinki.fi/fiskmo-project/): a project on the devlopment of resources and tools for translating between Finnish and Swedish
-* [fiskmö-trados](https://github.com/Helsinki-NLP/fiskmo-trados): an implementation of an NMT plugin for Trados Studio that can run OPUS-MT models
+* [The Tatoeba MT Challenge](https://github.com/Helsinki-NLP/Tatoeba-Challenge/) with [lots of pre-trained NMT models](https://github.com/Helsinki-NLP/Tatoeba-Challenge/blob/master/results/tatoeba-results-all.md)
+* [The NMT map](https://opus.nlpl.eu/NMT-map/Tatoeba/all/src2trg/) that plots the status of Tatoeba NMT models on a map
 * [pre-trained multilingual models](https://github.com/bzhangGo/zero/tree/master/docs/multilingual_laln_lalt#pretrained-multilingual-models-many-to-many) trained on [OPUS-100](https://github.com/EdinburghNLP/opus-100-corpus) using the [zero](https://github.com/bzhangGo/zero) toolkit
 
 
 ## Acknowledgements
 
-The work is supported by the [FoTran project](https://www.helsinki.fi/en/researchgroups/natural-language-understanding-with-cross-lingual-grounding), funded by the European Research Council (ERC) under the European Union’s Horizon 2020 research and innovation programme (grant agreement No 771113), and the [MeMAD project](https://memad.eu/), funded by the European Union’s Horizon 2020 Research and Innovation Programme under grant agreement No 780069. We are also greatful for the generous computational resources provided by [CSC -- IT Center for Science](https://www.csc.fi/), Finland.
+The work is supported by the [European Language Grid](https://www.european-language-grid.eu/) as [pilot project 2866](https://live.european-language-grid.eu/catalogue/#/resource/projects/2866), by the [FoTran project](https://www.helsinki.fi/en/researchgroups/natural-language-understanding-with-cross-lingual-grounding), funded by the European Research Council (ERC) under the European Union’s Horizon 2020 research and innovation programme (grant agreement No 771113), and the [MeMAD project](https://memad.eu/), funded by the European Union’s Horizon 2020 Research and Innovation Programme under grant agreement No 780069. We are also grateful for the generous computational resources and IT infrastructure provided by [CSC -- IT Center for Science](https://www.csc.fi/), Finland.

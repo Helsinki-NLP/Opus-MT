@@ -101,6 +101,10 @@ frfi-server:
 fifr-server:
 	${MAKE} SRC_LANGS=fi TRG_LANGS=fr MARIAN_PORT=11101 OPUSMT_PORT=21101 opusMT-server
 
+enbcl-server:
+	${MAKE} MODEL_PATTERN=${DATASET}\+nt\+bt.*\.zip \
+		SRC_LANGS=en TRG_LANGS=bcl MARIAN_PORT=15000 OPUSMT_PORT=25000 opusMT-server
+
 
 
 ## special server for the Goethe Institute
@@ -245,7 +249,8 @@ ${NMT_MODEL}:
 	rmdir model
 	rm -f model.zip model-list.txt
 
-
+model-list.txt:
+	wget -O model-list.txt ${MODEL_REPO}/index.txt
 
 
 ## opusMT service via sysvinit

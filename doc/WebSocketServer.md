@@ -7,7 +7,7 @@ Download the latest version from github:
 git clone https://github.com/Helsinki-NLP/Opus-MT.git
 ```
 
-Install pre-requisites (tested on Ubuntu 14.04, 16.04 and 18.04, the installation requires sudo permissions):
+Install pre-requisites (tested on Ubuntu 14.04, 16.04, 18.04 and 20.04, the installation requires sudo permissions):
 
 ```
 cd Opus-MT/install
@@ -163,4 +163,10 @@ sudo service opusMT restart
 ```
 
 The default location of the configuration file is `/usr/local/share/opusMT/`.
+
+
+# To-do list
+
+* SentencePiece does not compile within MarianNMT for Ubuntu 20.04 (problem in makefile)
+* multi-core translation does not work (need to send batches of text instead)
 

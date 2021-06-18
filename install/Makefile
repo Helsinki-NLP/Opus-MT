@@ -5,7 +5,7 @@ INSTALL = install -c
 INSTALL_BIN = ${INSTALL} -m 755
 INSTALL_DATA = ${INSTALL} -m 644
 
-UBUNTU_RELEASE = ${shell lsb_release -a | grep 'Release' | cut -f2}
+UBUNTU_RELEASE = ${shell lsb_release -a 2>/dev/null | grep 'Release' | cut -f2}
 
 
 .PHONY: all install clean
@@ -16,15 +16,20 @@ install: ${PREFIX}/bin/marian-server
 
 marian:
 	git clone https://github.com/marian-nmt/marian
-	cd marian && git checkout 1.9.0
+	cd marian && git checkout 1.10.0
 
 marian/build/marian-server: marian
 	sudo ${MAKE} /swapfile
 	sudo ${MAKE} prereqs
 	${MAKE} gperftools
 	mkdir -p ${dir $@}
+ifeq (${UBUNTU_RELEASE},20.04)
+	cd ${dir $@} && \
+	cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_STATIC_LIBS=on -DCOMPILE_SERVER=on -DCOMPILE_CPU=on -DCOMPILE_CUDA=off
+else
 	cd ${dir $@} && \
 	cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_STATIC_LIBS=on -DCOMPILE_SERVER=on -DUSE_SENTENCEPIECE=on -DCOMPILE_CPU=on -DCOMPILE_CUDA=off
+endif
 	${MAKE} -C ${dir $@} -j4
 
 
@@ -52,6 +57,9 @@ prereqs: GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB
 	apt-get -q install libboost-all-dev libblas-dev libopenblas-dev libz-dev libssl-dev
 	apt-get -q install python3-dev python3-pip python3-setuptools python3-websocket
 	apt-get -q install intel-mkl-64bit-2019.5-075
+ifeq (${UBUNTU_RELEASE},20.04)
+	apt-get install libprotobuf-dev libsentencepiece-dev
+endif
 	pip3 install SimpleWebSocketServer
 ifeq (${UBUNTU_RELEASE},16.04)
 	pip3 install mosestokenizer==1.0.0

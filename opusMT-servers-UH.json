@@ -1,4 +1,12 @@
 {
+    "192.168.1.32:25000" : {
+	"source-languages" : "en",
+	"target-languages" : "bcl"
+    },
+    "192.168.1.32:5001" : {
+	"source-languages" : "es",
+	"target-languages" : "aym+bzd+cni+gn+hch+nah+oto+quy+shp+tar"
+    },
     "192.168.1.18:20000" : {
 	"source-languages" : "en",
 	"target-languages" : "fi"
