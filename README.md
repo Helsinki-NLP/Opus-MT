@@ -61,16 +61,20 @@ python server.py
 
 By default, it will use port 8888. Launch your browser to localhost:8888 to get the web interface. The languages configured in services.json will be available.
 
-
 ### Option 2: Using Docker
-
 
 ```bash
 docker-compose up
 ```
 
-And launch your browser to localhost:8888
+or
 
+```bash
+docker build . -t opus-mt
+docker run -p 8888:8888 opus-mt:latest
+```
+
+And launch your browser to localhost:8888
 
 ### Configuration
 
