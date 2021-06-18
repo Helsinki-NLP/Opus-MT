@@ -7,6 +7,7 @@ fi
 MODEL_VERSION="1.1"
 LANGS=""
 PAIRS=""
+MODEL_COUNT=0
 
 if [[ ! -d "models" ]]; then
     echo "models/ doesn't exist, creating it and fetching models listed in models.txt"
@@ -24,6 +25,7 @@ fi
 
 echo
 for readme in $(find models/ -name "README.md"); do
+    ((MODEL_COUNT+=1))
     # Parse README files, yaml would be nicer
     # xargs to trim whitespace :)
     THIS_SRC_LANGS=$(grep "source language" $readme | cut --delimiter=":" -f2 | xargs)
@@ -58,7 +60,7 @@ for pair in $PAIRS; do
     src_lang_opt="--source-lang $(echo $pair | cut --delimiter="-" -f1)"
     tgt_lang_opt="--target-lang $(echo $pair | cut --delimiter="-" -f2)"
     # src_region and tgt_region aren't used in Tatoeba, but generate_metadata knows about them
-    python3 generate_metadata.py --version $MODEL_VERSION --image-name ${IMAGE_NAME} \
+    python3 generate_metadata.py --version $MODEL_VERSION --image-name ${IMAGE_NAME} --models-in-image $MODEL_COUNT \
 	    $src_lang_opt $tgt_lang_opt $src_region_opt $trg_region_opt
 done
 rm metadata_for_elg.zip
@@ -83,5 +85,13 @@ sudo docker build . -t $IMAGE_NAME
 rm server.py content_processor.py write_configuration.py apply_bpe.py \
    services.json
 
-sudo docker login
-sudo docker push $IMAGE_NAME
+read -p "Want to push image to Dockerhub now? [y/n] " yn
+    case $yn in
+	[Yy]* )
+	    sudo docker login
+	    sudo docker push $IMAGE_NAME;;
+	* ) echo "Not pushing.";;
+    esac
+
+echo
+echo "Done. Don't forget to upload metadata_for_elg.zip to the ELG catalogue!"
