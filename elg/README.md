@@ -36,7 +36,7 @@ https://object.pouta.csc.fi/Tatoeba-MT-models/dan-deu/opus-2021-02-18.zip
 https://object.pouta.csc.fi/Tatoeba-MT-models/dan-eng/opus-2021-01-03.zip
 ```
 
-and run `build_elg_image_and_metadata.sh`, this will result in an image that provides dan-deu and dan-eng translation, each with its own endpoint and server.
+and run `build_elg_image_and_metadata.sh`, this will result in an image that provides dan-deu and dan-eng translation, each with its own endpoint and `marian-server`.
 
 If you write
 
