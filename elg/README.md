@@ -4,6 +4,10 @@
 
 You have to be registered as a provider with ELG (meaning, have an account in the ELG portal with that status), and you have to have a Dockerhub account and be a member of the helsinkinlp team there.
 
+## The server
+
+The file `elg/elg_server.py` imports code from the main `server.py` and adds some ELG compatibility on top.
+
 ## The automatic part
 
 Almost everything is done by the bash script `build_elg_image_and_metadata.sh`. It is configured as follows:
@@ -12,6 +16,16 @@ Almost everything is done by the bash script `build_elg_image_and_metadata.sh`. 
    * If the directory `models/` exists, it is used as-is. It should contain subdirectories like `deu-eng/`, with `README.md` included. The script will parse the READMEs and discover all the language pairs the models provide. 
    * If it doesn't, you can write a file `models.txt` with one URL per line, indicating download locations for Opus-MT or Tatoeba models. These are automatically downloaded and unzipped, and we proceed as above.
 2. Docker image name. You can supply this as an argument, eg. `opus-mt-elg-deu-eng`, but there's a reasonable default (alphabetically sort all language ids and construct a name from them).
+
+The script will:
+
+1. Download the models if they don't already exist and name their directories according to language pairs
+2. Construct the translation pairs
+3. Generate as many XML files as there are language pairs, using `generate_metadata.py`
+4. Write configuration files for the server `write_configuration.py`, which knows about multilingual models
+5. Build and tag the docker image `opus-mt-base` and then the one for this ELG model using `elg/Dockerfile`, tagged as in 2. above
+6. Ask if you want to login to Dockerhub now, and if so, push the image
+7. Remind you to upload the XML to ELG
 
 ### Example
 
