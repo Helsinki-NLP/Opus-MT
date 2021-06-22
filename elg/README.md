@@ -13,6 +13,28 @@ Almost everything is done by the bash script `build_elg_image_and_metadata.sh`. 
    * If it doesn't, you can write a file `models.txt` with one URL per line, indicating download locations for Opus-MT or Tatoeba models. These are automatically downloaded and unzipped, and we proceed as above.
 2. Docker image name. You can supply this as an argument, eg. `opus-mt-elg-deu-eng`, but there's a reasonable default (alphabetically sort all language ids and construct a name from them).
 
+### Example
+
+So far, our ELG images have all had both directions of one pair, eg. fin-eng and eng-fin. As a different example, if you write into `models.txt` the following lines:
+
+```
+https://object.pouta.csc.fi/Tatoeba-MT-models/dan-deu/opus-2021-02-18.zip
+https://object.pouta.csc.fi/Tatoeba-MT-models/dan-eng/opus-2021-01-03.zip
+```
+
+and run `build_elg_image_and_metadata.sh`, this will result in an image that provides dan-deu and dan-eng translation, each with its own endpoint and server.
+
+If you write
+
+```
+https://object.pouta.csc.fi/Tatoeba-MT-models/dan-deu/opus-2021-02-18.zip
+https://object.pouta.csc.fi/Tatoeba-MT-models/bel+rus+ukr-bel+rus+ukr/opus-2020-06-16.zip
+```
+
+you will get dan-deu in one server that doesn't use input-initial language tags, and another server with bel-rus, bel-ukr, rus-bel, rus-ukr, ukr-bel and ukr-rus, each with their own endpoint and input-initial language tag in another, all running in the same container.
+
+### Notes
+
 The script will also count how many models are in the image, and write into the metadata an amount of memory that should be enough for running them simultaneously (768M per model).
 
 If you want to bump the version number, do that by editing the script manually.
