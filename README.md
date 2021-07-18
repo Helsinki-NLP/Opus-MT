@@ -13,12 +13,12 @@ Tools and resources for open translation services
 
 This repository includes two setups:
 
-* Setup 1: a [Tornado](https://www.tornadoweb.org)-based web application providing a web UI and api to work with multiple language pairs (developed by [Santhosh Thottingal](https://github.com/santhoshtr) and his team at the wikimedia foundation); en example instance is available here: https://opusmt.wmflabs.org/
+* Setup 1: a [Tornado](https://www.tornadoweb.org)-based web application providing a web UI and API to work with multiple language pairs (developed by [Santhosh Thottingal](https://github.com/santhoshtr) and his team at the Wikimedia Foundation); an example instance is available here: https://opusmt.wmflabs.org/
 * Setup 2: [a simple websocket service setup with some experimental API extensions](https://github.com/Helsinki-NLP/Opus-MT/tree/master/doc/WebSocketServer.md)
 
-There are also [scripts for training models](https://github.com/Helsinki-NLP/Opus-MT-train) but those are currently only useful in the computing environment used by the University of Helsinki and CSC as the IT service providor.
+There are also [scripts for training models](https://github.com/Helsinki-NLP/Opus-MT-train), but those are currently only useful in the computing environment used by the University of Helsinki and CSC as the IT service provider.
 
-Please, cite the following paper if you use OPUS-MT software and models:
+Please cite the following paper if you use OPUS-MT software and models:
 
 ```
 @InProceedings{TiedemannThottingal:EAMT2020,
@@ -41,7 +41,7 @@ git clone https://github.com/Helsinki-NLP/Opus-MT.git
 ### Option 1: Manual setup
 
 Install Marian MT. Follow the documentation at https://marian-nmt.github.io/docs/
-After the installation, marian-server is expected to be present in path. If not place it in `/usr/local/bin`
+After the installation, marian-server is expected to be present in path. If not, place it in `/usr/local/bin`
 
 Install pre-requisites.
 Using a virtual environment is recommended.
@@ -50,9 +50,9 @@ Using a virtual environment is recommended.
 pip install -r requirements.txt
 ```
 
-Download the translation models from https://github.com/Helsinki-NLP/Opus-MT-train/tree/master/models and place it in models directory.
+Download the translation models from https://github.com/Helsinki-NLP/Opus-MT-train/tree/master/models and place them in models directory.
 
-Then edits the services.json to point to that models.
+Then edit the services.json to point to those models.
 
 And start the webserver.
 ```bash
@@ -100,9 +100,9 @@ An example configuration file looks like this:
 
 ```
 
-This example configuration can provide MT service for en->fs and en->fi language pairs.
+This example configuration can provide MT service for en->es and en->fi language pairs.
 
-* `configuration` points to a yaml file containing the decoder configuration usable by `marian-server`. If this value is not provided, Opus-MT will assume that the service is already running in a remote host and post as given in other options. If value is provided a new sub process will be created using `marian-server`
+* `configuration` points to a yaml file containing the decoder configuration usable by `marian-server`. If this value is not provided, Opus-MT will assume that the service is already running in a remote host and post as given in other options. If value is provided, a new subprocess will be created using `marian-server`
 * `host`: The host where the server is running.
 * `port`: The port to be listen for `marian-server`
 
@@ -118,7 +118,7 @@ There is another option of setting up translation services using WebSockets and 
 ## Public MT models
 
 We store public models (CC-BY 4.0 License) at https://github.com/Helsinki-NLP/Opus-MT-train/tree/master/models
-They should be all compatible with the OPUS-MT services and you can install them by specifying the language pair. The installation script takes the latest model in that directory. For additional customisation you need to adjust the installation procedures (in the Makefile or elsewhere).
+They should all be compatible with the OPUS-MT services, and you can install them by specifying the language pair. The installation script takes the latest model in that directory. For additional customisation you need to adjust the installation procedures (in the Makefile or elsewhere).
 
 There are also development versions of models, which are often a bit more experimental and of low quality. But there are additional language pairs and they can be downloaded from https://github.com/Helsinki-NLP/Opus-MT-train/tree/master/work-spm/models
 
@@ -126,7 +126,7 @@ There are also development versions of models, which are often a bit more experi
 
 ## Train MT models
 
-There is a Makefile for training new models from OPUS data in the [Opus-MT-train](https://github.com/Helsinki-NLP/Opus-MT-train) repository but this is heavily customized for the work environment at CSC and the University of Helsinki projects. This will (hopefully) be more generic in the future to be able to run in different environments and setups as well.
+There is a Makefile for training new models from OPUS data in the [Opus-MT-train](https://github.com/Helsinki-NLP/Opus-MT-train) repository, but this is heavily customized for the work environment at CSC and the University of Helsinki projects. This will (hopefully) be more generic in the future to be able to run in different environments and setups as well.
 
 
 ## Known issues
