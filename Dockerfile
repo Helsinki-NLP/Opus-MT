@@ -13,7 +13,7 @@ RUN set -eux; \
 		ca-certificates git wget gnupg build-essential lsb-release g++ \
 		automake autogen libtool cmake-data cmake unzip \
 		libboost-all-dev libblas-dev libopenblas-dev libz-dev libssl-dev \
-		libprotobuf17 protobuf-compiler libprotobuf-dev \
+		libprotobuf23 protobuf-compiler libprotobuf-dev \
 		python3-dev python3-pip python3-setuptools python3-websocket python3-venv;
 
 # Install Intel libraries
