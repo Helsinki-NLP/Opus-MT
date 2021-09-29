@@ -2,7 +2,7 @@
 # image to build Marian and the required Python modules, then copy the built
 # artifacts into a much smaller final image.
 
-FROM debian:stable as builder
+FROM debian:buster as builder
 
 WORKDIR /usr/src/app
 
