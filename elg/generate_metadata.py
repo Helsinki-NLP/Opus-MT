@@ -1,8 +1,8 @@
+import sys
 import time
 import copy
 from lxml import etree
 import argparse
-import os
 import iso639
 
 argparser = argparse.ArgumentParser('Write ELG metadata and configuration information to local directory')
@@ -21,9 +21,26 @@ langpair = tuple(sorted((args.source_lang, args.target_lang)))
 # or organization
 tool_metadata = True
 
-responsible_person_surname = "Hardwick"
-responsible_person_given_name = "Sam"
-responsible_person_email = "sam.hardwick@iki.fi"
+def get_git_user_info():
+    '''Guess the maintainer's name and email from your git information'''
+    import subprocess
+    name = subprocess.Popen(["git", "config", "user.name"], stdout=subprocess.PIPE, encoding='utf-8').communicate()[0].strip()
+    last_space = name.rindex(' ')
+    firstname = name[:last_space]
+    lastname = name[last_space+1:]
+    email = subprocess.Popen(["git", "config", "user.email"], stdout=subprocess.PIPE, encoding='utf-8').communicate()[0].strip()
+    return (firstname, lastname, email)
+
+try:
+    user_info = get_git_user_info()
+    responsible_person_surname, responsible_person_given_name, responsible_person_email = user_info
+    print(f'* Using your git user info for maintainer info {user_info}', file=sys.stderr)
+except:
+    responsible_person_surname = "Hardwick"
+    responsible_person_given_name = "Sam"
+    responsible_person_email = "sam.hardwick@iki.fi"
+    print(f"* Couldn't read git user info, using default maintainer information", file=sys.stderr)
+
 version = args.version
 image_name = args.image_name
 docker_location = f"https://hub.docker.com/repository/docker/helsinkinlp/{image_name}:{version}"
