@@ -31,8 +31,10 @@ source_langcode = args.source_lang
 source_region = args.source_region
 target_langcode = args.target_lang
 target_region = args.target_region
-source_langname = iso639.to_name(source_langcode)
-target_langname = iso639.to_name(target_langcode)
+source_lang = iso639.languages.get(part3=source_langcode)
+target_lang = iso639.languages.get(part3=target_langcode)
+source_langname = source_lang.name
+target_langname = target_lang.name
 
 def append_elements(root, elements):
     for e in elements:
@@ -64,7 +66,7 @@ def Element(name, text = None, **kwargs):
     return retval
 
 def make_language(_id, **kwargs):
-    _id = iso639.to_iso639_1(_id)
+    _id = iso639.languages.get(part3=_id).part1
     language = Element(ms("language"))
     subtags = []
     if 'script' in kwargs:
