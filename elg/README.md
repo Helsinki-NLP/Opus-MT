@@ -4,6 +4,11 @@
 
 You have to be registered as a provider with ELG (meaning, have an account in the ELG portal with that status), and you have to have a Dockerhub account and be a member of the helsinkinlp team there.
 
+You need to have a Docker daemon running. If you're using a Debian-based system and a amd64 architecture, `sudo apt install docker.io` should accomplish that.
+
+
+You need to have working `zip` and `unzip` commands. There are also some Python packages listed in `requirements.txt`
+
 ## The server
 
 The file `elg/elg_server.py` imports code from the main `server.py` and adds some ELG compatibility on top.
