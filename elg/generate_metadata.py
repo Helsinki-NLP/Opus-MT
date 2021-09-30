@@ -83,7 +83,8 @@ def Element(name, text = None, **kwargs):
     return retval
 
 def make_language(_id, **kwargs):
-    _id = iso639.languages.get(part3=_id).part1
+    if iso639.languages.get(part3=_id).part1:
+        _id = iso639.languages.get(part3=_id).part1
     language = Element(ms("language"))
     subtags = []
     if 'script' in kwargs:
@@ -168,6 +169,7 @@ function.append(Element(ms("LTClassRecommended"), "http://w3id.org/meta-share/om
 software_distribution = etree.SubElement(tool_service, ms("SoftwareDistribution"), nsmap = namespace_map)
 software_distribution.append(Element(ms("SoftwareDistributionForm"), "http://w3id.org/meta-share/meta-share/dockerImage"))
 software_distribution.append(Element(ms("dockerDownloadLocation"), docker_location))
+software_distribution.append(Element(ms("privateResource"), "false"))
 software_distribution.append(Element(ms("executionLocation"), f"http://localhost:8888/elg/translate/{source_langcode}/{target_langcode}"))
 software_distribution.append(Element(ms("additionalHwRequirements"), f"limits_memory: {str(int(args.models_in_image)*768)}Mi"))
 
