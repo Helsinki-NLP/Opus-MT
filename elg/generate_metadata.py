@@ -131,6 +131,7 @@ language_resource = etree.SubElement(described_entity, ms("LanguageResource"), n
 language_resource.append(Element(ms("resourceName"), f"HelsinkiNLP - OPUS-MT: {source_langname}-{target_langname} machine translation", attribs = lang_en, nsmap=namespace_map))
 language_resource.append(Element(ms("resourceShortName"), f"OPUS-MT {source_langcode}-{target_langcode}", attribs = lang_en))
 language_resource.append(Element(ms("description"), "Multilingual machine translation using neural networks.", attribs = lang_en))
+language_resource.append(Element(ms("logo"), "https://github.com/Helsinki-NLP/Opus-MT/raw/master/img/opus_mt.png"))
 
 resource_provider = etree.SubElement(language_resource, ms("resourceProvider"), nsmap = namespace_map)
 resource_provider_organization = etree.SubElement(resource_provider, ms("Organization"), nsmap = namespace_map)
