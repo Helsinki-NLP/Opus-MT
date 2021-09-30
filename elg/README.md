@@ -22,7 +22,7 @@ The file `elg/elg_server.py` imports code from the main `server.py` and adds som
 Almost everything is done by the bash script `build_elg_image_and_metadata.sh`. It is configured as follows:
 
 ```
-build_elg_image_and_metadata.sh [[[IMAGE_NAME] TAG_NAME] VERSION]
+build_elg_image_and_metadata.sh [IMAGE_NAME [TAG_NAME [VERSION]]]
 ```
 
 1. Model selection
@@ -94,6 +94,6 @@ When the script has finished, there remains a manual task: publishing the image 
 3. Click on "My grid" on the top panel
 4. Hover on the "Add items" menu and select "Upload XML".
 5. Select "Upload multiple items".
-6. Check the box for ELG-compatible service, and choose `metadata_<IMAGE>_<VERSION>.zip` which the build script should have left in the `elg` directory.
+6. Check the box for ELG-compatible service, and choose `metadata_<IMAGE_NAME>_<TAG_NAME>.zip` which the build script should have left in the `elg` directory.
 7. Hopefully the upload completes successfully. If not, the metadata specification has probably changed again. It will take some time for the system to process these.
 8. When processing has finished (you may get an email), click on "My items", find the entries you've just uploaded, select them, and choose the action "Publish".
