@@ -12,7 +12,7 @@ argparser.add_argument('--source-region', action="store")
 argparser.add_argument('--target-region', action="store")
 argparser.add_argument('--image-name', action="store", required=True)
 argparser.add_argument('--models-in-image', action="store", required=True)
-argparser.add_argument('--version', action="store", default="1.0")
+argparser.add_argument('--version', action="store", default="1.0.0")
 args = argparser.parse_args()
 langpair = tuple(sorted((args.source_lang, args.target_lang)))
 
@@ -43,7 +43,7 @@ except:
 
 version = args.version
 image_name = args.image_name
-docker_location = f"https://hub.docker.com/repository/docker/helsinkinlp/{image_name}:{version}"
+docker_location = f"https://hub.docker.com/repository/docker/helsinkinlp/{image_name}"
 source_langcode = args.source_lang
 source_region = args.source_region
 target_langcode = args.target_lang
@@ -128,7 +128,7 @@ creation_date.text = time.strftime("%Y-%m-%d")
 
 described_entity = etree.SubElement(metadata, ms("DescribedEntity"), nsmap = namespace_map)
 language_resource = etree.SubElement(described_entity, ms("LanguageResource"), nsmap = namespace_map)
-language_resource.append(Element(ms("resourceName"), f"OPUS-MT: {source_langname}-{target_langname} machine translation", attribs = lang_en, nsmap=namespace_map))
+language_resource.append(Element(ms("resourceName"), f"HelsinkiNLP - OPUS-MT: {source_langname}-{target_langname} machine translation", attribs = lang_en, nsmap=namespace_map))
 language_resource.append(Element(ms("resourceShortName"), f"OPUS-MT {source_langcode}-{target_langcode}", attribs = lang_en))
 language_resource.append(Element(ms("description"), "Multilingual machine translation using neural networks.", attribs = lang_en))
 
@@ -174,8 +174,10 @@ software_distribution.append(Element(ms("executionLocation"), f"http://localhost
 software_distribution.append(Element(ms("additionalHwRequirements"), f"limits_memory: {str(int(args.models_in_image)*768)}Mi"))
 
 licence_terms = etree.SubElement(software_distribution, ms("licenceTerms"), nsmap = namespace_map)
-licence_terms.append(Element(ms("licenceTermsName"), "MIT License", attribs = lang_en))
-licence_terms.append(Element(ms("licenceTermsURL"), "https://spdx.org/licenses/MIT.html"))
+# licence_terms.append(Element(ms("licenceTermsName"), "MIT License", attribs = lang_en))
+# licence_terms.append(Element(ms("licenceTermsURL"), "https://spdx.org/licenses/MIT.html"))
+licence_terms.append(Element(ms("licenceTermsName"), "CC BY 4.0", attribs = lang_en))
+licence_terms.append(Element(ms("licenceTermsURL"), "https://creativecommons.org/licenses/by/4.0/"))
 licence_terms.append(Element(ms("conditionOfUse"), "http://w3id.org/meta-share/meta-share/other"))
 licence_identifier = etree.Element(ms("LicenceIdentifier"),
                                    { etree.QName(ms_namespace_uri, "LicenceIdentifierScheme"): "http://w3id.org/meta-share/meta-share/SPDX" },
