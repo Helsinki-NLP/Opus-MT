@@ -22,7 +22,7 @@ The file `elg/elg_server.py` imports code from the main `server.py` and adds som
 Almost everything is done by the bash script `build_elg_image_and_metadata.sh`. It is configured as follows:
 
 ```
-build_elg_image_and_metadata.sh [IMAGE_NAME [TAG_NAME [VERSION]]]
+build_elg_image_and_metadata.sh [IMAGE_NAME [TAG_NAME [VERSION [RESOURCE_NAME]]]]
 ```
 
 1. Model selection
@@ -31,13 +31,14 @@ build_elg_image_and_metadata.sh [IMAGE_NAME [TAG_NAME [VERSION]]]
 2. Docker image/repository name (IMAGE_NAME): You can supply this as an optional argument, eg. `opus-mt-elg`. The default is 'opus-mt'
 3. Docker image tag (TAG_NAME): This is the second optional argument. The default is the alphabetically sorted list of language codes + the date of today.
 4. Version of the release (VERSION): This is ther version number that will be used at ELG. Default is 1.0.0
-
+5. Resource name (RESOURCE_NAME): The base name of the resource at ELG (default = OPUS-MT)
 
 IMAGE_NAME and TAG_NAME have to comply with the standards on dockerhub, e.g. lower case letters, no special characters, no spaces (obviously). The recommendation for OPUS-MT and Tatoeba-MT models is:
 
 * IMAGE_NAME = opus-mt (for OPUS-MT models)
 * IMAGE_NAME = tatoeba-mt (for Tatoeba-MT models)
 * TAG_NAME = release-sub-directory + release-name (with special characters replaced with _)
+* RESOURCE_NAME = this is useful to have a different resource name for multilingual models that serve several languages (to avoid a clash between a bilingual model and a multilingual model that serve the same language pair)
 
 Example: Converting the multilingual model from https://object.pouta.csc.fi/Tatoeba-MT-models/gmw-eng/opus1m+bt-2021-05-01.zip should be done using:
 
@@ -94,6 +95,6 @@ When the script has finished, there remains a manual task: publishing the image 
 3. Click on "My grid" on the top panel
 4. Hover on the "Add items" menu and select "Upload XML".
 5. Select "Upload multiple items".
-6. Check the box for ELG-compatible service, and choose `metadata_<IMAGE_NAME>_<TAG_NAME>.zip` which the build script should have left in the `elg` directory.
+6. Check the box for ELG-compatible service, and choose `metadata_<IMAGE>_<VERSION>.zip` which the build script should have left in the `elg` directory.
 7. Hopefully the upload completes successfully. If not, the metadata specification has probably changed again. It will take some time for the system to process these.
 8. When processing has finished (you may get an email), click on "My items", find the entries you've just uploaded, select them, and choose the action "Publish".
