@@ -47,7 +47,7 @@ RUN set -eux; \
 
 
 # Start over from the minimal "slim" python base image
-FROM python:3.7-slim
+FROM python:3.7-slim-buster
 
 WORKDIR /usr/src/app
 
