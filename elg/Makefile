@@ -18,18 +18,35 @@ MODELS = 	Tatoeba-MT-models/gmw-eng/opus1m+bt-2021-05-01.zip \
 VERSION = 1.0.0
 
 MODELS_DONE = $(patsubst %.zip,%.done,${MODELS})
+METADATA_DONE = $(patsubst %.zip,%.metadone,${MODELS})
 
 
 all: ${MODELS_DONE}
+metadata: ${METADATA_DONE}
 
+## don't run in parallel because we copy and remove model files
 .NOTPARALLEL:
 
+## docker image and metadata
 ${MODELS_DONE}:
 	rm -fr models
 	echo "${STORAGE_HOME}/${@:.done=.zip}" > models.txt
 	./build_elg_image_and_metadata.sh \
 		$(shell echo "$@" | cut -f1 -d/ | sed 's/-models//' | tr '[:upper:]' '[:lower:]') \
 		$(shell echo '${@:.done=}' | cut -f2,3 -d/ | tr '+/' '__') \
+		$(shell echo "$@" | cut -f2 -d/) \
+		${VERSION}
+	mkdir -p $(dir $@)
+	touch $@
+	rm -fr models
+
+## meta data only
+${METADATA_DONE}:
+	rm -fr models
+	echo "${STORAGE_HOME}/${@:.metadone=.zip}" > models.txt
+	./build_elg_metadata.sh \
+		$(shell echo "$@" | cut -f1 -d/ | sed 's/-models//' | tr '[:upper:]' '[:lower:]') \
+		$(shell echo '${@:.metadone=}' | cut -f2,3 -d/ | tr '+/' '__') \
 		$(shell echo "$@" | cut -f2 -d/) \
 		${VERSION}
 	mkdir -p $(dir $@)

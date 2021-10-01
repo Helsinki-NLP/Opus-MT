@@ -86,7 +86,7 @@ if [[ "$#" -ge 4 ]]; then
     MODEL_VERSION=$4
 fi
 
-
+echo "============== $MODEL_VERSION"
 
 if ls *.xml 1> /dev/null 2>&1; then
     read -p "There are stale xml files present. Delete them? [y/n] " yn
@@ -113,31 +113,5 @@ rm -f metadata_${IMAGE_NAME}_${TAG_NAME}.zip
 zip metadata_${IMAGE_NAME}_${TAG_NAME}.zip *.xml
 rm -f *.xml
 echo "Wrote metadata in metadata_${IMAGE_NAME}_${TAG_NAME}.zip"
-
-IMAGE_NAME="helsinkinlp/$IMAGE_NAME:$TAG_NAME"
-echo "Building with name "$IMAGE_NAME
-
-cd ..
-sudo docker build . -f Dockerfile.base -t opus-mt-base
-
-# This is an annoying hack needed to deal with the fact that elg/ is in the
-# main .dockerignore, and some files needed by the Dockerfile for elg live
-# in the main directory. We copy those files, use them, then delete them.
-
-cp server.py content_processor.py write_configuration.py apply_bpe.py elg/
-cd elg
-python3 write_configuration.py > services.json
-sudo docker build . -t $IMAGE_NAME
-rm server.py content_processor.py write_configuration.py apply_bpe.py \
-   services.json
-
-read -p "Want to push image to Dockerhub now? [y/n] " yn
-    case $yn in
-	[Yy]* )
-	    sudo docker login
-	    sudo docker push $IMAGE_NAME;;
-	* ) echo "Not pushing.";;
-    esac
-
 echo
 echo "Done. Don't forget to upload metadata_$IMAGE_NAME_$MODEL_VERSION.zip to the ELG catalogue!"
