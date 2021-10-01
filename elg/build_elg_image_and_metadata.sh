@@ -80,10 +80,10 @@ if [[ "$#" -ge 2 ]]; then
     TAG_NAME=$2
 fi
 if [[ "$#" -ge 3 ]]; then
-    MODEL_VERSION=$3
+    GENERAL_LANGUAGE_PAIR=$3
 fi
 if [[ "$#" -ge 4 ]]; then
-    RESOURCE_NAME=$4
+    MODEL_VERSION=$3
 fi
 
 
@@ -99,9 +99,12 @@ for pair in $PAIRS; do
     src_lang_opt="--source-lang $(echo $pair | cut -d"-" -f1)"
     tgt_lang_opt="--target-lang $(echo $pair | cut -d"-" -f2)"
     # src_region and tgt_region aren't used in Tatoeba, but generate_metadata knows about them
+    if [[ "$GENERAL_LANGUAGE_PAIR" != "" ]]; then
+	pair=$GENERAL_LANGUAGE_PAIR
+    fi
     python3 generate_metadata.py \
 	    --version $MODEL_VERSION \
-	    --resource-name ${RESOURCE_NAME} \
+	    --language-pair $pair \
 	    --image-name ${IMAGE_NAME}:${TAG_NAME} \
 	    --models-in-image $MODEL_COUNT \
 	    $src_lang_opt $tgt_lang_opt $src_region_opt $trg_region_opt

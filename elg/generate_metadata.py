@@ -10,6 +10,7 @@ argparser.add_argument('--source-lang', action="store", required=True)
 argparser.add_argument('--target-lang', action="store", required=True)
 argparser.add_argument('--source-region', action="store")
 argparser.add_argument('--target-region', action="store")
+argparser.add_argument('--language-pair', action="store")
 argparser.add_argument('--resource-name', action="store", default="OPUS-MT")
 argparser.add_argument('--image-name', action="store", required=True)
 argparser.add_argument('--models-in-image', action="store", required=True)
@@ -44,6 +45,7 @@ except:
 
 version = args.version
 resource_name = args.resource_name
+language_pair = args.language_pair
 image_name = args.image_name
 docker_location = f"https://hub.docker.com/repository/docker/helsinkinlp/{image_name}"
 source_langcode = args.source_lang
@@ -54,6 +56,12 @@ source_lang = iso639.languages.get(part3=source_langcode)
 target_lang = iso639.languages.get(part3=target_langcode)
 source_langname = source_lang.name
 target_langname = target_lang.name
+
+# add language pair to the resource name if it is different from
+# the source and target languages (typically multilingual models)
+if language_pair != f'{source_langcode}-{target_langcode}':
+    resource_name = f'{resource_name} ({language_pair})'
+
 
 def append_elements(root, elements):
     for e in elements:
@@ -131,7 +139,7 @@ creation_date.text = time.strftime("%Y-%m-%d")
 described_entity = etree.SubElement(metadata, ms("DescribedEntity"), nsmap = namespace_map)
 language_resource = etree.SubElement(described_entity, ms("LanguageResource"), nsmap = namespace_map)
 language_resource.append(Element(ms("resourceName"), f"HelsinkiNLP - {resource_name}: {source_langname}-{target_langname} machine translation", attribs = lang_en, nsmap=namespace_map))
-language_resource.append(Element(ms("resourceShortName"), f"{resource_name} ({source_langcode}-{target_langcode})", attribs = lang_en))
+language_resource.append(Element(ms("resourceShortName"), f"{resource_name} {source_langcode}-{target_langcode}", attribs = lang_en))
 language_resource.append(Element(ms("description"), "Multilingual machine translation using neural networks.", attribs = lang_en))
 language_resource.append(Element(ms("logo"), "https://github.com/Helsinki-NLP/Opus-MT/raw/master/img/opus_mt.png"))
 

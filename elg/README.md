@@ -22,7 +22,7 @@ The file `elg/elg_server.py` imports code from the main `server.py` and adds som
 Almost everything is done by the bash script `build_elg_image_and_metadata.sh`. It is configured as follows:
 
 ```
-build_elg_image_and_metadata.sh [IMAGE_NAME [TAG_NAME [VERSION [RESOURCE_NAME]]]]
+build_elg_image_and_metadata.sh [IMAGE_NAME [TAG_NAME [LANGUAGE_PAIR [VERSION]]]]
 ```
 
 1. Model selection
@@ -30,21 +30,22 @@ build_elg_image_and_metadata.sh [IMAGE_NAME [TAG_NAME [VERSION [RESOURCE_NAME]]]
    * If it doesn't, you can write a file `models.txt` with one URL per line, indicating download locations for Opus-MT or Tatoeba models. These are automatically downloaded and unzipped, and we proceed as above.
 2. Docker image/repository name (IMAGE_NAME): You can supply this as an optional argument, eg. `opus-mt-elg`. The default is 'opus-mt'
 3. Docker image tag (TAG_NAME): This is the second optional argument. The default is the alphabetically sorted list of language codes + the date of today.
-4. Version of the release (VERSION): This is ther version number that will be used at ELG. Default is 1.0.0
-5. Resource name (RESOURCE_NAME): The base name of the resource at ELG (default = OPUS-MT)
+4. Language pair (LANGUAGE_PAIR): Optionally the language pair of the model
+5. Version of the release (VERSION): This is ther version number that will be used at ELG. Default is 1.0.0
+
 
 IMAGE_NAME and TAG_NAME have to comply with the standards on dockerhub, e.g. lower case letters, no special characters, no spaces (obviously). The recommendation for OPUS-MT and Tatoeba-MT models is:
 
 * IMAGE_NAME = opus-mt (for OPUS-MT models)
 * IMAGE_NAME = tatoeba-mt (for Tatoeba-MT models)
 * TAG_NAME = release-sub-directory + release-name (with special characters replaced with _)
-* RESOURCE_NAME = this is useful to have a different resource name for multilingual models that serve several languages (to avoid a clash between a bilingual model and a multilingual model that serve the same language pair)
+* LANGUAGE_PAIR = language pair of the model - this is useful for multilingual models that cover more than one language pair, e.g. one can set 'gmw-eng' as the language pair argument to be visible at ELG
 
 Example: Converting the multilingual model from https://object.pouta.csc.fi/Tatoeba-MT-models/gmw-eng/opus1m+bt-2021-05-01.zip should be done using:
 
 ```
 echo 'https://object.pouta.csc.fi/Tatoeba-MT-models/gmw-eng/opus1m+bt-2021-05-01.zip' > models.txt
-./build_elg_image_and_metadata.sh tatoeba-mt gmw-eng_opus1m_bt-2021-05-01
+./build_elg_image_and_metadata.sh tatoeba-mt gmw-eng_opus1m_bt-2021-05-01 gmw-eng
 ```
 
 Metadata for ELG will be in `metadata_tatoeba-mt_gmw-eng_opus1m_bt-2021-05-01.zip`.
