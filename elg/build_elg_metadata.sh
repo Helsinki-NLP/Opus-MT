@@ -86,8 +86,6 @@ if [[ "$#" -ge 4 ]]; then
     MODEL_VERSION=$4
 fi
 
-echo "============== $MODEL_VERSION"
-
 if ls *.xml 1> /dev/null 2>&1; then
     read -p "There are stale xml files present. Delete them? [y/n] " yn
     case $yn in

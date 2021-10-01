@@ -99,3 +99,37 @@ When the script has finished, there remains a manual task: publishing the image 
 6. Check the box for ELG-compatible service, and choose `metadata_<IMAGE>_<VERSION>.zip` which the build script should have left in the `elg` directory.
 7. Hopefully the upload completes successfully. If not, the metadata specification has probably changed again. It will take some time for the system to process these.
 8. When processing has finished (you may get an email), click on "My items", find the entries you've just uploaded, select them, and choose the action "Publish".
+
+
+## Testing a docker image
+
+* check images that are locally available
+
+```
+sudo docker images
+```
+
+* start the server for a selected docker container, assuming that we have a docker `helsinkinlp/tatoeba-mt` with the tag `gmw-eng_opus1m_bt-2021-05-01` in the list above
+
+```
+sudo docker run  -p 8888:8888 helsinkinlp/tatoeba-mt:gmw-eng_opus1m_bt-2021-05-01
+```
+
+* send a translation request
+
+```
+curl -X POST -H "Content-Type: application/json" -d '{"content":"Übersetze das bitte."}' "localhost:8888/elg/translate/gmw/eng"
+```
+
+which should produce something like
+
+```
+{"response": {"type": "texts", "texts": [{"content": "Please translate this. "}]}}
+```
+
+* checking manually the software and the model in the image
+
+```
+sudo docker run -ti helsinkinlp/tatoeba-mt:gmw-eng_opus1m_bt-2021-05-01 bash
+marian-server -c models/gmw-eng/decoder.yml
+```
