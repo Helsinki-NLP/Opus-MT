@@ -8,7 +8,7 @@ Tools and resources for open translation services
 * mainly [SentencePiece](https://github.com/google/sentencepiece)-based segmentation
 * mostly trained with guided alignment based on [eflomal](https://github.com/robertostling/eflomal) wordalignments 
 * [pre-trained downloadable translation models](https://github.com/Helsinki-NLP/Opus-MT-train/tree/master/models) ([matrix view](http://opus.nlpl.eu/Opus-MT/)), CC-BY 4.0 license
-* [more freely available translation models](https://github.com/Helsinki-NLP/Tatoeba-Challenge/blob/master/results/tatoeba-results-all.md) [from the Tatoeba translation challenge]{https://github.com/Helsinki-NLP/Tatoeba-Challenge), CC-BY 4.0 license
+* [more freely available translation models](https://github.com/Helsinki-NLP/Tatoeba-Challenge/blob/master/results/tatoeba-results-all.md) [from the Tatoeba translation challenge](https://github.com/Helsinki-NLP/Tatoeba-Challenge), CC-BY 4.0 license
 * demo translation interface available from https://opusmt.wmflabs.org/
 
 
