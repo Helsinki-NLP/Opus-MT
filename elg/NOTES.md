@@ -22,3 +22,12 @@ response = me.upload_xml(“path/to/the/xml/file.xml”)
 ```
 
 To see all the possible parameters (to upload data for example), you can have a look to the source code: https://gitlab.com/european-language-grid/platform/python-client/-/blob/master/elg/provider.py
+
+
+# Cleanup
+
+delete local docker images and volumes
+
+```
+docker system prune -a --volumes
+```
