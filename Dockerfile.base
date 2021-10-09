@@ -33,7 +33,7 @@ RUN set -eux; \
 	git clone https://github.com/marian-nmt/marian marian; \
 	cd marian; \
 	git checkout 1.9.0; \
-	cmake . -DUSE_STATIC_LIBS=on -DCOMPILE_SERVER=on -DUSE_SENTENCEPIECE=on -DCOMPILE_CPU=on -DCOMPILE_CUDA=off;  \
+	cmake . -DUSE_STATIC_LIBS=on -DCOMPILE_SERVER=on -DUSE_SENTENCEPIECE=on -DCOMPILE_CPU=on -DCOMPILE_CUDA=off -DAVX512_FOUND=false;  \
 	make -j4 marian_server ;
 
 COPY requirements.txt .
