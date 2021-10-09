@@ -9,9 +9,22 @@ rootdir = "models"
 
 for dirname in os.listdir(rootdir):
     try:
-        source, target = dirname.split('-')
-        sources = source.split('+')
-        targets = target.split('+')
+        sources = ()
+        targets = ()
+        readme = os.path.join(rootdir, dirname, 'README.md')
+        with open(readme) as f:
+            lines = f.read().splitlines()
+            for line in lines:
+                if line.startswith('* source language'):
+                    source = line.split(': ')
+                    sources = source[1].split(' ')
+                if line.startswith('* target language'):
+                    target = line.split(': ')
+                    targets = target[1].split(' ')
+        if len(sources) == 0 or len(targets) == 0:
+            source, target = dirname.split('-')
+            sources = source.split('+')
+            targets = target.split('+')
         dirname = os.path.join(rootdir, dirname)
         sourcetok = None
         targettok = None
