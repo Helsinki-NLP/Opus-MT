@@ -31,28 +31,41 @@ else
     echo "Using existing directory models/"
 fi
 
-echo
+
 for readme in $(find models/ -name "README.md"); do
     ((MODEL_COUNT+=1))
     # Parse README files, yaml would be nicer
     # xargs to trim whitespace :)
-    THIS_SRC_LANGS=$(grep "\* source language" $readme | cut -d":" -f2 | xargs)
-    THIS_TGT_LANGS=$(grep "\* target language" $readme | cut -d":" -f2 | xargs)
+
+    THIS_README_SRC_LANGS=$(grep "\* source language" $readme | cut -d":" -f2 | xargs)
+    THIS_README_TGT_LANGS=$(grep "\* target language" $readme | cut -d":" -f2 | xargs)
+    
+    ## OLD: each source language get's its own entry point
+    ## NEW: in multilingual models that use language groups: only use the language group name
+    ##      if multiple source languages are given in the path then use those
+    THIS_SRC_LANGS=$(echo "$readme" | cut -f2 -d/ | cut -d"-" -f1 | tr '+' ' ' | xargs)
+    THIS_TGT_LANGS=$THIS_README_TGT_LANGS
     echo "In $readme, found source languages ${THIS_SRC_LANGS} and target languages ${THIS_TGT_LANGS}"
 
     for src in $THIS_SRC_LANGS; do
 	LANGS+="$src "
+	## need to grep for 'multi' for multilingual models
+	if [[ "$THIS_SRC_LANGS" != "$THIS_README_SRC_LANGS" ]]; then
+	    srcgrep="multi"
+	else
+	    srcgrep=$src
+	fi
 	for tgt in $THIS_TGT_LANGS; do
 	    ## get scores and size of the biggest test set
-	    BLEU_SCORE=$(grep '^|' $readme | grep "${src}-${tgt}" | sort -t '|' -k5 -nr | cut -f3 -d'|' | head -1 | xargs)
-	    CHRF_SCORE=$(grep '^|' $readme | grep "${src}-${tgt}" | sort -t '|' -k5 -nr | cut -f4 -d'|' | head -1 | xargs)
-	    TEST_SIZE=$(grep '^|' $readme | grep "${src}-${tgt}" | sort -t '|' -k5 -nr | cut -f5 -d'|' | head -1 | xargs)
+	    BLEU_SCORE=$(grep '^|' $readme | grep "${srcgrep}.${tgt}" | sort -t '|' -k5 -nr | cut -f3 -d'|' | head -1 | xargs)
+	    CHRF_SCORE=$(grep '^|' $readme | grep "${srcgrep}.${tgt}" | sort -t '|' -k5 -nr | cut -f4 -d'|' | head -1 | xargs)
+	    TEST_SIZE=$(grep '^|' $readme | grep "${srcgrep}.${tgt}" | sort -t '|' -k5 -nr | cut -f5 -d'|' | head -1 | xargs)
 	    ## if we don't know the test set size: get the highest scores
 	    ## and assume that the test set is big enough (old models)
 	    if [[ "$TEST_SIZE" == "" ]]; then
 		TEST_SIZE=$MIN_TEST_SIZE
-		BLEU_SCORE=$(grep '^|' $readme | grep "${src}-${tgt}" | sort -t '|' -k3 -nr | cut -f3 -d'|' | head -1 | xargs)
-		CHRF_SCORE=$(grep '^|' $readme | grep "${src}-${tgt}" | sort -t '|' -k4 -nr | cut -f4 -d'|' | head -1 | xargs)
+		BLEU_SCORE=$(grep '^|' $readme | grep "${srcgrep}.${tgt}" | sort -t '|' -k3 -nr | cut -f3 -d'|' | head -1 | xargs)
+		CHRF_SCORE=$(grep '^|' $readme | grep "${srcgrep}.${tgt}" | sort -t '|' -k4 -nr | cut -f4 -d'|' | head -1 | xargs)
 	    fi
 	    echo "$src-$tgt: $BLEU_SCORE / $CHRF_SCORE / $TEST_SIZE"
 	    if [[ "$TEST_SIZE" -ge $MIN_TEST_SIZE ]]; then
@@ -118,7 +131,7 @@ IMAGE_NAME="helsinkinlp/$IMAGE_NAME:$TAG_NAME"
 echo "Building with name "$IMAGE_NAME
 
 cd ..
-sudo docker build . -f Dockerfile.base -t opus-mt-base
+# sudo docker build . -f Dockerfile.base -t opus-mt-base
 
 # This is an annoying hack needed to deal with the fact that elg/ is in the
 # main .dockerignore, and some files needed by the Dockerfile for elg live
@@ -131,13 +144,17 @@ sudo docker build . -t $IMAGE_NAME
 rm server.py content_processor.py write_configuration.py apply_bpe.py \
    services.json
 
-read -p "Want to push image to Dockerhub now? [y/n] " yn
-    case $yn in
-	[Yy]* )
-	    sudo docker login
-	    sudo docker push $IMAGE_NAME;;
-	* ) echo "Not pushing.";;
-    esac
+
+sudo docker login
+sudo docker push $IMAGE_NAME
+
+# read -p "Want to push image to Dockerhub now? [y/n] " yn
+#     case $yn in
+# 	[Yy]* )
+# 	    sudo docker login
+# 	    sudo docker push $IMAGE_NAME;;
+# 	* ) echo "Not pushing.";;
+#     esac
 
 echo
 echo "Done. Don't forget to upload metadata_$IMAGE_NAME_$MODEL_VERSION.zip to the ELG catalogue!"

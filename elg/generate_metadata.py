@@ -3,11 +3,14 @@ import time
 import copy
 from lxml import etree
 import argparse
-import iso639
+# import iso639
+from iso639 import Lang
+
 
 argparser = argparse.ArgumentParser('Write ELG metadata and configuration information to local directory')
 argparser.add_argument('--source-lang', action="store", required=True)
 argparser.add_argument('--target-lang', action="store", required=True)
+argparser.add_argument('--supported-source-lang', action="store")
 argparser.add_argument('--source-region', action="store")
 argparser.add_argument('--target-region', action="store")
 argparser.add_argument('--language-pair', action="store")
@@ -53,10 +56,13 @@ source_langcode = args.source_lang
 source_region = args.source_region
 target_langcode = args.target_lang
 target_region = args.target_region
-source_lang = iso639.languages.get(part3=source_langcode)
-target_lang = iso639.languages.get(part3=target_langcode)
-source_langname = source_lang.name
-target_langname = target_lang.name
+# source_lang = iso639.languages.get(part3=source_langcode)
+# target_lang = iso639.languages.get(part3=target_langcode)
+# source_langname = source_lang.name
+# target_langname = target_lang.name
+source_langname = Lang(source_langcode).name
+target_langname = Lang(target_langcode).name
+
 
 # add language pair to the resource name if it is different from
 # the source and target languages (typically multilingual models)
@@ -94,8 +100,10 @@ def Element(name, text = None, **kwargs):
     return retval
 
 def make_language(_id, **kwargs):
-    if iso639.languages.get(part3=_id).part1:
-        _id = iso639.languages.get(part3=_id).part1
+    if Lang(_id).pt1:
+        _id = Lang(_id).pt1
+    # if iso639.languages.get(part3=_id).part1:
+    #     _id = iso639.languages.get(part3=_id).part1
     language = Element(ms("language"))
     subtags = []
     if 'script' in kwargs:
@@ -195,7 +203,7 @@ licence_terms.append(Element(ms("conditionOfUse"), "http://w3id.org/meta-share/m
 licence_identifier = etree.Element(ms("LicenceIdentifier"),
                                    { etree.QName(ms_namespace_uri, "LicenceIdentifierScheme"): "http://w3id.org/meta-share/meta-share/SPDX" },
                                    nsmap = {'ms': ms_namespace_uri})
-licence_identifier.text = "MIT"
+licence_identifier.text = "CC-BY-4.0"
 licence_terms.append(licence_identifier)
 
 tool_service.append(Element(ms("languageDependent"), "true"))
