@@ -31,54 +31,51 @@ else
     echo "Using existing directory models/"
 fi
 
-
 for readme in $(find models/ -name "README.md"); do
     ((MODEL_COUNT+=1))
     # Parse README files, yaml would be nicer
     # xargs to trim whitespace :)
 
-    THIS_README_SRC_LANGS=$(grep "\* source language" $readme | cut -d":" -f2 | xargs)
-    THIS_README_TGT_LANGS=$(grep "\* target language" $readme | cut -d":" -f2 | xargs)
-    
-    ## OLD: each source language get's its own entry point
-    ## NEW: in multilingual models that use language groups: only use the language group name
-    ##      if multiple source languages are given in the path then use those
-    THIS_SRC_LANGS=$(echo "$readme" | cut -f2 -d/ | cut -d"-" -f1 | tr '+' ' ' | xargs)
-    THIS_TGT_LANGS=$THIS_README_TGT_LANGS
+    THIS_SRC=$(echo "$readme" | cut -f2 -d/ | cut -d"-" -f1)
+    THIS_SRC_LANGS=$(grep "\* source language" $readme | cut -d":" -f2 | xargs)
+    THIS_TGT_LANGS=$(grep "\* target language" $readme | cut -d":" -f2 | xargs)
+
     echo "In $readme, found source languages ${THIS_SRC_LANGS} and target languages ${THIS_TGT_LANGS}"
 
-    for src in $THIS_SRC_LANGS; do
-	LANGS+="$src "
-	## need to grep for 'multi' for multilingual models
-	if [[ "$THIS_SRC_LANGS" != "$THIS_README_SRC_LANGS" ]]; then
-	    srcgrep="multi"
-	else
-	    srcgrep=$src
-	fi
-	for tgt in $THIS_TGT_LANGS; do
+    SRC_LANGS=''
+    TGT_LANGS=''
+    for tgt in $THIS_TGT_LANGS; do
+	for src in $THIS_SRC_LANGS; do
 	    ## get scores and size of the biggest test set
-	    BLEU_SCORE=$(grep '^|' $readme | grep "${srcgrep}.${tgt}" | sort -t '|' -k5 -nr | cut -f3 -d'|' | head -1 | xargs)
-	    CHRF_SCORE=$(grep '^|' $readme | grep "${srcgrep}.${tgt}" | sort -t '|' -k5 -nr | cut -f4 -d'|' | head -1 | xargs)
-	    TEST_SIZE=$(grep '^|' $readme | grep "${srcgrep}.${tgt}" | sort -t '|' -k5 -nr | cut -f5 -d'|' | head -1 | xargs)
+	    BLEU_SCORE=$(grep '^|' $readme | grep "${src}.${tgt}" | sort -t '|' -k5 -nr | cut -f3 -d'|' | head -1 | xargs)
+	    CHRF_SCORE=$(grep '^|' $readme | grep "${src}.${tgt}" | sort -t '|' -k5 -nr | cut -f4 -d'|' | head -1 | xargs)
+	    TEST_SIZE=$(grep '^|' $readme | grep "${src}.${tgt}" | sort -t '|' -k5 -nr | cut -f5 -d'|' | head -1 | xargs)
 	    ## if we don't know the test set size: get the highest scores
 	    ## and assume that the test set is big enough (old models)
 	    if [[ "$TEST_SIZE" == "" ]]; then
 		TEST_SIZE=$MIN_TEST_SIZE
-		BLEU_SCORE=$(grep '^|' $readme | grep "${srcgrep}.${tgt}" | sort -t '|' -k3 -nr | cut -f3 -d'|' | head -1 | xargs)
-		CHRF_SCORE=$(grep '^|' $readme | grep "${srcgrep}.${tgt}" | sort -t '|' -k4 -nr | cut -f4 -d'|' | head -1 | xargs)
+		BLEU_SCORE=$(grep '^|' $readme | grep "${src}.${tgt}" | sort -t '|' -k3 -nr | cut -f3 -d'|' | head -1 | xargs)
+		CHRF_SCORE=$(grep '^|' $readme | grep "${src}.${tgt}" | sort -t '|' -k4 -nr | cut -f4 -d'|' | head -1 | xargs)
 	    fi
 	    echo "$src-$tgt: $BLEU_SCORE / $CHRF_SCORE / $TEST_SIZE"
 	    if [[ "$TEST_SIZE" -ge $MIN_TEST_SIZE ]]; then
 		if [[ "$BLEU_SCORE" != "" ]]; then
 		    if [[ "$CHRF_SCORE" != "" ]]; then
 			if (( $(echo "$BLEU_SCORE > $BLEU_THRESHOLD" | bc -l) )) || (( $(echo "$CHRF_SCORE > $CHRF_THRESHOLD" | bc -l) )); then
-			    PAIRS+="$src-$tgt "
-			    LANGS+="$tgt "
+			    SRC_LANGS+="$src+"
 			fi
 		    fi
 		fi
 	    fi
 	done
+	if [[ "$SRC_LANGS" != "" ]]; then
+	    TGT_LANGS+="$tgt "
+	fi
+    done
+    LANGS+="$SRC_LANGS $TGT_LANGS "
+    for tgt in $TGT_LANGS; do
+	src=$(echo $SRC_LANGS | sed 's/+$//')
+	PAIRS+="$THIS_SRC-$src-$tgt "
     done
 done
 
@@ -109,18 +106,13 @@ if ls *.xml 1> /dev/null 2>&1; then
     esac
 fi
 for pair in $PAIRS; do
-    src_lang_opt="--source-lang $(echo $pair | cut -d"-" -f1)"
-    tgt_lang_opt="--target-lang $(echo $pair | cut -d"-" -f2)"
-    # src_region and tgt_region aren't used in Tatoeba, but generate_metadata knows about them
-    if [[ "$GENERAL_LANGUAGE_PAIR" != "" ]]; then
-	pair=$GENERAL_LANGUAGE_PAIR
-    fi
     python3 generate_metadata.py \
 	    --version $MODEL_VERSION \
-	    --language-pair $pair \
+	    --source-langs $(echo $pair | cut -d"-" -f2) \
+	    --source-lang $(echo $pair | cut -d"-" -f1) \
+    	    --target-lang $(echo $pair | cut -d"-" -f3) \
 	    --image-name ${IMAGE_NAME}:${TAG_NAME} \
-	    --models-in-image $MODEL_COUNT \
-	    $src_lang_opt $tgt_lang_opt $src_region_opt $trg_region_opt
+	    --models-in-image $MODEL_COUNT
 done
 rm -f metadata_${IMAGE_NAME}_${TAG_NAME}.zip
 zip metadata_${IMAGE_NAME}_${TAG_NAME}.zip *.xml
@@ -129,6 +121,7 @@ echo "Wrote metadata in metadata_${IMAGE_NAME}_${TAG_NAME}.zip"
 
 IMAGE_NAME="helsinkinlp/$IMAGE_NAME:$TAG_NAME"
 echo "Building with name "$IMAGE_NAME
+
 
 cd ..
 # sudo docker build . -f Dockerfile.base -t opus-mt-base

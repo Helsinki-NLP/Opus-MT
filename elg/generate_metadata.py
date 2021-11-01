@@ -8,12 +8,12 @@ from iso639 import Lang
 
 
 argparser = argparse.ArgumentParser('Write ELG metadata and configuration information to local directory')
+argparser.add_argument('--source-langs', action="store", required=True)
 argparser.add_argument('--source-lang', action="store", required=True)
 argparser.add_argument('--target-lang', action="store", required=True)
 argparser.add_argument('--supported-source-lang', action="store")
 argparser.add_argument('--source-region', action="store")
 argparser.add_argument('--target-region', action="store")
-argparser.add_argument('--language-pair', action="store")
 argparser.add_argument('--resource-name', action="store", default="OPUS-MT")
 argparser.add_argument('--image-name', action="store", required=True)
 argparser.add_argument('--models-in-image', action="store", required=True)
@@ -48,10 +48,10 @@ except:
 
 version = args.version
 resource_name = args.resource_name
-language_pair = args.language_pair
 image_name = args.image_name
 # docker_location = f"https://hub.docker.com/repository/docker/helsinkinlp/{image_name}"
 docker_location = f"docker.io/helsinkinlp/{image_name}"
+source_langcodes = args.source_langs
 source_langcode = args.source_lang
 source_region = args.source_region
 target_langcode = args.target_lang
@@ -63,10 +63,11 @@ target_region = args.target_region
 source_langname = Lang(source_langcode).name
 target_langname = Lang(target_langcode).name
 
+language_pair = f'{source_langcode}-{target_langcode}'
 
 # add language pair to the resource name if it is different from
 # the source and target languages (typically multilingual models)
-if language_pair != f'{source_langcode}-{target_langcode}':
+if language_pair != f'{source_langcodes}-{target_langcode}':
     resource_name = f'{resource_name} ({language_pair})'
 
 
@@ -210,7 +211,11 @@ tool_service.append(Element(ms("languageDependent"), "true"))
 
 input_content_resource = etree.SubElement(tool_service, ms("inputContentResource"))
 input_content_resource.append(Element(ms("processingResourceType"), "http://w3id.org/meta-share/meta-share/userInputText"))
-input_content_resource.append(make_language(source_langcode, region = source_region))
+for s in source_langcodes.split('+'):
+    try:
+        input_content_resource.append(make_language(s, region = source_region))
+    except:
+        print("could not add language " + s)
 input_content_resource.append(Element(ms("mediaType"), "http://w3id.org/meta-share/meta-share/text"))
 input_content_resource.append(Element(ms("characterEncoding"), "http://w3id.org/meta-share/meta-share/UTF-8"))
 
