@@ -1,5 +1,10 @@
 import os
 import json
+import argparse
+
+argparser = argparse.ArgumentParser('Write OPUS-MT service JSON')
+argparser.add_argument('--source-lang-from-path', action="store_true")
+args = argparser.parse_args()
 
 configuration = {}
 port = 10001
@@ -21,16 +26,13 @@ for dirname in os.listdir(rootdir):
                 if line.startswith('* target language'):
                     target = line.split(': ')
                     targets = target[1].split(' ')
-                ## target language labels may include writing script!
-                #if line.startswith('* valid language labels'):
-                #    target = line.split(': ')
-                #    target[1] = target[1].replace('<','')
-                #    target[1] = target[1].replace('>','')
-                #    targets = target[1].split(' ')
         if len(sources) == 0 or len(targets) == 0:
             source, target = dirname.split('-')
             sources = source.split('+')
             targets = target.split('+')
+        if args.source_lang_from_path:
+            source, target = dirname.split('-')
+            sources = source.split('+')
         dirname = os.path.join(rootdir, dirname)
         sourcetok = None
         targettok = None
@@ -50,10 +52,8 @@ for dirname in os.listdir(rootdir):
         assert os.path.isfile(os.path.join(dirname, "decoder.yml"))
         assert len(sources) > 0
         assert len(targets) > 0
-        ## language labels may be longer than 3 characters
-        ## (if they contain writing script information)
-        # assert all(map(lambda x: len(x) <= 3, sources))
-        # assert all(map(lambda x: len(x) <= 3, targets))
+        assert all(map(lambda x: len(x) <= 3, sources))
+        assert all(map(lambda x: len(x) <= 3, targets))
     except Exception as ex:
         raise ex
         continue

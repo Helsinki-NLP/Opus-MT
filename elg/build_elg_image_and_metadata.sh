@@ -95,6 +95,9 @@ fi
 if [[ "$#" -ge 4 ]]; then
     MODEL_VERSION=$4
 fi
+if [[ "$#" -ge 5 ]]; then
+    PAIRS=$5
+fi
 
 
 
@@ -132,7 +135,7 @@ cd ..
 
 cp server.py content_processor.py write_configuration.py apply_bpe.py elg/
 cd elg
-python3 write_configuration.py > services.json
+python3 write_configuration.py --source-lang-from-path > services.json
 sudo docker build . -t $IMAGE_NAME
 rm server.py content_processor.py write_configuration.py apply_bpe.py \
    services.json

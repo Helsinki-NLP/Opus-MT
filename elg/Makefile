@@ -66,3 +66,13 @@ ${METADATA_DONE}:
 	mkdir -p $(dir $@)
 	touch $@
 	rm -fr models
+
+
+sme:
+	./build_elg_image_and_metadata.sh \
+		opus-mt \
+		opus_giella \
+		sme-gmq \
+		1.0.0 \
+		"sme-se-fi sme-se-nb sme-se-nn sme-se-sv gmq-fi+nb+no+nn+sv-se"
+
