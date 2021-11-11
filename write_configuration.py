@@ -52,8 +52,8 @@ for dirname in os.listdir(rootdir):
         assert os.path.isfile(os.path.join(dirname, "decoder.yml"))
         assert len(sources) > 0
         assert len(targets) > 0
-        assert all(map(lambda x: len(x) <= 3, sources))
-        assert all(map(lambda x: len(x) <= 3, targets))
+        assert all(map(lambda x: len(x.split('_')[0]) <= 3, sources))
+        assert all(map(lambda x: len(x.split('_')[0]) <= 3, targets))
     except Exception as ex:
         raise ex
         continue

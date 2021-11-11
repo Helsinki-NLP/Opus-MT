@@ -60,8 +60,10 @@ target_region = args.target_region
 # target_lang = iso639.languages.get(part3=target_langcode)
 # source_langname = source_lang.name
 # target_langname = target_lang.name
-source_langname = Lang(source_langcode).name
-target_langname = Lang(target_langcode).name
+# source_langcode_short = source_langcode.split('_')[0]
+# target_langcode_short = target_langcode.split('_')[0]
+source_langname = Lang(source_langcode.split('_')[0]).name
+target_langname = Lang(target_langcode.split('_')[0]).name
 
 language_pair = f'{source_langcode}-{target_langcode}'
 
@@ -101,8 +103,8 @@ def Element(name, text = None, **kwargs):
     return retval
 
 def make_language(_id, **kwargs):
-    if Lang(_id).pt1:
-        _id = Lang(_id).pt1
+    if Lang(_id.split('_')[0]).pt1:
+        _id = Lang(_id.split('_')[0]).pt1
     # if iso639.languages.get(part3=_id).part1:
     #     _id = iso639.languages.get(part3=_id).part1
     language = Element(ms("language"))

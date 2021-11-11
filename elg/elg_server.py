@@ -42,7 +42,7 @@ def make_app(args):
     # Take the language pair from the URL, i.e. a POST to /elg/translate/en/fi
     # would do English to Finnish
     handlers = [
-        (r"/elg/translate/([a-z]+)/([a-z]+)", ElgApiHandler,
+        (r"/elg/translate/([a-zA-Z_]+)/([a-zA-Z_]+)", ElgApiHandler,
          dict(api='translate', config=services, worker_pool=worker_pool)),
         (r"/elg/ready", ElgApiHandler,
          dict(api='ready', config=services, worker_pool=worker_pool)),
