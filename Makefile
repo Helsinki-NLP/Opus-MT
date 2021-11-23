@@ -14,7 +14,27 @@ LANGPAIR = ${SRC_LANGS}-${TRG_LANGS}
 
 
 ## repository with all public models
-MODEL_REPO = https://object.pouta.csc.fi/OPUS-MT-models
+OPUSMT_MODEL_REPO  = https://object.pouta.csc.fi/OPUS-MT-models
+TATOEBA_MODEL_REPO = https://object.pouta.csc.fi/Tatoeba-MT-models
+MODEL_REPO = ${OPUSMT_MODEL_REPO}
+
+## set model to be downloaded (the last model for the given language pair and dataset)
+## TODO: check whether at least one exists!
+## TODO: this always prefers +bt models even if they are not the last one
+
+MODEL_PATTERN = ${DATASET}\(-\|\+bt\).*\.zip
+OPUSMT_MODEL := ${shell wget -q -O - ${MODEL_REPO}/index.txt | \
+		grep '^${SRC_LANGS}-${TRG_LANGS}/${MODEL_PATTERN}' | \
+		sort | tail -1}
+
+## overwrite OPUSMT_MODEL or MODEL_URL if you want to download a specific model
+##
+##    make OPUSMT_MODEL=fi-en/modelname.zip ...
+##    make MODEL_URL=https://download.server/fi-en/modelname.zip ...
+##
+
+## download URL of the model
+MODEL_URL = ${MODEL_REPO}/${OPUSMT_MODEL}
 
 
 ## installation destinations
@@ -225,16 +245,12 @@ test-download:
 
 fetch-model: ${NMT_MODEL}
 
-## download the last model for the given language pair and dataset
-## TODO: check whether at least one exists!
-## TODO: this always prefers +bt models even if they are not the last one
 
-MODEL_PATTERN = ${DATASET}\(-\|\+bt\).*\.zip
+print-selected-model:
+	@echo ${OPUSMT_MODEL}
 
 ${NMT_MODEL}:
-	wget -O model-list.txt ${MODEL_REPO}/index.txt
-	wget -O model.zip \
-		${MODEL_REPO}/`grep '^${SRC_LANGS}-${TRG_LANGS}/${MODEL_PATTERN}' model-list.txt | sort | tail -1`
+	wget -O model.zip ${MODEL_URL}
 	mkdir -p model
 	cd model && unzip ../model.zip
 	mkdir -p ${dir $@}
@@ -247,7 +263,12 @@ ${NMT_MODEL}:
 	fi
 	rm -f model/*
 	rmdir model
-	rm -f model.zip model-list.txt
+	rm -f model.zip
+
+#	wget -O model-list.txt ${MODEL_REPO}/index.txt
+#	wget -O model.zip \
+#		${MODEL_REPO}/`grep '^${SRC_LANGS}-${TRG_LANGS}/${MODEL_PATTERN}' model-list.txt | sort | tail -1`
+#	rm -f model-list.txt
 
 model-list.txt:
 	wget -O model-list.txt ${MODEL_REPO}/index.txt
