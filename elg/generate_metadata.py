@@ -150,6 +150,7 @@ creation_date.text = time.strftime("%Y-%m-%d")
 
 described_entity = etree.SubElement(metadata, ms("DescribedEntity"), nsmap = namespace_map)
 language_resource = etree.SubElement(described_entity, ms("LanguageResource"), nsmap = namespace_map)
+language_resource.append(Element(ms("entityType"), "LanguageResource"))
 language_resource.append(Element(ms("resourceName"), f"HelsinkiNLP - {resource_name}: {source_langname}-{target_langname} machine translation", attribs = lang_en, nsmap=namespace_map))
 language_resource.append(Element(ms("resourceShortName"), f"{resource_name} {source_langcode}-{target_langcode}", attribs = lang_en))
 language_resource.append(Element(ms("description"), "Multilingual machine translation using neural networks.", attribs = lang_en))
