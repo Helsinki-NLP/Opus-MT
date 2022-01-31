@@ -4,7 +4,7 @@ services:
   opus-mt:
     build: .
     volumes:
-      - .:/usr/src/app
+      - ./models:/usr/src/app/models
     ports:
       - 8888:80
 
