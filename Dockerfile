@@ -8,6 +8,7 @@ WORKDIR /usr/src/app
 
 # Install base packages
 RUN set -eux; \
+    sh -c 'echo deb http://deb.debian.org/debian buster-backports main > /etc/apt/sources.list.d/buster-backports.list'; \
 	apt-get update; \
 	apt-get install -y --no-install-recommends \
 		ca-certificates git wget gnupg build-essential lsb-release g++ \
