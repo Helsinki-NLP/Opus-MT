@@ -85,6 +85,23 @@ INSTALL_DATA = ${INSTALL} -m 644
 .PHONY: all
 all: opusMT-server opusMT-router
 
+.PHONY: tornado-models
+tornado-models: models/en-es models/en-fi
+
+models/en-es:
+	mkdir -p $@
+	wget -O $@/model.zip https://object.pouta.csc.fi/OPUS-MT-models/en-es/opus-2019-12-04.zip
+	cd $@ && unzip model.zip
+	rm -f $@/model.zip
+
+models/en-fi:
+	mkdir -p $@
+	wget -O $@/model.zip https://object.pouta.csc.fi/OPUS-MT-models/en-fi/opus+bt-2020-02-26.zip
+	cd $@ && unzip model.zip
+	rm -f $@/model.zip
+
+
+
 .PHONY: install
 install: opusMT-server
 
