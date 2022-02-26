@@ -261,7 +261,7 @@ ${PYTORCH_MODEL}/README.md: ${PYTORCH_MODEL} ${PYTORCH_MODEL}/benchmark_results.
 	@echo 'model-index:'       >> $@
 	@echo '- name: ${HF_NAME}' >> $@
 	@echo '  results:'         >> $@
-	@./extract-task-results.pl ${PYTORCH_MODEL}/benchmark_results.txt >> $@
+	./extract-task-results.pl ${PYTORCH_MODEL}/benchmark_results.txt >> $@
 	@echo '---'                >> $@
 	@echo '# ${HF_NAME}'       >> $@
 	@echo ''                   >> $@

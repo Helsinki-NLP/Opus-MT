@@ -18,11 +18,17 @@ while (<>){
     }
     # $testset=~s/^news/WMT-news/;
     $testset=~s/^newstest(20[0-9]{2}).*/wmt-$1-news/;
-    $testset=~s/^flores101-devtest/flores101/;
     $testset=~s/^multi30k_test_(.*)$/multi30k-$1/;
 
-    $results{$testset}{$langpair}[0] = $name;
-    $results{$testset}{$langpair}[1] = $version;
+    if ($testset=~s/^flores101-(devtest|dev)$/flores_101/){
+	my ($src,$trg) = split(/\-/,$langpair);
+	$results{$testset}{$langpair}[1] = "$src $trg $1"
+    }
+    else{
+	$results{$testset}{$langpair}[1] = $langpair;
+    }
+
+    $results{$testset}{$langpair}[0] = $name;    
     $results{$testset}{$langpair}[2] = $bleu;
     $results{$testset}{$langpair}[3] = $chrf;
 }
@@ -36,8 +42,9 @@ foreach my $t (sort keys %results){
 	print "    dataset:\n";
 	print "      name: $results{$t}{$l}[0]\n";
 	print "      type: $t\n";
-#	print "      args: $l $results{$t}{$l}[1]\n";
-	print "      args: $l\n";
+	#	print "      args: $l $results{$t}{$l}[1]\n";
+	#	print "      args: $l\n";
+	print "      args: $results{$t}{$l}[1]\n";
 	print "    metrics:\n";
 	print "       - name: BLEU\n";
 	print "         type: bleu\n";

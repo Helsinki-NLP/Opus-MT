@@ -119,8 +119,8 @@ def make_language(_id, **kwargs):
         subtags.append(kwargs['variant'])
         language.append(Element(ms("variantId"), kwargs['variant']))
     tag = '-'.join([_id] + subtags)
-    language.append(Element(ms("languageId"), _id))
     language.append(Element(ms("languageTag"), tag))
+    language.append(Element(ms("languageId"), _id))
     return language
 
 metadata = etree.Element(ms("MetadataRecord"),
@@ -156,16 +156,22 @@ language_resource.append(Element(ms("resourceShortName"), f"{resource_name} {sou
 language_resource.append(Element(ms("description"), "Multilingual machine translation using neural networks.", attribs = lang_en))
 language_resource.append(Element(ms("logo"), "https://github.com/Helsinki-NLP/Opus-MT/raw/master/img/opus_mt.png"))
 
+language_resource.append(Element(ms("version"), version))
+additional_info = etree.SubElement(language_resource, ms("additionalInfo"), nsmap = namespace_map)
+additional_info.append(Element(ms("landingPage"), "https://github.com/Helsinki-NLP/Opus-MT"))
+language_resource.append(Element(ms("keyword"), "machine translation", attribs = lang_en))
+language_resource.append(Element(ms("keyword"), "translation", attribs = lang_en))
+language_resource.append(Element(ms("keyword"), "multilingual", attribs = lang_en))
 
 resource_provider = etree.SubElement(language_resource, ms("resourceProvider"), nsmap = namespace_map)
 resource_provider_organization = etree.SubElement(resource_provider, ms("Organization"), nsmap = namespace_map)
-resource_provider_organization.append(Element(ms("actorType"), "Organisation", nsmap=namespace_map))
+resource_provider_organization.append(Element(ms("actorType"), "Organization", nsmap=namespace_map))
 resource_provider_organization.append(Element(ms("organizationName"), "University of Helsinki", attribs = lang_en, nsmap=namespace_map))
 resource_provider_organization.append(Element(ms("website"), "http://www.helsinki.fi", nsmap=namespace_map))
 
 resource_creator = etree.SubElement(language_resource, ms("resourceCreator"), nsmap = namespace_map)
 resource_creator_organization = etree.SubElement(resource_creator, ms("Organization"), nsmap = namespace_map)
-resource_creator_organization.append(Element(ms("actorType"), "Organisation", nsmap=namespace_map))
+resource_creator_organization.append(Element(ms("actorType"), "Organization", nsmap=namespace_map))
 resource_creator_organization.append(Element(ms("organizationName"), "Opus-MT Team", attribs = lang_en, nsmap=namespace_map))
 resource_creator_organization.append(Element(ms("website"), "https://github.com/Helsinki-NLP/Opus-MT", nsmap=namespace_map))
 
@@ -178,17 +184,12 @@ project_identifier.text = "Opus-MT"
 funding_project.append(project_identifier)
 funding_project.append(Element(ms("website"), "https://github.com/Helsinki-NLP/Opus-MT", nsmap=namespace_map))
 
-language_resource.append(Element(ms("version"), version))
 intended_application = etree.SubElement(language_resource, ms("intendedApplication"), nsmap=namespace_map)
 intended_application.append(Element(ms("LTClassRecommended"), "http://w3id.org/meta-share/omtd-share/MachineTranslation"))
-additional_info = etree.SubElement(language_resource, ms("additionalInfo"), nsmap = namespace_map)
-additional_info.append(Element(ms("landingPage"), "https://github.com/Helsinki-NLP/Opus-MT"))
-language_resource.append(Element(ms("keyword"), "machine translation", attribs = lang_en))
-language_resource.append(Element(ms("keyword"), "translation", attribs = lang_en))
-language_resource.append(Element(ms("keyword"), "multilingual", attribs = lang_en))
 
 lr_subclass = etree.SubElement(language_resource, ms("LRSubclass"), nsmap = namespace_map)
 tool_service = etree.SubElement(lr_subclass, ms("ToolService"), nsmap = namespace_map)
+tool_service.append(Element(ms("lrType"), "ToolService"))
 function = etree.SubElement(tool_service, ms("function"), nsmap = namespace_map)
 function.append(Element(ms("LTClassRecommended"), "http://w3id.org/meta-share/omtd-share/MachineTranslation"))
 software_distribution = etree.SubElement(tool_service, ms("SoftwareDistribution"), nsmap = namespace_map)
@@ -196,7 +197,7 @@ software_distribution.append(Element(ms("SoftwareDistributionForm"), "http://w3i
 software_distribution.append(Element(ms("dockerDownloadLocation"), docker_location))
 software_distribution.append(Element(ms("privateResource"), "false"))
 software_distribution.append(Element(ms("executionLocation"), f"http://localhost:8888/elg/translate/{source_langcode}/{target_langcode}"))
-software_distribution.append(Element(ms("additionalHwRequirements"), f"limits_memory: {str(int(args.models_in_image)*768)}Mi"))
+software_distribution.append(Element(ms("additionalHWRequirements"), f"limits_memory: {str(int(args.models_in_image)*768)}Mi"))
 
 licence_terms = etree.SubElement(software_distribution, ms("licenceTerms"), nsmap = namespace_map)
 # licence_terms.append(Element(ms("licenceTermsName"), "MIT License", attribs = lang_en))
