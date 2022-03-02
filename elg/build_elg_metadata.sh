@@ -43,9 +43,8 @@ for readme in $(find models/ -name "README.md"); do
 
     echo "In $readme, found source languages ${THIS_SRC_LANGS} and target languages ${THIS_TGT_LANGS}"
 
-    SRC_LANGS=''
-    TGT_LANGS=''
     for tgt in $THIS_TGT_LANGS; do
+	SRC_LANGS=''
 	for src in $THIS_SRC_LANGS; do
 	    ## get scores and size of the biggest test set
 	    BLEU_SCORE=$(grep '^|' $readme | grep "${src}.${tgt}" | sort -t '|' -k5 -nr | cut -f3 -d'|' | head -1 | xargs)
@@ -70,56 +69,19 @@ for readme in $(find models/ -name "README.md"); do
 	    fi
 	done
 	if [[ "$SRC_LANGS" != "" ]]; then
-	    TGT_LANGS+="$tgt "
+	    echo "... add $THIS_SRC-$SRC_LANGS-$tgt"
+	    SRC_LANGS=$(echo $SRC_LANGS | sed 's/\+$//')
+	    PAIRS+="$THIS_SRC-$SRC_LANGS-$tgt "
 	fi
     done
-    LANGS+="$SRC_LANGS $TGT_LANGS "
-    for tgt in $TGT_LANGS; do
-	src=$(echo $SRC_LANGS | sed 's/+$//')
-	PAIRS+="$THIS_SRC-$src-$tgt "
-    done
 done
+LANGS=$(echo "$PAIRS" | tr '\-\+' '  ' | tr ' ' "\n" | sort -u | xargs)
 
-# echo
-# for readme in $(find models/ -name "README.md"); do
-#     ((MODEL_COUNT+=1))
-#     # Parse README files, yaml would be nicer
-#     # xargs to trim whitespace :)
-#     THIS_SRC_LANGS=$(grep "\* source language" $readme | cut -d":" -f2 | xargs)
-#     THIS_TGT_LANGS=$(grep "\* target language" $readme | cut -d":" -f2 | xargs)
-#     echo "In $readme, found source languages ${THIS_SRC_LANGS} and target languages ${THIS_TGT_LANGS}"
-
-#     for src in $THIS_SRC_LANGS; do
-# 	LANGS+="$src "
-# 	for tgt in $THIS_TGT_LANGS; do
-# 	    ## get scores and size of the biggest test set
-# 	    BLEU_SCORE=$(grep '^|' $readme | grep "${src}-${tgt}" | sort -t '|' -k5 -nr | cut -f3 -d'|' | head -1 | xargs)
-# 	    CHRF_SCORE=$(grep '^|' $readme | grep "${src}-${tgt}" | sort -t '|' -k5 -nr | cut -f4 -d'|' | head -1 | xargs)
-# 	    TEST_SIZE=$(grep '^|' $readme | grep "${src}-${tgt}" | sort -t '|' -k5 -nr | cut -f5 -d'|' | head -1 | xargs)
-# 	    ## if we don't know the test set size: get the highest scores
-# 	    ## and assume that the test set is big enough (old models)
-# 	    if [[ "$TEST_SIZE" == "" ]]; then
-# 		TEST_SIZE=$MIN_TEST_SIZE
-# 		BLEU_SCORE=$(grep '^|' $readme | grep "${src}-${tgt}" | sort -t '|' -k3 -nr | cut -f3 -d'|' | head -1 | xargs)
-# 		CHRF_SCORE=$(grep '^|' $readme | grep "${src}-${tgt}" | sort -t '|' -k4 -nr | cut -f4 -d'|' | head -1 | xargs)
-# 	    fi
-# 	    echo "$src-$tgt: $BLEU_SCORE / $CHRF_SCORE / $TEST_SIZE"
-# 	    if [[ "$TEST_SIZE" -ge $MIN_TEST_SIZE ]]; then
-# 		if [[ "$BLEU_SCORE" != "" ]]; then
-# 		    if [[ "$CHRF_SCORE" != "" ]]; then
-# 			if (( $(echo "$BLEU_SCORE > $BLEU_THRESHOLD" | bc -l) )) || (( $(echo "$CHRF_SCORE > $CHRF_THRESHOLD" | bc -l) )); then
-# 			    PAIRS+="$src-$tgt "
-# 			    LANGS+="$tgt "
-# 			fi
-# 		    fi
-# 		fi
-# 	    fi
-# 	done
-#     done
-# done
-
-echo "Ended up with pairs: ${PAIRS}"
+echo "supported pairs: ${PAIRS}"
+echo "supported languages: $LANGS"
 echo
+
+
 
 TAG_NAME=$(echo $LANGS | tr ' ' '\n' | sort -u | tr '\n' ' ' | xargs | tr ' ' '-')"-"$(date +%F)
 if [[ "$#" -ge 1 ]]; then

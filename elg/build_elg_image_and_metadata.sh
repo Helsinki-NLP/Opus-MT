@@ -31,6 +31,7 @@ else
     echo "Using existing directory models/"
 fi
 
+echo
 for readme in $(find models/ -name "README.md"); do
     ((MODEL_COUNT+=1))
     # Parse README files, yaml would be nicer
@@ -42,9 +43,8 @@ for readme in $(find models/ -name "README.md"); do
 
     echo "In $readme, found source languages ${THIS_SRC_LANGS} and target languages ${THIS_TGT_LANGS}"
 
-    SRC_LANGS=''
-    TGT_LANGS=''
     for tgt in $THIS_TGT_LANGS; do
+	SRC_LANGS=''
 	for src in $THIS_SRC_LANGS; do
 	    ## get scores and size of the biggest test set
 	    BLEU_SCORE=$(grep '^|' $readme | grep "${src}.${tgt}" | sort -t '|' -k5 -nr | cut -f3 -d'|' | head -1 | xargs)
@@ -69,18 +69,21 @@ for readme in $(find models/ -name "README.md"); do
 	    fi
 	done
 	if [[ "$SRC_LANGS" != "" ]]; then
-	    TGT_LANGS+="$tgt "
+	    echo "... add $THIS_SRC-$SRC_LANGS-$tgt"
+	    SRC_LANGS=$(echo $SRC_LANGS | sed 's/\+$//')
+	    PAIRS+="$THIS_SRC-$SRC_LANGS-$tgt "
 	fi
     done
-    LANGS+="$SRC_LANGS $TGT_LANGS "
-    for tgt in $TGT_LANGS; do
-	src=$(echo $SRC_LANGS | sed 's/+$//')
-	PAIRS+="$THIS_SRC-$src-$tgt "
-    done
 done
+LANGS=$(echo "$PAIRS" | tr '\-\+' '  ' | tr ' ' "\n" | sort -u | xargs)
 
-echo "Ended up with pairs: ${PAIRS}"
+echo "supported pairs: ${PAIRS}"
+echo "supported languages: $LANGS"
 echo
+
+
+
+
 
 TAG_NAME=$(echo $LANGS | tr ' ' '\n' | sort -u | tr '\n' ' ' | xargs | tr ' ' '-')"-"$(date +%F)
 if [[ "$#" -ge 1 ]]; then

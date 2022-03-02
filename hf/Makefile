@@ -18,8 +18,11 @@
 ##   TODO: some kind of quality control before converting/publishing
 
 
-MARIAN_MODEL_URLS = https://object.pouta.csc.fi/Tatoeba-MT-models/gmw-gmw/opus-2021-02-23.zip \
-		https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fin/opusTCv20210807+bt-2021-09-01.zip
+MARIAN_MODEL_URLS = https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hun/opus+bt-2021-04-13.zip 
+#		https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hun/opusTCv20210807+bt_transformer-big_2022-02-25.zip
+
+# https://object.pouta.csc.fi/Tatoeba-MT-models/gmw-gmw/opus-2021-02-23.zip \
+#		https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fin/opusTCv20210807+bt-2021-09-01.zip
 
 #		https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fin/opusTCv20210807+bt-2021-12-08.zip \
 #		https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fin/opusTCv20210807+bt-2021-09-01.zip \
@@ -191,7 +194,11 @@ TRANSFORMERSRC =
 
 ${PYTORCH_MODEL}: ${MARIAN_MODEL}
 	export PYTHONPATH=${HOME}/research/Tatoeba-Challenge/transformers/src:${PYTHONPATH} && \
-	python3 convert_to_pytorch.py --model-path $< --dest-path $@
+	python convert_to_pytorch.py --model-path $< --dest-path $@
+
+#	export PYTHONPATH=${HOME}/research/Tatoeba-Challenge/transformers/src:${PYTHONPATH} && \
+#	python3 convert_to_pytorch.py --model-path $< --dest-path $@
+
 
 
 ## files with benchmarks and test set translations
