@@ -49,7 +49,7 @@ ${MODELS_DONE}:
 		$(shell echo "$@" | cut -f1 -d/ | sed 's/-models//' | tr '[:upper:]' '[:lower:]') \
 		$(shell echo '${@:.done=}' | cut -f2,3 -d/ | tr '+/' '__') \
 		$(shell echo "$@" | cut -f2 -d/) \
-		${VERSION}
+		${shell echo $@ | sed 's/^.*[\-\_]\(....\-..\-..\)\.done$$/\1/' | tr '-' '.'}
 	mkdir -p $(dir $@)
 	touch $@
 	rm -fr models
@@ -62,7 +62,7 @@ ${METADATA_DONE}:
 		$(shell echo "$@" | cut -f1 -d/ | sed 's/-models//' | tr '[:upper:]' '[:lower:]') \
 		$(shell echo '${@:.metadone=}' | cut -f2,3 -d/ | tr '+/' '__') \
 		$(shell echo "$@" | cut -f2 -d/) \
-		${VERSION}
+		${shell echo $@ | sed 's/^.*[\-\_]\(....\-..\-..\)\.done$$/\1/' | tr '-' '.'}
 	mkdir -p $(dir $@)
 	touch $@
 	rm -fr models

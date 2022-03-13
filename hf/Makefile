@@ -18,7 +18,8 @@
 ##   TODO: some kind of quality control before converting/publishing
 
 
-MARIAN_MODEL_URLS = https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hun/opus+bt-2021-04-13.zip 
+MARIAN_MODEL_URLS = https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hun/opusTCv20210807+bt_transformer-big_2022-02-25.zip
+# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hun/opus+bt-2021-04-13.zip 
 #		https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hun/opusTCv20210807+bt_transformer-big_2022-02-25.zip
 
 # https://object.pouta.csc.fi/Tatoeba-MT-models/gmw-gmw/opus-2021-02-23.zip \
@@ -31,6 +32,7 @@ MARIAN_MODEL_URLS = https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hun/opus+b
 ## broken yml file:
 # https://object.pouta.csc.fi/Tatoeba-MT-models/eng-gmw/opus1m+bt-2021-04-10.zip
 
+SHELL := bash
 
 MARIAN_MODEL_URL ?= ${firstword ${MARIAN_MODEL_URLS}}
 
@@ -141,6 +143,8 @@ info:
 	@echo "source langs: ${MODEL_SRCLANGS}"
 	@echo "target langs: ${MODEL_TRGLANGS}"
 	@echo "hfname: ${HF_NAME}"
+	@echo
+	@echo "testset file: ${TESTSET_TRANSLATIONS_FILE}"
 
 .PHONY: fetch
 fetch: ${MARIAN_MODEL}
@@ -232,19 +236,19 @@ ${PYTORCH_MODEL}/benchmark_translations.zip:
 ## use dummy string if no example can be downloaded
 
 ifeq (${shell wget -q -O - ${TESTSET_TRANSLATIONS_FILE} | head -3 | wc -l | xargs},3)
-  TESTSET_INPUT_EXAMPLE = ${shell wget -q -O - ${TESTSET_TRANSLATIONS_FILE} | head -1}
-  TESTSET_OUTPUT_EXAMPLE = ${shell wget -q -O - ${TESTSET_TRANSLATIONS_FILE} | head -3 | tail -1}
-  TESTSET_INPUT2_EXAMPLE = ${shell wget -q -O - ${TESTSET_TRANSLATIONS_FILE} | tail -4 | head -1}
-  TESTSET_OUTPUT2_EXAMPLE = ${shell wget -q -O - ${TESTSET_TRANSLATIONS_FILE} | tail -2 | head -1}
+  TESTSET_INPUT_EXAMPLE   := ${subst ",\",${shell wget -q -O - ${TESTSET_TRANSLATIONS_FILE} | head -1}}
+  TESTSET_OUTPUT_EXAMPLE  := ${subst ",\",${shell wget -q -O - ${TESTSET_TRANSLATIONS_FILE} | head -3 | tail -1}}
+  TESTSET_INPUT2_EXAMPLE  := ${subst ",\",${shell wget -q -O - ${TESTSET_TRANSLATIONS_FILE} | tail -4 | head -1}}
+  TESTSET_OUTPUT2_EXAMPLE := ${subst ",\",${shell wget -q -O - ${TESTSET_TRANSLATIONS_FILE} | tail -2 | head -1}}
 #  TESTSET_INPUT2_EXAMPLE = ${shell wget -q -O - ${TESTSET_TRANSLATIONS_FILE} | head -5 | tail -1}
 #  TESTSET_OUTPUT2_EXAMPLE = ${shell wget -q -O - ${TESTSET_TRANSLATIONS_FILE} | head -7 | tail -1}
 else
 ifeq (${USE_LABELS},1)
-  TESTSET_INPUT_EXAMPLE = ${firstword ${MODEL_TRGLABELS}} Replace this with text in an accepted source language.
-  TESTSET_INPUT2_EXAMPLE = ${lastword ${MODEL_TRGLABELS}} This is the second sentence.
+  TESTSET_INPUT_EXAMPLE  := ${firstword ${MODEL_TRGLABELS}} Replace this with text in an accepted source language.
+  TESTSET_INPUT2_EXAMPLE := ${lastword ${MODEL_TRGLABELS}} This is the second sentence.
 else
-  TESTSET_INPUT_EXAMPLE = Replace this with text in an accepted source language.
-  TESTSET_INPUT2_EXAMPLE = This is the second sentence.
+  TESTSET_INPUT_EXAMPLE  := Replace this with text in an accepted source language.
+  TESTSET_INPUT2_EXAMPLE := This is the second sentence.
 endif
 endif
 
@@ -333,8 +337,8 @@ endif
 	@echo 'from transformers import MarianMTModel, MarianTokenizer' >> $@
 	@echo ''                                                        >> $@
 	@echo 'src_text = ['                                            >> $@
-	@echo '    "${TESTSET_INPUT_EXAMPLE}",'                         >> $@
-	@echo '    "${TESTSET_INPUT2_EXAMPLE}"'                         >> $@
+	@echo "    \"${TESTSET_INPUT_EXAMPLE}\","                       >> $@
+	@echo "    \"${TESTSET_INPUT2_EXAMPLE}\""                       >> $@
 	@echo ']'                                                       >> $@
 	@echo ''                                                        >> $@
 	@echo 'model_name = "pytorch-models/${HF_NAME}"'     >> $@
@@ -347,8 +351,8 @@ endif
 ifdef TESTSET_OUTPUT_EXAMPLE
 	@echo ''                                                        >> $@
 	@echo '# expected output:'                                      >> $@
-	@echo '#     ${TESTSET_OUTPUT_EXAMPLE}'                         >> $@
-	@echo '#     ${TESTSET_OUTPUT2_EXAMPLE}'                        >> $@
+	@echo "#     ${TESTSET_OUTPUT_EXAMPLE}"                         >> $@
+	@echo "#     ${TESTSET_OUTPUT2_EXAMPLE}"                        >> $@
 endif
 	@echo '```'                                                     >> $@
 	@echo ''                                                        >> $@
@@ -357,10 +361,10 @@ endif
 	@echo '```python'                                               >> $@
 	@echo 'from transformers import pipeline'                       >> $@
 	@echo 'pipe = pipeline("translation", model="Helsinki-NLP/${HF_NAME}")' >> $@
-	@echo 'print(pipe(${TESTSET_INPUT_EXAMPLE}))'                   >> $@
+	@echo "print(pipe(\"${TESTSET_INPUT_EXAMPLE}\"))"               >> $@
 ifdef TESTSET_OUTPUT_EXAMPLE
 	@echo ''                                                        >> $@
-	@echo '# expected output: ${TESTSET_OUTPUT_EXAMPLE}'            >> $@
+	@echo "# expected output: ${TESTSET_OUTPUT_EXAMPLE}"            >> $@
 endif
 	@echo '```'                                                     >> $@
 	@echo ''                                                        >> $@

@@ -7,6 +7,7 @@ fi
 RESOURCE_NAME="OPUS-MT"
 IMAGE_NAME="opus-mt"
 MODEL_VERSION="1.0.0"
+RAM_PER_MODEL=768
 
 LANGS=""
 PAIRS=""
@@ -98,10 +99,15 @@ fi
 if [[ "$#" -ge 4 ]]; then
     MODEL_VERSION=$4
 fi
-if [[ "$#" -ge 5 ]]; then
-    PAIRS=$5
-fi
 
+
+## increase size per model if necessary
+if [[ $MODEL_COUNT -gt 0 ]]; then
+    MODEL_SIZE=$((`du -hsm models | cut -f1` / $MODEL_COUNT))
+    if [[ $MODEL_SIZE -gt 400 ]]; then
+	RAM_PER_MODEL=2048
+    fi
+fi
 
 
 if ls *.xml 1> /dev/null 2>&1; then
@@ -111,6 +117,7 @@ if ls *.xml 1> /dev/null 2>&1; then
 	* ) echo "OK, exiting so you can deal with them."; exit;;
     esac
 fi
+
 for pair in $PAIRS; do
     python3 generate_metadata.py \
 	    --version $MODEL_VERSION \
@@ -118,7 +125,8 @@ for pair in $PAIRS; do
 	    --source-lang $(echo $pair | cut -d"-" -f1) \
     	    --target-lang $(echo $pair | cut -d"-" -f3) \
 	    --image-name ${IMAGE_NAME}:${TAG_NAME} \
-	    --models-in-image $MODEL_COUNT
+	    --models-in-image $MODEL_COUNT \
+	    --ram-per-model $RAM_PER_MODEL
 done
 rm -f metadata_${IMAGE_NAME}_${TAG_NAME}.zip
 zip metadata_${IMAGE_NAME}_${TAG_NAME}.zip *.xml
@@ -156,4 +164,4 @@ sudo docker push $IMAGE_NAME
 #     esac
 
 echo
-echo "Done. Don't forget to upload metadata_$IMAGE_NAME_$MODEL_VERSION.zip to the ELG catalogue!"
+echo "Done. Don't forget to upload metadata_$IMAGE_NAME_$TAG_NAME.zip to the ELG catalogue!"
