@@ -18,19 +18,60 @@
 ##   TODO: some kind of quality control before converting/publishing
 
 
-MARIAN_MODEL_URLS = https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hun/opusTCv20210807+bt_transformer-big_2022-02-25.zip
-# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hun/opus+bt-2021-04-13.zip 
-#		https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hun/opusTCv20210807+bt_transformer-big_2022-02-25.zip
-
-# https://object.pouta.csc.fi/Tatoeba-MT-models/gmw-gmw/opus-2021-02-23.zip \
-#		https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fin/opusTCv20210807+bt-2021-09-01.zip
-
-#		https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fin/opusTCv20210807+bt-2021-12-08.zip \
-#		https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fin/opusTCv20210807+bt-2021-09-01.zip \
-#		https://object.pouta.csc.fi/Tatoeba-MT-models/gmw-eng/opus4m+btTCv20210807-2021-09-30.zip
+# MARIAN_MODEL_URLS =
+#	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hun/opusTCv20210807+bt_transformer-big_2022-02-25.zip
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hun/opus+bt-2021-04-13.zip 
+#	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hun/opusTCv20210807+bt_transformer-big_2022-02-25.zip
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/gmw-gmw/opus-2021-02-23.zip \
+#	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fin/opusTCv20210807+bt-2021-09-01.zip
+#	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fin/opusTCv20210807+bt-2021-12-08.zip \
+#	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fin/opusTCv20210807+bt-2021-09-01.zip \
+#	https://object.pouta.csc.fi/Tatoeba-MT-models/gmw-eng/opus4m+btTCv20210807-2021-09-30.zip
 
 ## broken yml file:
-# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-gmw/opus1m+bt-2021-04-10.zip
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-gmw/opus1m+bt-2021-04-10.zip
+
+
+## models for Ukrainian
+
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/fin-eng/opusTCv20210807+bt-2021-12-08.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fin/opusTCv20210807+bt_transformer-big_2022-03-09.zip
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/zle-eng/opusTCv20210807+bt_transformer-big_2022-03-17.zip \
+#	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-zle/opusTCv20210807+bt_transformer-big_2022-03-13.zip
+
+
+MARIAN_MODEL_URLS = https://object.pouta.csc.fi/Tatoeba-MT-models/ukr-fin/opusTCv20210807+pft+pbt_transformer-align_2022-03-17.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/ukr-ces+slk/opusTCv20210807+pft_transformer-align_2022-03-17.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/ukr-hun/opusTCv20210807+pft_transformer-align_2022-03-08.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/ukr-ron/opusTCv20210807+pft_transformer-align_2022-03-08.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/ukr-tur/opusTCv20210807+pft_transformer-align_2022-03-07.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/zle-bat/opusTCv20210807_transformer-align_2022-03-14.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/zle-deu/opusTCv20210807_transformer-big_2022-03-19.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/zle-eng/opusTCv20210807+bt_transformer-big_2022-03-17.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/zle-fra/opusTCv20210807_transformer-big_2022-03-23.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/zle-gmq/opusTCv20210807+pft_transformer-big_2022-03-14.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/zle-ita/opusTCv20210807_transformer-big_2022-03-19.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/zle-por/opusTCv20210807_transformer-big_2022-03-23.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/zle-spa/opusTCv20210807_transformer-big_2022-03-23.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/zle-zle/opusTCv20210807+bt_transformer-big_2022-03-07.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/zle-zls/opusTCv20210807+bt_transformer-big_2022-03-23.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/zle-zlw/opusTCv20210807+bt_transformer-big_2022-03-23.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/bat-zle/opusTCv20210807_transformer-align_2022-03-13.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/ces+slk-ukr/opusTCv20210807+pbt_transformer-align_2022-03-08.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/deu-zle/opusTCv20210807_transformer-big_2022-03-23.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/eng-zle/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/fin-ukr/opusTCv20210807+pbt_transformer-align_2022-03-07.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/fra-zle/opusTCv20210807_transformer-big_2022-03-23.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/gmq-zle/opusTCv20210807+pbt_transformer-big_2022-03-23.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/hun-ukr/opusTCv20210807+pbt_transformer-align_2022-03-08.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/ita-zle/opusTCv20210807_transformer-big_2022-03-23.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/por-zle/opusTCv20210807_transformer-big_2022-03-23.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/ron-ukr/opusTCv20210807+pbt_transformer-align_2022-03-08.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/spa-zle/opusTCv20210807_transformer-big_2022-03-23.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/tur-ukr/opusTCv20210807+pbt_transformer-align_2022-03-07.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/zls-zle/opusTCv20210807+bt_transformer-big_2022-03-23.zip \
+https://object.pouta.csc.fi/Tatoeba-MT-models/zlw-zle/opusTCv20210807+bt_transformer-big_2022-03-19.zip
+
 
 SHELL := bash
 
@@ -38,7 +79,7 @@ MARIAN_MODEL_URL ?= ${firstword ${MARIAN_MODEL_URLS}}
 
 ## extract language pair and release data from the URL
 LANGPAIR     = $(notdir ${patsubst %/,%,${dir ${MARIAN_MODEL_URL}}})
-RELEASE_DATE = ${shell echo '${basename ${MARIAN_MODEL_URL}}' | rev | cut -f1-3 -d\- | rev}
+RELEASE_DATE = ${shell echo '${basename ${MARIAN_MODEL_URL}}' | rev | cut -f1-3 -d\- | cut -f1 -d_ | rev}
 
 ## get language names and IDs in various variants
 SRCLANGID   := $(firstword $(subst -, ,${LANGPAIR}))
@@ -84,7 +125,7 @@ endif
 
 ## multiple target languages always require labels
 ifeq (${MODEL_TRGLABELS},)
-ifneq ($(words ${MODEL_TRGLABELS}),1)
+ifneq ($(words ${MODEL_TRGLANGS}),1)
   USE_LABELS = 1
   MODEL_TRGLABELS = ${patsubst %,>>%<<,${MODEL_TRGLANGS}}
 endif
@@ -116,14 +157,30 @@ ifeq (${HF_MODELTYPE},transformer)
 endif
 
 
-HF_NAME       := ${HF_BASENAME}-${HF_MODELTYPE}-${LANGPAIR2}
+HF_NAME       := ${subst +,_,${HF_BASENAME}-${HF_MODELTYPE}-${LANGPAIR2}}
 PYTORCH_MODEL := pytorch-models/${HF_NAME}
 
 .PHONY: all
 all:
+	${MAKE} convert-all
+	${MAKE} commit-all
+
+.PHONY: convert-all
+convert-all:
 	@for m in ${MARIAN_MODEL_URLS}; do \
-	  ${MAKE} MARIAN_MODEL_URL=$$m process; \
+	  ${MAKE} MARIAN_MODEL_URL=$$m fetch-and-convert; \
 	done
+
+.PHONY: commit-all
+commit-all:
+	@for m in ${MARIAN_MODEL_URLS}; do \
+	  ${MAKE} MARIAN_MODEL_URL=$$m fetch-and-commit; \
+	done
+
+.PHONY: fetch-and-convert
+fetch-and-convert:
+	${MAKE} fetch
+	${MAKE} convert
 
 .PHONY: process
 process:
@@ -171,6 +228,7 @@ ${PYTORCH_MODEL}.committed: ${PYTORCH_MODEL} ${PYTORCH_MODEL}/README.md ${HOME}/
 	-huggingface-cli repo create ${HF_NAME} --organization Helsinki-NLP
 	-git clone https://tiedeman:`cat ${HOME}/.huggingface/token`@huggingface.co/Helsinki-NLP/${HF_NAME}
 	cd ${HF_NAME} && git lfs install
+	cd ${HF_NAME} && git lfs track "*.spm"
 	cd ${HF_NAME} && git config --global user.email "jorg.tiedemann@helsinki.fi"
 	cd ${HF_NAME} && git config --global user.name "Joerg Tiedemann"
 	mv ${PYTORCH_MODEL}/* ${HF_NAME}/
@@ -192,12 +250,15 @@ ${MARIAN_MODEL}:
 	rm -f $@/model.zip
 
 
+transformers:
+	git clone https://github.com/huggingface/transformers.git
+	cd transformers
+	pip install -e .
+
 # convert the model to pyTorch
 
-TRANSFORMERSRC = 
-
-${PYTORCH_MODEL}: ${MARIAN_MODEL}
-	export PYTHONPATH=${HOME}/research/Tatoeba-Challenge/transformers/src:${PYTHONPATH} && \
+${PYTORCH_MODEL}: ${MARIAN_MODEL} transformers
+	export PYTHONPATH=transformers/src:${PYTHONPATH} && \
 	python convert_to_pytorch.py --model-path $< --dest-path $@
 
 #	export PYTHONPATH=${HOME}/research/Tatoeba-Challenge/transformers/src:${PYTHONPATH} && \
@@ -207,10 +268,14 @@ ${PYTORCH_MODEL}: ${MARIAN_MODEL}
 
 ## files with benchmarks and test set translations
 
-TESTSET_TRANSLATIONS_FILE = ${shell grep 'test set translations:' ${MARIAN_MODEL}/README.md | cut -f2 -d'(' | sed 's/)$$//'}
-TESTSET_OUTPUT_FILE = ${shell grep 'test set scores:' ${MARIAN_MODEL}/README.md | cut -f2 -d'(' | sed 's/)$$//'}
+ifneq (${wildcard ${MARIAN_MODEL}/README.md},)
+  TESTSET_TRANSLATIONS_FILE = ${shell grep 'test set translations:' ${MARIAN_MODEL}/README.md | cut -f2 -d'(' | sed 's/)$$//'}
+  TESTSET_OUTPUT_FILE = ${shell grep 'test set scores:' ${MARIAN_MODEL}/README.md | cut -f2 -d'(' | sed 's/)$$//'}
+endif
+
 SCORES_FILE = ${MARIAN_MODEL_URL:.zip=.scores.txt}
 EVAL_FILE = ${MARIAN_MODEL_URL:.zip=.eval.zip}
+
 
 ${PYTORCH_MODEL}/benchmark_results.txt:
 	-wget -q -O - ${SCORES_FILE} | cut -f1-4,6,7 > $@
@@ -235,6 +300,7 @@ ${PYTORCH_MODEL}/benchmark_translations.zip:
 ## get an example and example output
 ## use dummy string if no example can be downloaded
 
+ifdef TESTSET_TRANSLATIONS_FILE
 ifeq (${shell wget -q -O - ${TESTSET_TRANSLATIONS_FILE} | head -3 | wc -l | xargs},3)
   TESTSET_INPUT_EXAMPLE   := ${subst ",\",${shell wget -q -O - ${TESTSET_TRANSLATIONS_FILE} | head -1}}
   TESTSET_OUTPUT_EXAMPLE  := ${subst ",\",${shell wget -q -O - ${TESTSET_TRANSLATIONS_FILE} | head -3 | tail -1}}
@@ -251,7 +317,7 @@ else
   TESTSET_INPUT2_EXAMPLE := This is the second sentence.
 endif
 endif
-
+endif
 
 ## create the model card
 
@@ -318,7 +384,8 @@ endif
 ifeq (${USE_LABELS},1)
 	@echo '* valid target language labels: ${MODEL_TRGLABELS}'      >> $@
 endif
-	@echo '* model: ${MODEL_TYPE} (${HF_MODELTYPE})'                >> $@
+#	@echo '* model: ${MODEL_TYPE} (${HF_MODELTYPE})'                >> $@
+	@echo '* model: ${MODEL_TYPE}'                                  >> $@
 	@echo '* data: ${MODEL_DATA} ([source](${DATA_SOURCE}))'        >> $@
 	@echo '* tokenization: ${MODEL_TOK}'                            >> $@
 	@echo '* original model: [$(notdir ${MARIAN_MODEL_URL})](${MARIAN_MODEL_URL})' >> $@
