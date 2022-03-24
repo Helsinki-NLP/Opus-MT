@@ -1,11 +1,17 @@
 #!/usr/bin/env perl
 
-my $MinBleu = 20;
+my $MinBleuTatoeba = 20;
+my $MinBleu = 15;
 
 my %results = ();
 while (<>){
     my ($langpair, $testset, $chrf, $bleu) = split(/\t/);
-    next unless ($bleu >= $MinBleu);
+    if ($testset=~/tatoeba-test-(.*)$/i){
+	next unless ($bleu >= $MinBleuTatoeba);
+    }
+    else{
+	next unless ($bleu >= $MinBleu);
+    }	
     my $version - undef;
     next if ($testset eq 'flores101-dev');
     next if ($testset=~'newssyscomb');

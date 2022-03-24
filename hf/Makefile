@@ -174,7 +174,7 @@ convert-all:
 .PHONY: commit-all
 commit-all:
 	@for m in ${MARIAN_MODEL_URLS}; do \
-	  ${MAKE} MARIAN_MODEL_URL=$$m fetch-and-commit; \
+	  ${MAKE} MARIAN_MODEL_URL=$$m commit; \
 	done
 
 .PHONY: fetch-and-convert
