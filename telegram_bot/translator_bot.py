@@ -1,3 +1,5 @@
+
+import os
 import asyncio
 import aiohttp
 from aiogram import Bot, Dispatcher, executor, types
@@ -21,7 +23,7 @@ from websocket import create_connection
 
 HOST = '86.50.168.81'
 PORT = 8080
-TOKEN = 'your_key'
+TOKEN = os.environ['OPUSMT_TELEGRAMBOT_TOKEN']
 LANG_DICT = {'English': 'eng', 'Finnish': 'fin'}
 
 # PRE init
