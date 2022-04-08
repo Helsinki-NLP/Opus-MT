@@ -219,6 +219,8 @@ class Translate(WebSocket):
                     # print('raw sentence: ' + s, flush=True)
                     segmented = ' '.join(spm.EncodeAsPieces(s))
                     # print(segmented, flush=True)
+                else:
+                    segmented = s
 
                 # print('segmented sentence ' + prefix + segmented, flush=True)
                 ws.send(prefix + segmented)
@@ -232,6 +234,8 @@ class Translate(WebSocket):
                 elif args.spm:
                     translated = received[0].replace(' ','').replace('▁',' ').strip()
                     # translated = sp.DecodePieces(received[0].split(' '))
+                else:
+                    translated = received[0].strip()
 
                 alignment = ''
                 if len(received) == 2:

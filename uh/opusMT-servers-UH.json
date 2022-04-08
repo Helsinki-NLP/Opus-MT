@@ -1,0 +1,171 @@
+{
+    "192.168.1.32:30000" : {
+	"source-languages" : "en",
+	"target-languages" : "uk"
+    },
+    "192.168.1.32:30001" : {
+	"source-languages" : "uk",
+	"target-languages" : "en"
+    },
+    "192.168.1.26:60001" : {
+	"source-languages" : "fin",
+	"target-languages" : "ukr"
+    },
+    "192.168.1.26:60002" : {
+	"source-languages" : "ukr",
+	"target-languages" : "fin"
+    },    
+    "192.168.1.7:60000" : {
+	"target-languages" : "bel+rus+ukr",
+	"source-languages" : "eng"
+    },
+    "192.168.1.7:60001" : {
+	"target-languages" : "ukr",
+	"source-languages" : "ces+slk"
+    },
+    "192.168.1.7:60002" : {
+	"target-languages" : "ukr",
+	"source-languages" : "dan"
+    },
+    "192.168.1.7:60003" : {
+	"target-languages" : "ukr",
+	"source-languages" : "deu"
+    },
+    "192.168.1.7:60004" : {
+	"target-languages" : "ukr",
+	"source-languages" : "hun"
+    },
+    "192.168.1.7:60005" : {
+	"target-languages" : "ukr",
+	"source-languages" : "ron"
+    },
+    "192.168.1.7:60006" : {
+	"target-languages" : "ukr",
+	"source-languages" : "swe"
+    },
+    "192.168.1.7:60007" : {
+	"target-languages" : "ukr",
+	"source-languages" : "tur"
+    },
+    "192.168.1.7:60008" : {
+	"target-languages" : "bel+rus+ukr",
+	"source-languages" : "lav+lit"
+    },
+    "192.168.1.13:60000" : {
+	"source-languages" : "bel+rus+ukr",
+	"target-languages" : "eng"
+    },
+    "192.168.1.13:60001" : {
+	"source-languages" : "ukr",
+	"target-languages" : "ces+slk"
+    },
+    "192.168.1.13:60002" : {
+	"source-languages" : "ukr",
+	"target-languages" : "dan"
+    },
+    "192.168.1.13:60003" : {
+	"source-languages" : "ukr",
+	"target-languages" : "deu"
+    },
+    "192.168.1.13:60004" : {
+	"source-languages" : "ukr",
+	"target-languages" : "hun"
+    },
+    "192.168.1.13:60005" : {
+	"source-languages" : "ukr",
+	"target-languages" : "ron"
+    },
+    "192.168.1.13:60006" : {
+	"source-languages" : "ukr",
+	"target-languages" : "swe"
+    },
+    "192.168.1.13:60007" : {
+	"source-languages" : "ukr",
+	"target-languages" : "tur"
+    },
+    "192.168.1.13:60008" : {
+	"source-languages" : "bel+rus+ukr",
+	"target-languages" : "lav+lit"
+    },
+    "192.168.1.32:25000" : {
+	"source-languages" : "en",
+	"target-languages" : "bcl"
+    },
+    "192.168.1.32:5001" : {
+	"source-languages" : "es",
+	"target-languages" : "aym+bzd+cni+gn+hch+nah+oto+quy+shp+tar"
+    },
+    "192.168.1.25:40102" : {
+	"source-languages" : "en",
+	"target-languages" : "fi"
+    },
+    "192.168.1.25:40101" : {
+	"source-languages" : "fi",
+	"target-languages" : "en"
+    },
+    "192.168.1.25:40103" : {
+	"source-languages" : "fi",
+	"target-languages" : "de"
+    },
+    "192.168.1.19:20006" : {
+	"model" : "goethe",
+	"source-languages" : "de",
+	"target-languages" : "fi"
+    },
+    "192.168.1.19:20004" : {
+	"source-languages" : "de",
+	"target-languages" : "fi"
+    },
+    "192.168.1.19:21000" : {
+    	"source-languages" : "et+fi",
+    	"target-languages" : "da+fo+is+no+nb+nn+sv"
+    },
+    "192.168.1.19:21001" : {
+    	"source-languages" : "da+fo+is+no+nb+nn+sv",
+    	"target-languages" : "et+fi"
+    },
+    "192.168.1.14:21100" : {
+	"source-languages" : "fr",
+	"target-languages" : "fi"
+    },
+    "192.168.1.14:21101" : {
+	"source-languages" : "fi",
+	"target-languages" : "fr"
+    },
+    "192.168.1.21:21050" : {
+    	"source-languages" : "ga+cy+br+gd+kw+gv",
+    	"target-languages" : "en"
+    },
+    "192.168.1.21:21051" : {
+	"source-languages" : "en",
+    	"target-languages" : "ga+cy+br+gd+kw+gv"
+    },
+    "192.168.1.21:22000" : {
+	"source-languages" : "se+sma+smj+smn+sms+vep+et+fi+kv+krl+nb+no+nn+ru+sv+en",
+    	"target-languages" : "se+sma+smj+smn+sms+vep+et+fi+kv+krl+nb+no+nn+ru+sv+en"
+    },    
+    "192.168.1.22:21004" : {
+    	"source-languages" : "de+af+fy+nl",
+    	"target-languages" : "de+af+fy+nl"
+    },
+    "192.168.1.22:21005" : {
+    	"source-languages" : "da+fo+is+no+nb+nn+sv",
+    	"target-languages" : "da+fo+is+no+nb+nn+sv"
+    },
+    "192.168.1.22:21006" : {
+    	"source-languages" : "et+hu+fi",
+    	"target-languages" : "et+hu+fi"
+    },
+    "192.168.1.15:40002" : {
+    	"source-languages" : "sv",
+    	"target-languages" : "fi"
+    },
+    "192.168.1.15:40001" : {
+    	"source-languages" : "fi",
+    	"target-languages" : "sv"
+    },
+    "192.168.1.15:21005" : {
+    	"source-languages" : "ca+es+fr+ga+it+la+oc+pt_br+pt",
+    	"target-languages" : "ca+es+fr+ga+it+la+oc+pt_br+pt"
+    }
+}
