@@ -86,9 +86,9 @@ ukr-xxx:
 
 xxx-ukr:
 	${MAKE} LANGPAIR=deu-ukr SRC_LANGS=de TRG_LANGS=uk PORT=30102 opusMT-server
-	${MAKE} LANGPAIR=ces+slk-ukr SRC_LANGS="cs sk" TRG_LANGS=uk PORT=30103 opusMT-server
+	${MAKE} LANGPAIR=ces+slk-ukr MODEL_LANGPAIR=ces_slk-ukr SRC_LANGS="cs+sk" TRG_LANGS=uk PORT=30103 opusMT-server
 	${MAKE} LANGPAIR=fin-ukr SRC_LANGS=fi TRG_LANGS=uk PORT=30104 opusMT-server
-	${MAKE} LANGPAIR=gmq-ukr SRC_LANGS="da no sv" TRG_LANGS=uk PORT=30105 opusMT-server
+	${MAKE} LANGPAIR=gmq-ukr SRC_LANGS="da+no+sv" TRG_LANGS=uk PORT=30105 opusMT-server
 	${MAKE} LANGPAIR=hun-ukr SRC_LANGS=hu TRG_LANGS=uk PORT=30106 opusMT-server
 	${MAKE} LANGPAIR=lit-ukr SRC_LANGS=lt TRG_LANGS=uk PORT=30107 opusMT-server
 	${MAKE} LANGPAIR=pol-ukr SRC_LANGS=pl TRG_LANGS=uk PORT=30108 opusMT-server
@@ -192,9 +192,9 @@ marian:
 	mv marian-dev marian
 
 marian/build/marian-server: marian
-	sudo ${MAKE} /swapfile
-	sudo ${MAKE} prereqs
-	${MAKE} gperftools
+#	sudo ${MAKE} /swapfile
+#	sudo ${MAKE} prereqs
+#	${MAKE} gperftools
 	mkdir -p ${dir $@}
 ifeq (${UBUNTU_RELEASE},20.04)
 	cd ${dir $@} && \

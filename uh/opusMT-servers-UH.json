@@ -1,4 +1,40 @@
 {
+    "192.168.1.7:30102" : {
+	"source-languages" : "de",
+	"target-languages" : "uk"
+    },
+    "192.168.1.7:30103" : {
+	"source-languages" : "cs+sk",
+	"target-languages" : "uk"
+    },
+    "192.168.1.7:30104" : {
+	"source-languages" : "fi",
+	"target-languages" : "uk"
+    },
+    "192.168.1.7:30105" : {
+	"source-languages" : "da+no+sv",
+	"target-languages" : "uk"
+    },
+    "192.168.1.7:30106" : {
+	"source-languages" : "hu",
+	"target-languages" : "uk"
+    },
+    "192.168.1.7:30107" : {
+	"source-languages" : "lt",
+	"target-languages" : "uk"
+    },
+    "192.168.1.7:30108" : {
+	"source-languages" : "pl",
+	"target-languages" : "uk"
+    },
+    "192.168.1.7:30109" : {
+	"source-languages" : "ro",
+	"target-languages" : "uk"
+    },
+    "192.168.1.7:30110" : {
+	"source-languages" : "es",
+	"target-languages" : "uk"
+    },
     "192.168.1.32:30000" : {
 	"source-languages" : "en",
 	"target-languages" : "uk"
@@ -141,8 +177,8 @@
     	"target-languages" : "ga+cy+br+gd+kw+gv"
     },
     "192.168.1.21:22000" : {
-	"source-languages" : "se+sma+smj+smn+sms+vep+et+fi+kv+krl+nb+no+nn+ru+sv+en",
-    	"target-languages" : "se+sma+smj+smn+sms+vep+et+fi+kv+krl+nb+no+nn+ru+sv+en"
+	"source-languages" : "se+sma+smj+smn+sms+vep+et+fi+kv+krl+nb+no+nn+sv",
+    	"target-languages" : "se+sma+smj+smn+sms+vep+et+fi+kv+krl+nb+no+nn+sv"
     },    
     "192.168.1.22:21004" : {
     	"source-languages" : "de+af+fy+nl",
