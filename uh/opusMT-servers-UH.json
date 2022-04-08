@@ -83,6 +83,10 @@
 	"source-languages" : "es",
 	"target-languages" : "uk"
     },
+    "192.168.1.7:30111" : {
+	"source-languages" : "fr",
+	"target-languages" : "uk"
+    },
     "192.168.1.32:30000" : {
 	"source-languages" : "en",
 	"target-languages" : "uk"

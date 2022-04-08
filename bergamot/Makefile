@@ -94,6 +94,8 @@ xxx-ukr:
 	${MAKE} LANGPAIR=pol-ukr SRC_LANGS=pl TRG_LANGS=uk PORT=30108 opusMT-server
 	${MAKE} LANGPAIR=ron-ukr SRC_LANGS=ro TRG_LANGS=uk PORT=30109 opusMT-server
 	${MAKE} LANGPAIR=spa-ukr SRC_LANGS=es TRG_LANGS=uk PORT=30110 opusMT-server
+	${MAKE} LANGPAIR=fra-ukr SRC_LANGS=fr TRG_LANGS=uk PORT=30111 opusMT-server
+
 
 
 ## print some info about the model that has been selected
