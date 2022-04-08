@@ -26,7 +26,7 @@ from websocket import create_connection
 HOST = '86.50.168.81'
 PORT = 8080
 TOKEN = os.environ['OPUSMT_TELEGRAMBOT_TOKEN']
-LANG_DICT = {'English': 'eng', 'Finnish': 'fin'}
+LANG_DICT = {'English': 'en', 'Finnish': 'fi'}
 
 # PRE init
 storage = MemoryStorage()
@@ -86,7 +86,7 @@ async def processing_message(message: types.Message, state: FSMContext):
     await UserStates.start.set()
 
 
-async def translate(text, message, host=HOST, port=PORT, source='ukr', target='eng'):
+async def translate(text, message, host=HOST, port=PORT, source='detect', target='eng'):
     ws = create_connection("ws://{}:{}/translate".format(host, port))
     data = {'text': text, 'source': source, 'target': target, 'model': 'default'}
     ws.send(json.dumps(data))
