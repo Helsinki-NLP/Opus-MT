@@ -3,7 +3,7 @@ from aiogram import types
 KEYBOARDS = {
     'hide': types.ReplyKeyboardRemove(selective=False),
     'lang': {
-        'options': ['English', 'Finnish'],
+        'options': ['English', 'Finnish', 'Ukrainian'],
         'markup': None,
     },
 }
