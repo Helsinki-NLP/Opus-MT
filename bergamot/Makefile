@@ -70,6 +70,30 @@ eng-ukr:
 ukr-eng:
 	${MAKE} LANGPAIR=ukr-eng SRC_LANGS=uk TRG_LANGS=en PORT=30001 opusMT-server
 
+ukr-xxx:
+	${MAKE} LANGPAIR=ukr-dan SRC_LANGS=uk TRG_LANGS=da PORT=30002 opusMT-server
+	${MAKE} LANGPAIR=ukr-deu SRC_LANGS=uk TRG_LANGS=de PORT=30003 opusMT-server
+	${MAKE} LANGPAIR=ukr-fin SRC_LANGS=uk TRG_LANGS=fi PORT=30004 opusMT-server
+	${MAKE} LANGPAIR=ukr-fra SRC_LANGS=uk TRG_LANGS=fr PORT=30005 opusMT-server
+	${MAKE} LANGPAIR=ukr-hun SRC_LANGS=uk TRG_LANGS=hu PORT=30006 opusMT-server
+	${MAKE} LANGPAIR=ukr-lit SRC_LANGS=uk TRG_LANGS=lt PORT=30007 opusMT-server
+	${MAKE} LANGPAIR=ukr-nob SRC_LANGS=uk TRG_LANGS=no PORT=30008 opusMT-server
+	${MAKE} LANGPAIR=ukr-pol SRC_LANGS=uk TRG_LANGS=pl PORT=30009 opusMT-server
+	${MAKE} LANGPAIR=ukr-ron SRC_LANGS=uk TRG_LANGS=ro PORT=30010 opusMT-server
+	${MAKE} LANGPAIR=ukr-spa SRC_LANGS=uk TRG_LANGS=es PORT=30011 opusMT-server
+	${MAKE} LANGPAIR=ukr-swe SRC_LANGS=uk TRG_LANGS=sv PORT=30012 opusMT-server
+	${MAKE} LANGPAIR=ukr-tur SRC_LANGS=uk TRG_LANGS=tr PORT=30013 opusMT-server
+
+xxx-ukr:
+	${MAKE} LANGPAIR=deu-ukr SRC_LANGS=de TRG_LANGS=uk PORT=30102 opusMT-server
+	${MAKE} LANGPAIR=ces+slk-ukr SRC_LANGS="cs sk" TRG_LANGS=uk PORT=30103 opusMT-server
+	${MAKE} LANGPAIR=fin-ukr SRC_LANGS=fi TRG_LANGS=uk PORT=30104 opusMT-server
+	${MAKE} LANGPAIR=gmq-ukr SRC_LANGS="da no sv" TRG_LANGS=uk PORT=30105 opusMT-server
+	${MAKE} LANGPAIR=hun-ukr SRC_LANGS=hu TRG_LANGS=uk PORT=30106 opusMT-server
+	${MAKE} LANGPAIR=lit-ukr SRC_LANGS=lt TRG_LANGS=uk PORT=30107 opusMT-server
+	${MAKE} LANGPAIR=pol-ukr SRC_LANGS=pl TRG_LANGS=uk PORT=30108 opusMT-server
+	${MAKE} LANGPAIR=ron-ukr SRC_LANGS=ro TRG_LANGS=uk PORT=30109 opusMT-server
+	${MAKE} LANGPAIR=spa-ukr SRC_LANGS=es TRG_LANGS=uk PORT=30110 opusMT-server
 
 
 ## print some info about the model that has been selected
