@@ -44,7 +44,7 @@ async def global_error_handler(update, exception):
 @dp.message_handler(state=not_processing_state, commands=['start'])
 async def start_message(message: types.Message, state: FSMContext):
     await UserStates.start.set()
-    await state.update_data(lang='eng')
+    await state.update_data(lang='en')
     await message.answer(
         "Hi! I'm an OPUS Translator bot. The default target language is English. Please press /lang if you'd like to choose some other.",
         reply_markup=KEYBOARDS['hide']
@@ -86,7 +86,7 @@ async def processing_message(message: types.Message, state: FSMContext):
     await UserStates.start.set()
 
 
-async def translate(text, message, host=HOST, port=PORT, source='detect', target='eng'):
+async def translate(text, message, host=HOST, port=PORT, source='detect', target='en'):
     ws = create_connection("ws://{}:{}/translate".format(host, port))
     data = {'text': text, 'source': source, 'target': target, 'model': 'default'}
     ws.send(json.dumps(data))
