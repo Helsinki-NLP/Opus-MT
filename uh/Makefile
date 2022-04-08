@@ -107,6 +107,10 @@ sami-server: opusMT-server-sami
 
 # se+sma+smj+smn+sms-fi+nb+no+nn+ru+sv+en
 
+## installation tools
+INSTALL = install -c
+INSTALL_BIN = ${INSTALL} -m 755
+INSTALL_DATA = ${INSTALL} -m 644
 
 ${SHAREDIR}/opusMT/%: %
 	mkdir -p ${dir $@}

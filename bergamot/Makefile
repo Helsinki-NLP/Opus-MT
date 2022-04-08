@@ -192,9 +192,9 @@ marian:
 	mv marian-dev marian
 
 marian/build/marian-server: marian
-#	sudo ${MAKE} /swapfile
-#	sudo ${MAKE} prereqs
-#	${MAKE} gperftools
+	sudo ${MAKE} /swapfile
+	sudo ${MAKE} prereqs
+	${MAKE} gperftools
 	mkdir -p ${dir $@}
 ifeq (${UBUNTU_RELEASE},20.04)
 	cd ${dir $@} && \

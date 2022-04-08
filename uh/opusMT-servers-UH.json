@@ -1,4 +1,52 @@
 {
+    "192.168.1.13:30002" : {
+	"source-languages" : "uk",
+	"target-languages" : "da"
+    },
+    "192.168.1.13:30003" : {
+	"source-languages" : "uk",
+	"target-languages" : "de"
+    },
+    "192.168.1.13:30004" : {
+	"source-languages" : "uk",
+	"target-languages" : "fi"
+    },
+    "192.168.1.13:30005" : {
+	"source-languages" : "uk",
+	"target-languages" : "fr"
+    },
+    "192.168.1.13:30006" : {
+	"source-languages" : "uk",
+	"target-languages" : "hu"
+    },
+    "192.168.1.13:30007" : {
+	"source-languages" : "uk",
+	"target-languages" : "lt"
+    },
+    "192.168.1.13:30008" : {
+	"source-languages" : "uk",
+	"target-languages" : "no"
+    },
+    "192.168.1.13:30009" : {
+	"source-languages" : "uk",
+	"target-languages" : "pl"
+    },
+    "192.168.1.13:30010" : {
+	"source-languages" : "uk",
+	"target-languages" : "ro"
+    },
+    "192.168.1.13:30011" : {
+	"source-languages" : "uk",
+	"target-languages" : "es"
+    },
+    "192.168.1.13:30012" : {
+	"source-languages" : "uk",
+	"target-languages" : "sv"
+    },
+    "192.168.1.13:30013" : {
+	"source-languages" : "uk",
+	"target-languages" : "tr"
+    },
     "192.168.1.7:30102" : {
 	"source-languages" : "de",
 	"target-languages" : "uk"
