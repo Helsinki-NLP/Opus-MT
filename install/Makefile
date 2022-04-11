@@ -8,11 +8,11 @@ INSTALL_DATA = ${INSTALL} -m 644
 UBUNTU_RELEASE = ${shell lsb_release -a 2>/dev/null | grep 'Release' | cut -f2}
 
 
-.PHONY: all install clean
+.PHONY: all install install-browsermt clean
 all: marian/build/marian-server
 
 install: ${PREFIX}/bin/marian-server
-
+install-browsermt: ${PREFIX}/bin/browsermt-marian-server ${PREFIX}/bin/browsermt-marian-conv
 
 marian:
 	git clone https://github.com/marian-nmt/marian
@@ -43,6 +43,40 @@ ${PREFIX}/bin/marian-server: marian/build/marian-server
 #	sudo ${INSTALL_BIN} marian/build/marian-scorer  ${PREFIX}/bin/marian-scorer
 #	sudo ${INSTALL_BIN} marian/build/marian-conv    ${PREFIX}/bin/marian-conv
 #	sudo ${INSTALL_DATA} marian/build/libmarian.a   ${PREFIX}/lib/libmarian.a
+
+
+
+
+## marian-server from the browsermt fork
+
+${PREFIX}/bin/browsermt-marian-server:
+	${MAKE} browsermt/marian-dev/build/marian-server
+	sudo ${INSTALL_BIN} browsermt/marian-dev/build/marian-server $@
+
+${PREFIX}/bin/browsermt-marian-conv:
+	${MAKE} browsermt/marian-dev/build/marian-conv
+	sudo ${INSTALL_BIN} browsermt/marian-dev/build/marian-conv $@
+
+browsermt/marian-dev:
+	cd ${dir $@} && git clone https://github.com/browsermt/marian-dev
+
+browsermt/marian-dev/build/marian-server: browsermt/marian-dev
+	sudo ${MAKE} /swapfile
+	sudo ${MAKE} prereqs
+	${MAKE} gperftools
+	mkdir -p ${dir $@}
+ifeq (${UBUNTU_RELEASE},20.04)
+	cd ${dir $@} && \
+	cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_STATIC_LIBS=on -DCOMPILE_SERVER=on -DCOMPILE_CPU=on -DCOMPILE_CUDA=off
+else
+	cd ${dir $@} && \
+	cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_STATIC_LIBS=on -DCOMPILE_SERVER=on -DUSE_SENTENCEPIECE=on -DCOMPILE_CPU=on -DCOMPILE_CUDA=off
+endif
+	${MAKE} -C ${dir $@} -j4
+
+browsermt/marian-dev/build/marian-conv: browsermt/marian-dev/build/marian-server
+	@echo "done!"
+
 
 
 # add libgoogle-perftools-dev instead of compiling from scratch

@@ -60,8 +60,10 @@ MARIAN_PORT ?= ${shell echo $$((${PORT} + 10000))}
 
 
 
-.PHONY: all install clean
-all: marian/build/marian-server
+.PHONY: all
+all:
+	${MAKE} info
+	${MAKE} opusMT-server
 
 
 eng-ukr:
@@ -83,7 +85,6 @@ ukr-xxx:
 	${MAKE} LANGPAIR=ukr-spa SRC_LANGS=uk TRG_LANGS=es PORT=30011 opusMT-server
 	${MAKE} LANGPAIR=ukr-swe SRC_LANGS=uk TRG_LANGS=sv PORT=30012 opusMT-server
 	${MAKE} LANGPAIR=ukr-tur SRC_LANGS=uk TRG_LANGS=tr PORT=30013 opusMT-server
-	${MAKE} LANGPAIR=ukr-bul SRC_LANGS=uk TRG_LANGS=bg PORT=30014 opusMT-server
 
 xxx-ukr:
 	${MAKE} LANGPAIR=deu-ukr SRC_LANGS=de TRG_LANGS=uk PORT=30102 opusMT-server
@@ -114,7 +115,8 @@ install-marian: ${MARIAN_SERVER}
 install-marian-server: /etc/init.d/browsermt-marian-${MODEL_LANGPAIR}
 install-opusMT-server: /etc/init.d/opusMT-browsermt-${MODEL_LANGPAIR}
 
-
+${MARIAN_SERVER}:
+	${MAKE} -C ../install $@
 
 .PHONY: remove remove-server remove-opusMT-server remove-marian-server
 remove remove-server: remove-marian-server remove-opusMT-server
@@ -187,84 +189,91 @@ ${OPUSMT_SERVER}: ${BINDIR}/%: ../%
 	${INSTALL_BIN} $< $@
 
 
-.PHONY: build-marian
-build-marian: marian/build/marian-server
 
-marian:
-	git clone https://github.com/browsermt/marian-dev
-	mv marian-dev marian
-
-marian/build/marian-server: marian
-	sudo ${MAKE} /swapfile
-	sudo ${MAKE} prereqs
-	${MAKE} gperftools
-	mkdir -p ${dir $@}
-ifeq (${UBUNTU_RELEASE},20.04)
-	cd ${dir $@} && \
-	cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_STATIC_LIBS=on -DCOMPILE_SERVER=on -DCOMPILE_CPU=on -DCOMPILE_CUDA=off
-else
-	cd ${dir $@} && \
-	cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_STATIC_LIBS=on -DCOMPILE_SERVER=on -DUSE_SENTENCEPIECE=on -DCOMPILE_CPU=on -DCOMPILE_CUDA=off
-endif
-	${MAKE} -C ${dir $@} -j4
+## OLD: now in ../install/Makefile
 
 
+# .PHONY: build-marian
+# build-marian: marian/build/marian-server
 
-${PREFIX}/bin/browsermt-marian-server: marian/build/marian-server
-	sudo ${INSTALL_BIN} $< $@
+# marian:
+# 	git clone https://github.com/browsermt/marian-dev
+# 	mv marian-dev marian
 
-
-# TODO: add libgoogle-perftools-dev instead of compiling from scratch
-
-.PHONY: prereqs
-prereqs: GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB
-	apt-key add $<
-	sh -c 'echo deb https://apt.repos.intel.com/mkl all main > /etc/apt/sources.list.d/intel-mkl.list'
-	apt-get -q update
-	apt-get -q upgrade g++
-	apt-get -q install automake autogen libtool cmake-data cmake unzip
-	apt-get -q install libboost-all-dev libblas-dev libopenblas-dev libz-dev libssl-dev
-	apt-get -q install python3-dev python3-pip python3-setuptools python3-websocket
-	apt-get -q install intel-mkl-64bit-2019.5-075
-ifeq (${UBUNTU_RELEASE},20.04)
-	apt-get install libprotobuf-dev libsentencepiece-dev
-endif
-	pip3 install SimpleWebSocketServer
-ifeq (${UBUNTU_RELEASE},16.04)
-	pip3 install mosestokenizer==1.0.0
-endif
-ifeq (${UBUNTU_RELEASE},14.04)
-	apt-get -q install cmake3-data cmake3
-	pip3 install mosestokenizer==1.0.0
-	pip3 install websocket-client==0.46.0
-endif
-	pip3 install mosestokenizer pycld2 sqlitedict
-	pip3 install sentencepiece
+# marian/build/marian-server: marian
+# 	sudo ${MAKE} /swapfile
+# 	sudo ${MAKE} prereqs
+# 	${MAKE} gperftools
+# 	mkdir -p ${dir $@}
+# ifeq (${UBUNTU_RELEASE},20.04)
+# 	cd ${dir $@} && \
+# 	cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_STATIC_LIBS=on -DCOMPILE_SERVER=on -DCOMPILE_CPU=on -DCOMPILE_CUDA=off
+# else
+# 	cd ${dir $@} && \
+# 	cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_STATIC_LIBS=on -DCOMPILE_SERVER=on -DUSE_SENTENCEPIECE=on -DCOMPILE_CPU=on -DCOMPILE_CUDA=off
+# endif
+# 	${MAKE} -C ${dir $@} -j4
 
 
-GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB:
-	wget https://apt.repos.intel.com/intel-gpg-keys/$@
 
-gperftools:
-	git clone https://github.com/gperftools/gperftools
-	cd $@ && ./autogen.sh
-	cd $@ && ./configure
-	${MAKE} -j 2 -C $@
-	sudo ${MAKE} -j 2 -C $@ install
+# ${PREFIX}/bin/browsermt-marian-server: marian/build/marian-server
+# 	sudo ${INSTALL_BIN} $< $@
+
+# ${PREFIX}/bin/browsermt-marian-conv: marian/build/marian-conv
+# 	sudo ${INSTALL_BIN} $< $@
 
 
-/swapfile:
-	fallocate -l 8G /swapfile
-	chmod 600 /swapfile
-	mkswap /swapfile
-	swapon /swapfile
-	grep -v '/swapfile' /etc/fstab > fstab.tmp
-	echo '/swapfile   none    swap    sw    0   0' >> fstab.tmp
-	${INSTALL_DATA} -b -S .old fstab.tmp /etc/fstab
-	rm -f fstab.tmp
+# # TODO: add libgoogle-perftools-dev instead of compiling from scratch
+
+# .PHONY: prereqs
+# prereqs: GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB
+# 	apt-key add $<
+# 	sh -c 'echo deb https://apt.repos.intel.com/mkl all main > /etc/apt/sources.list.d/intel-mkl.list'
+# 	apt-get -q update
+# 	apt-get -q upgrade g++
+# 	apt-get -q install automake autogen libtool cmake-data cmake unzip
+# 	apt-get -q install libboost-all-dev libblas-dev libopenblas-dev libz-dev libssl-dev
+# 	apt-get -q install python3-dev python3-pip python3-setuptools python3-websocket
+# 	apt-get -q install intel-mkl-64bit-2019.5-075
+# ifeq (${UBUNTU_RELEASE},20.04)
+# 	apt-get install libprotobuf-dev libsentencepiece-dev
+# endif
+# 	pip3 install SimpleWebSocketServer
+# ifeq (${UBUNTU_RELEASE},16.04)
+# 	pip3 install mosestokenizer==1.0.0
+# endif
+# ifeq (${UBUNTU_RELEASE},14.04)
+# 	apt-get -q install cmake3-data cmake3
+# 	pip3 install mosestokenizer==1.0.0
+# 	pip3 install websocket-client==0.46.0
+# endif
+# 	pip3 install mosestokenizer pycld2 sqlitedict
+# 	pip3 install sentencepiece
 
 
-clean:
-	rm -f GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB
-	rm -fr marian
-	rm -fr gperftools
+# GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB:
+# 	wget https://apt.repos.intel.com/intel-gpg-keys/$@
+
+# gperftools:
+# 	git clone https://github.com/gperftools/gperftools
+# 	cd $@ && ./autogen.sh
+# 	cd $@ && ./configure
+# 	${MAKE} -j 2 -C $@
+# 	sudo ${MAKE} -j 2 -C $@ install
+
+
+# /swapfile:
+# 	fallocate -l 8G /swapfile
+# 	chmod 600 /swapfile
+# 	mkswap /swapfile
+# 	swapon /swapfile
+# 	grep -v '/swapfile' /etc/fstab > fstab.tmp
+# 	echo '/swapfile   none    swap    sw    0   0' >> fstab.tmp
+# 	${INSTALL_DATA} -b -S .old fstab.tmp /etc/fstab
+# 	rm -f fstab.tmp
+
+
+# clean:
+# 	rm -f GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB
+# 	rm -fr marian
+# 	rm -fr gperftools

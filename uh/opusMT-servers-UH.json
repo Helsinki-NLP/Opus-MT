@@ -47,10 +47,6 @@
 	"source-languages" : "uk",
 	"target-languages" : "tr"
     },
-    "192.168.1.13:30014" : {
-	"source-languages" : "uk",
-	"target-languages" : "bg"
-    },
     "192.168.1.7:30102" : {
 	"source-languages" : "de",
 	"target-languages" : "uk"

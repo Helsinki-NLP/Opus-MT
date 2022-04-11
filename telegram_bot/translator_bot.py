@@ -26,7 +26,7 @@ from websocket import create_connection
 HOST = '86.50.168.81'
 PORT = 8080
 TOKEN = os.environ['OPUSMT_TELEGRAMBOT_TOKEN']
-LANG_DICT = {'English': 'en', 'Finnish': 'fi', 'Ukrainian': 'uk'}
+LANG_DICT = {'English': 'en', 'Finnish': 'fi', 'French': 'fr', 'German': 'de', 'Swedish': 'sv', 'Ukrainian': 'uk'}
 
 # PRE init
 storage = MemoryStorage()
