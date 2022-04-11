@@ -83,6 +83,7 @@ ukr-xxx:
 	${MAKE} LANGPAIR=ukr-spa SRC_LANGS=uk TRG_LANGS=es PORT=30011 opusMT-server
 	${MAKE} LANGPAIR=ukr-swe SRC_LANGS=uk TRG_LANGS=sv PORT=30012 opusMT-server
 	${MAKE} LANGPAIR=ukr-tur SRC_LANGS=uk TRG_LANGS=tr PORT=30013 opusMT-server
+	${MAKE} LANGPAIR=ukr-bul SRC_LANGS=uk TRG_LANGS=bg PORT=30014 opusMT-server
 
 xxx-ukr:
 	${MAKE} LANGPAIR=deu-ukr SRC_LANGS=de TRG_LANGS=uk PORT=30102 opusMT-server
