@@ -17,14 +17,38 @@ OPUSMT_MODEL_REPO  = https://object.pouta.csc.fi/OPUS-MT-models
 TATOEBA_MODEL_REPO = https://object.pouta.csc.fi/Tatoeba-MT-models
 MODEL_REPO = ${TATOEBA_MODEL_REPO}
 
+## raw git files in the OPUS-MT leaderboard
+OPUSMT_LEADERBOARD = https://raw.githubusercontent.com/Helsinki-NLP/Opus-MT-train/master
+
+
+## set test set and metric to be used for retrieving the best model
+## TODO: is there some more principled way of setting the benchmark
+BENCHMARK = flores101-devtest
+MT_METRIC = chrf-scores
+# MT_METRIC = bleu-scores
+
+
+BEST_MODEL   := ${shell wget -q -O - ${OPUSMT_LEADERBOARD}/scores/${LANGPAIR}/${BENCHMARK}/${MT_METRIC}.txt | head -1}
+MODEL_SCORE  := ${firstword ${BEST_MODEL}}
+MODEL_URL    := ${lastword ${BEST_MODEL}}
+OPUSMT_MODEL := ${shell echo "${MODEL_URL}" | rev | cut -f1,2 -d/ | rev}
+MODEL_REPO   := ${patsubst %/${OPUS_MODEL},%,${MODEL_URL}}
+
+
+## OLD style of selecting a model
+##
 ## set model to be downloaded (the last model for the given language pair and dataset)
 ## TODO: check whether at least one exists!
 ## TODO: this always prefers +bt models even if they are not the last one
 
-MODEL_PATTERN = .*\.zip
-OPUSMT_MODEL := ${shell wget -q -O - ${MODEL_REPO}/index.txt | \
-		grep '^${SRC_LANGS}-${TRG_LANGS}/${MODEL_PATTERN}' | \
-		sort | tail -1}
+# MODEL_PATTERN = .*\.zip
+# OPUSMT_MODEL := ${shell wget -q -O - ${MODEL_REPO}/index.txt | \
+# 		grep '^${LANGPAIR}/${MODEL_PATTERN}' | \
+# 		sort | tail -1}
+
+# ## download URL of the model
+# MODEL_URL = ${MODEL_REPO}/${OPUSMT_MODEL}
+
 
 ##-------------------------------------------------------------------------------
 ## overwrite OPUSMT_MODEL or MODEL_URL if you want to download a specific model
@@ -34,8 +58,6 @@ OPUSMT_MODEL := ${shell wget -q -O - ${MODEL_REPO}/index.txt | \
 ##
 ##-------------------------------------------------------------------------------
 
-## download URL of the model
-MODEL_URL = ${MODEL_REPO}/${OPUSMT_MODEL}
 
 
 ## installation destinations
@@ -121,9 +143,10 @@ model-list.txt:
 
 .PHONY: print-selected-model info
 print-selected-model info:
-	@echo ${OPUSMT_MODEL}
-	@echo ${MODEL_URL}
-	@echo ${MODEL_CONFIG}
+	@echo "       model: ${OPUSMT_MODEL}"
+	@echo " model score: ${MODEL_SCORE} (${BENCHMARK} - ${MT_METRIC})"
+	@echo "   model URL: ${MODEL_URL}"
+	@echo "model config: ${MODEL_CONFIG}"
 
 
 ## quantize model and create config file
