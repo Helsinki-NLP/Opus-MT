@@ -45,12 +45,12 @@ class ContentProcessor():
 
     def preprocess(self, srctxt):
         sentSplitted = srctxt.split('\n')
-        sentMormalized = []
+        sentNormalized = []
         for s in sentSplitted:
-            sentMormalized.append(self.normalizer(s))
+            sentNormalized.append(self.normalizer(s))
 
-        sentMormalized = list(filter(len, sentMormalized))
-        sentSource = self.sentence_splitter(sentMormalized)
+        sentNormalized = list(filter(len, sentNormalized))
+        sentSource = self.sentence_splitter(sentNormalized)
         
         self.sentences=[]
         for s in sentSource:
