@@ -3,6 +3,7 @@
 from __future__ import print_function, unicode_literals, division
 
 import sys
+import ssl
 import time
 import argparse
 import json
@@ -20,10 +21,17 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--source-language", type=str, default='detect')
     parser.add_argument("-t", "--target-language", type=str, default='en')
     parser.add_argument("-m", "--model", type=str, default='default')
+    parser.add_argument("--ssl", default=0, type=int, action="store", dest="ssl",
+                  help="ssl (1: on, 0: off (default))")
+    
     args = parser.parse_args()
 
     # open connection
-    ws = create_connection("ws://{}:{}/translate".format(args.host,args.port))
+    if args.ssl == 1:
+        ws = create_connection("wss://{}:{}/translate".format(args.host,args.port), sslopt={"cert_reqs": ssl.CERT_NONE})
+
+    else:
+        ws = create_connection("ws://{}:{}/translate".format(args.host,args.port))
 
     count = 0
     batch = ""

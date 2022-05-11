@@ -122,12 +122,14 @@ fien-server:
 .PHONY: opusMT-server opusMT-router
 opusMT-server: install-marian-server install-opusMT-server
 opusMT-router: install-opusMT-router
+opusMT-ssl-router: install-opusMT-ssl-router
 
 
 .PHONY: install-marian-server install-opusMT-server
 install-marian-server: /etc/init.d/marian-${DATASET}-${LANGPAIR}
 install-opusMT-server: /etc/init.d/opusMT-${DATASET}-${LANGPAIR}
 install-opusMT-router: /etc/init.d/opusMT
+install-opusMT-ssl-router: /etc/init.d/opusMT_SSL
 
 # install-marian-server: /etc/init/marian-${DATASET}-${LANGPAIR}.conf
 # install-opusMT-server: /etc/init/opusMT-${DATASET}-${LANGPAIR}.conf
@@ -193,6 +195,27 @@ model-list.txt:
 	rm -f ${notdir $@}
 #	systemctl daemon-reload
 	service ${notdir $@} restart
+
+
+/etc/ssl/opusMT/cert.pem:
+	mkdir -p $(dir $@)
+	openssl req -new -x509 -days 365 -nodes -out $@ -keyout ${dir $@}key.pem
+
+/etc/init.d/opusMT_SSL: ${OPUSMT_ROUTER} ${OPUSMT_CONFIG} /etc/ssl/opusMT/cert.pem service-template
+	sed 	-e 's#%%SERVICENAME%%#opusMT#' \
+		-e 's#%%APPSHORTDESCR%%#opusMT#' \
+		-e 's#%%APPLONGDESCR%%#translation service#' \
+		-e 's#%%APPBIN%%#$<#' \
+		-e 's#%%APPARGS%%#-p ${ROUTER_PORT} -c ${OPUSMT_CONFIG} -s ${DEFAULT_SOURCE_LANG} -t ${DEFAULT_TARGET_LANG} --ssl 1 --cert /etc/ssl/opusMT/cert.pem --key /etc/ssl/opusMT/key.pem --port 443#' \
+	< service-template > ${notdir $@}
+	mkdir -p ${dir ${OPUSMT_CACHE}}
+	${INSTALL_BIN} ${notdir $@} $@
+	rm -f ${notdir $@}
+	update-rc.d ${notdir $@} defaults 80
+	rm -f ${notdir $@}
+	service ${notdir $@} restart
+
+
 
 
 ## opusMT service via sysvinit

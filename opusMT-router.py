@@ -5,12 +5,13 @@
 
 import signal
 import sys
+import ssl
 import argparse
 import codecs
 import json
 # import socket
 from websocket import create_connection
-from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
+from SimpleWebSocketServer import SimpleWebSocketServer, SimpleSSLWebSocketServer, WebSocket
 
 ## language identifer (if source language is not given)
 import pycld2 as cld2
@@ -26,6 +27,16 @@ parser.add_argument('-s','--defsrc','--default-source-language', type=str, defau
                     help='default source language')
 parser.add_argument('-m','--max-input-length', type=int, default=1000,
                    help='maximum length of the input string')
+
+## SSL options
+parser.add_argument("--ssl", default=0, type=int, action="store", dest="ssl",
+                  help="ssl (1: on, 0: off (default))")
+parser.add_argument("--cert", default='./cert.pem', type=str, action="store", dest="cert",
+                  help="cert (./cert.pem)")
+parser.add_argument("--key", default='./key.pem', type=str, action="store", dest="key",
+                  help="key (./key.pem)")
+parser.add_argument("--ver", default=ssl.PROTOCOL_TLSv1_2, type=int, action="store", dest="ver",
+                  help="ssl version")
 
 
 args = parser.parse_args()
@@ -146,5 +157,11 @@ class Translate(WebSocket):
     def handleClose(self):
         print(self.address, 'closed')
 
-server = SimpleWebSocketServer('', args.port, Translate)
+
+if args.ssl == 1:
+    print("open ssl connection with version " + str(args.ver))
+    server = SimpleSSLWebSocketServer('', args.port, Translate,
+                                      args.cert, args.key, version=args.ver)
+else:   
+    server = SimpleWebSocketServer('', args.port, Translate)
 server.serveforever()

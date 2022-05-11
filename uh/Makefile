@@ -10,6 +10,10 @@ UH_MODEL_CONFIG = opusMT-servers-UH.json
 opusMT-UH: ${SHAREDIR}/opusMT/${UH_MODEL_CONFIG}
 	${MAKE} -C .. OPUSMT_CONFIG=$< opusMT-router
 
+.PHONY: opusMT-UH-SSL
+opusMT-UH-SSL: ${SHAREDIR}/opusMT/${UH_MODEL_CONFIG}
+	${MAKE} -C .. OPUSMT_CONFIG=$< opusMT-ssl-router
+
 
 ## short-cut targets for installing MT-services for other language pairs
 enfi-server:
