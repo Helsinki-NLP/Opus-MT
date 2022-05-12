@@ -4,7 +4,7 @@
 Tools and resources for open translation services
 
 * based on [Marian-NMT](https://marian-nmt.github.io/)
-* trained on [OPUS](http://opus.nlpl.eu/) data using [OPUS-MT-train](https://github.com/Helsinki-NLP/Opus-MT-train)
+* trained on [OPUS](http://opus.nlpl.eu/) data using [OPUS-MT-train](https://github.com/Helsinki-NLP/Opus-MT-train) (New: [leaderboard](https://opus.nlpl.eu/leaderboard/))
 * mainly [SentencePiece](https://github.com/google/sentencepiece)-based segmentation
 * mostly trained with guided alignment based on [eflomal](https://github.com/robertostling/eflomal) wordalignments 
 * [pre-trained downloadable translation models](https://github.com/Helsinki-NLP/Opus-MT-train/tree/master/models) ([matrix view](http://opus.nlpl.eu/Opus-MT/)), CC-BY 4.0 license
@@ -161,6 +161,7 @@ There is a Makefile for training new models from OPUS data in the [Opus-MT-train
 * [fiskmö](https://blogs.helsinki.fi/fiskmo-project/): a project on the devlopment of resources and tools for translating between Finnish and Swedish
 * [The Tatoeba MT Challenge](https://github.com/Helsinki-NLP/Tatoeba-Challenge/) with [lots of pre-trained NMT models](https://github.com/Helsinki-NLP/Tatoeba-Challenge/blob/master/results/tatoeba-results-all.md)
 * [The NMT map](https://opus.nlpl.eu/NMT-map/Tatoeba/all/src2trg/) that plots the status of Tatoeba NMT models on a map
+* [The OPUS-MT leaderboard](https://opus.nlpl.eu/leaderboard/)
 * [pre-trained multilingual models](https://github.com/bzhangGo/zero/tree/master/docs/multilingual_laln_lalt#pretrained-multilingual-models-many-to-many) trained on [OPUS-100](https://github.com/EdinburghNLP/opus-100-corpus) using the [zero](https://github.com/bzhangGo/zero) toolkit
 
 
