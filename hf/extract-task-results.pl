@@ -55,8 +55,8 @@ foreach my $t (sort keys %results){
 	print "       - name: BLEU\n";
 	print "         type: bleu\n";
 	print "         value: $results{$t}{$l}[2]\n";
-#	print "       - name: chr-F\n";
-#	print "         type: chrf\n";
-#	print "         value: $results{$t}{$l}[3]\n";
+	print "       - name: chr-F\n";
+	print "         type: chrf\n";
+	print "         value: $results{$t}{$l}[3]\n";
     }
 }

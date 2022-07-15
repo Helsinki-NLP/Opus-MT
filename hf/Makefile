@@ -389,6 +389,9 @@ ${PYTORCH_MODEL}/README.md: ${PYTORCH_MODEL} ${PYTORCH_MODEL}/benchmark_results.
 	@echo ''                   >> $@
 	@echo 'tags:'              >> $@
 	@echo '- translation'      >> $@
+ifeq (${HF_BASENAME},opus-mt-tc)
+	@echo '- ${HF_BASENAME}'   >> $@
+endif
 	@echo ''                   >> $@
 	@echo 'license: cc-by-4.0' >> $@
 	@echo 'model-index:'       >> $@
@@ -398,61 +401,59 @@ ${PYTORCH_MODEL}/README.md: ${PYTORCH_MODEL} ${PYTORCH_MODEL}/benchmark_results.
 	@echo '---'                >> $@
 	@echo '# ${HF_NAME}'       >> $@
 	@echo ''                   >> $@
+	@echo '## Table of Contents'                             >> $@
+	@echo '- [Model Details](#model-details)'                >> $@
+	@echo '- [Uses](#uses)'                                  >> $@
+	@echo '- [Risks, Limitations and Biases](#risks-limitations-and-biases)' >> $@
+	@echo '- [How to Get Started With the Model](#how-to-get-started-with-the-model)' >> $@
+	@echo '- [Training](#training)'                          >> $@
+	@echo '- [Evaluation](#evaluation)'                      >> $@
+	@echo '- [Citation Information](#citation-information)'  >> $@
+	@echo '- [Acknowledgements](#acknowledgements)'          >> $@
+	@echo ''                   >> $@
+	@echo '## Model Details'   >> $@
+	@echo ''                   >> $@
 	@echo 'Neural machine translation model for translating from ${SRCLANG} (${SRCLANGID2}) to ${TRGLANG} (${TRGLANGID2}).' >> $@
 	@echo ''                   >> $@
 	@echo 'This model is part of the [OPUS-MT project](https://github.com/Helsinki-NLP/Opus-MT), an effort to make neural machine translation models widely available and accessible for many languages in the world. All models are originally trained using the amazing framework of [Marian NMT](https://marian-nmt.github.io/), an efficient NMT implementation written in pure C++. The models have been converted to pyTorch using the transformers library by huggingface. Training data is taken from [OPUS](https://opus.nlpl.eu/) and training pipelines use the procedures of [OPUS-MT-train](https://github.com/Helsinki-NLP/Opus-MT-train).' >> $@
-	@echo ''                                                        >> $@
-	@echo '* Publications: ${BACKGROUND_READING} (Please, cite if you use this model.)' >> $@
-	@echo ''                                                        >> $@
-	@echo '```'                                                     >> $@
-	@echo '@inproceedings{tiedemann-thottingal-2020-opus,'          >> $@
-	@echo '    title = "{OPUS}-{MT} {--} Building open translation services for the World",' >> $@
-	@echo '    author = {Tiedemann, J{\"o}rg  and Thottingal, Santhosh},' >> $@
-	@echo '    booktitle = "Proceedings of the 22nd Annual Conference of the European Association for Machine Translation",' >> $@
-	@echo '    month = nov,'                                        >> $@
-	@echo '    year = "2020",'                                      >> $@
-	@echo '    address = "Lisboa, Portugal",'                       >> $@
-	@echo '    publisher = "European Association for Machine Translation",' >> $@
-	@echo '    url = "https://aclanthology.org/2020.eamt-1.61",'    >> $@
-	@echo '    pages = "479--480",'                                 >> $@
-	@echo '}'                                                       >> $@
+
+	@echo '**Model Description:**'                              >> $@
+	@echo '- **Developed by:** Language Technology Research Group at the University of Helsinki' >> $@
+	@echo '- **Model Type:** Translation (${MODEL_TYPE})'        >> $@
+#	@echo '* model: ${MODEL_TYPE} (${HF_MODELTYPE})'             >> $@
+	@echo '- **Release**: ${RELEASE_DATE}'                       >> $@
+	@echo '- **License:** CC-BY-4.0'                             >> $@
+	@echo '- **Language(s):**  '                                 >> $@
+	@echo '  - Source Language(s): ${sort ${MODEL_SRCLANGS}}'    >> $@
+	@echo '  - Target Language(s): ${sort ${MODEL_TRGLANGS}}'    >> $@
+ifeq (${USE_LABELS},1)
+	@echo '  - Valid Target Language Labels: ${MODEL_TRGLABELS}' >> $@
+endif
+	@echo '- **Original Model**: [$(notdir ${MARIAN_MODEL_URL})](${MARIAN_MODEL_URL})' >> $@
+	@echo '- **Resources for more information:**'                >> $@
+	@echo '  - [OPUS-MT-train GitHub Repo](https://github.com/Helsinki-NLP/OPUS-MT-train)' >> $@
+	@echo '  - More information about released models for this language pair: [OPUS-MT ${LANGPAIR} README](${OPUSMT_README})' >> $@
+	@echo "  - [More information about MarianNMT models in the transformers library](https://huggingface.co/docs/transformers/model_doc/marian)" >>$@
 ifeq (${HF_BASENAME},opus-mt-tc)
-	@echo ''                                                        >> $@
-	@echo '@inproceedings{tiedemann-2020-tatoeba,'                  >> $@
-	@echo '    title = "The Tatoeba Translation Challenge {--} Realistic Data Sets for Low Resource and Multilingual {MT}",' >> $@
-	@echo '    author = {Tiedemann, J{\"o}rg},'                     >> $@
-	@echo '    booktitle = "Proceedings of the Fifth Conference on Machine Translation",' >> $@
-	@echo '    month = nov,'                                        >> $@
-	@echo '    year = "2020",'                                      >> $@
-	@echo '    address = "Online",'                                 >> $@
-	@echo '    publisher = "Association for Computational Linguistics",' >> $@
-	@echo '    url = "https://aclanthology.org/2020.wmt-1.139",'    >> $@
-	@echo '    pages = "1174--1182",'                               >> $@
-	@echo '}'                                                       >> $@
+	@echo '  - [Tatoeba Translation Challenge](https://github.com/Helsinki-NLP/Tatoeba-Challenge/' >> $@
 endif
-	@echo '```'                                                     >> $@
-	@echo ''                                                        >> $@
-	@echo '## Model info'                                           >> $@
-	@echo ''                                                        >> $@
-	@echo '* Release: ${RELEASE_DATE}'                              >> $@
-	@echo '* source language(s): ${MODEL_SRCLANGS}'                 >> $@
-	@echo '* target language(s): ${MODEL_TRGLANGS}'                 >> $@
 ifeq (${USE_LABELS},1)
-	@echo '* valid target language labels: ${MODEL_TRGLABELS}'      >> $@
-endif
-#	@echo '* model: ${MODEL_TYPE} (${HF_MODELTYPE})'                >> $@
-	@echo '* model: ${MODEL_TYPE}'                                  >> $@
-	@echo '* data: ${MODEL_DATA} ([source](${DATA_SOURCE}))'        >> $@
-	@echo '* tokenization: ${MODEL_TOK}'                            >> $@
-	@echo '* original model: [$(notdir ${MARIAN_MODEL_URL})](${MARIAN_MODEL_URL})' >> $@
-	@echo '* more information released models: [OPUS-MT ${LANGPAIR} README](${OPUSMT_README})'     >> $@
-ifeq (${USE_LABELS},1)
-	@echo "* more information about the model: [MarianMT](https://huggingface.co/docs/transformers/model_doc/marian)" >>$@
 	@echo ''                                                        >> $@
 	@echo 'This is a multilingual translation model with multiple target languages. A sentence initial language token is required in the form of `>>id<<` (id = valid target language ID), e.g. `>>${firstword ${MODEL_TRGLANGS}}<<`' >> $@
 endif
 	@echo ''                                                        >> $@
-	@echo '## Usage'                                                >> $@
+	@echo '## Uses'                                                 >> $@
+	@echo ''                                                        >> $@
+	@echo 'This model can be used for translation and text-to-text generation.'  >> $@
+	@echo ''                                                        >> $@
+
+	@echo '## Risks, Limitations and Biases'                        >> $@
+	@echo ''                                                        >> $@
+	@echo '**CONTENT WARNING: Readers should be aware that the model is trained on various public data sets that may contain content that is disturbing, offensive, and can propagate historical and current stereotypes.**'                                                          >> $@
+	@echo ''                                                        >> $@
+	@echo 'Significant research has explored bias and fairness issues with language models (see, e.g., [Sheng et al. (2021)](https://aclanthology.org/2021.acl-long.330.pdf) and [Bender et al. (2021)](https://dl.acm.org/doi/pdf/10.1145/3442188.3445922)).'                                                        >> $@
+	@echo ''                                                        >> $@
+	@echo '## How to Get Started With the Model'                    >> $@
 	@echo ''                                                        >> $@
 	@echo 'A short example code:'                                   >> $@
 	@echo ''                                                        >> $@
@@ -491,7 +492,15 @@ ifdef TESTSET_OUTPUT_EXAMPLE
 endif
 	@echo '```'                                                     >> $@
 	@echo ''                                                        >> $@
-	@echo '## Benchmarks'                                           >> $@
+	@echo '## Training'                                             >> $@
+	@echo ''                                                        >> $@
+	@echo '- **Data**: ${MODEL_DATA} ([source](${DATA_SOURCE}))'    >> $@
+	@echo '- **Pre-processing**: ${MODEL_TOK}'                      >> $@
+	@echo '- **Model Type:**  ${MODEL_TYPE}'                        >> $@
+	@echo '- **Original MarianNMT Model**: [$(notdir ${MARIAN_MODEL_URL})](${MARIAN_MODEL_URL})' >> $@
+	@echo '- **Training Scripts**: [GitHub Repo](https://github.com/Helsinki-NLP/OPUS-MT-train)' >> $@
+	@echo ''                                                        >> $@
+	@echo '## Evaluation'                                           >> $@
 	@echo ''                                                        >> $@
 	@grep 'test set translations:' ${MARIAN_MODEL}/README.md        >> $@
 	@grep 'test set scores:' ${MARIAN_MODEL}/README.md              >> $@
@@ -510,6 +519,38 @@ endif
 	grep -v 'flores101-dev	' | grep -v 'tatoeba-test' |\
 	awk '{if (($$3 > 0.4 || $$4 > 20) && $$5 > 199) print}' |\
 	sed 's/	/ | /g;s/^/| /;s/$$/ |/'                                >> $@
+	@echo ''                                                        >> $@
+	@echo '## Citation Information'                   >> $@
+	@echo ''                                                        >> $@
+	@echo '* Publications: ${BACKGROUND_READING} (Please, cite if you use this model.)' >> $@
+	@echo ''                                                        >> $@
+	@echo '```'                                                     >> $@
+	@echo '@inproceedings{tiedemann-thottingal-2020-opus,'          >> $@
+	@echo '    title = "{OPUS}-{MT} {--} Building open translation services for the World",' >> $@
+	@echo '    author = {Tiedemann, J{\"o}rg  and Thottingal, Santhosh},' >> $@
+	@echo '    booktitle = "Proceedings of the 22nd Annual Conference of the European Association for Machine Translation",' >> $@
+	@echo '    month = nov,'                                        >> $@
+	@echo '    year = "2020",'                                      >> $@
+	@echo '    address = "Lisboa, Portugal",'                       >> $@
+	@echo '    publisher = "European Association for Machine Translation",' >> $@
+	@echo '    url = "https://aclanthology.org/2020.eamt-1.61",'    >> $@
+	@echo '    pages = "479--480",'                                 >> $@
+	@echo '}'                                                       >> $@
+ifeq (${HF_BASENAME},opus-mt-tc)
+	@echo ''                                                        >> $@
+	@echo '@inproceedings{tiedemann-2020-tatoeba,'                  >> $@
+	@echo '    title = "The Tatoeba Translation Challenge {--} Realistic Data Sets for Low Resource and Multilingual {MT}",' >> $@
+	@echo '    author = {Tiedemann, J{\"o}rg},'                     >> $@
+	@echo '    booktitle = "Proceedings of the Fifth Conference on Machine Translation",' >> $@
+	@echo '    month = nov,'                                        >> $@
+	@echo '    year = "2020",'                                      >> $@
+	@echo '    address = "Online",'                                 >> $@
+	@echo '    publisher = "Association for Computational Linguistics",' >> $@
+	@echo '    url = "https://aclanthology.org/2020.wmt-1.139",'    >> $@
+	@echo '    pages = "1174--1182",'                               >> $@
+	@echo '}'                                                       >> $@
+endif
+	@echo '```'                                                     >> $@
 	@echo ''                                                        >> $@
 	@echo '## Acknowledgements'                                     >> $@
 	@echo ''                                                        >> $@
