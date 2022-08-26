@@ -11,31 +11,31 @@ RUN set -eux; \
 	apt-get update; \
 	apt-get upgrade -yq; \
 	apt-get install -yq --no-install-recommends \
-        build-essential \
-        git-core \
-        pkg-config \
-        libtool \
-        zlib1g-dev \
-        libbz2-dev \
-        automake \
-        perl \
-        libsparsehash-dev \
-        libboost-all-dev \
-        libprotobuf17 \
-        protobuf-compiler \
-        libprotobuf-dev \ 
-        openssl \ 
-        libssl-dev \ 
-        libgoogle-perftools-dev \
-        wget \
-        apt-transport-https \
-        ca-certificates \
-        gnupg \
-        software-properties-common \
-        cmake \
-        python3-dev \
-        python3-pip \
-        python3-venv; \
+		build-essential \
+		git-core \
+		pkg-config \
+		libtool \
+		zlib1g-dev \
+		libbz2-dev \
+		automake \
+		perl \
+		libsparsehash-dev \
+		libboost-all-dev \
+		libprotobuf17 \
+		protobuf-compiler \
+		libprotobuf-dev \ 
+		openssl \ 
+		libssl-dev \ 
+		libgoogle-perftools-dev \
+		wget \
+		apt-transport-https \
+		ca-certificates \
+		gnupg \
+		software-properties-common \
+		cmake \
+		python3-dev \
+		python3-pip \
+		python3-venv; \
 	rm -rf /var/lib/apt/lists/*;
 
 RUN set -eux; \
