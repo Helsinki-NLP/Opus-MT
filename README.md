@@ -1,7 +1,7 @@
 
 <img src="https://github.com/Helsinki-NLP/Opus-MT/blob/master/img/opus_mt.png" width="250" alt="OPUS-MT"/>
 
-<p align="center">
+<p>
 <a href="https://console.tiyaro.ai/explore?q=opus-mt&pub=Helsinki-NLP"> <img src="https://tiyaro-public-docs.s3.us-west-2.amazonaws.com/assets/try_on_tiyaro_badge.svg"></a>
 </p>
 
