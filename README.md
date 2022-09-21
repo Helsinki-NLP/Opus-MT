@@ -77,6 +77,15 @@ docker run -p 8888:8888 opus-mt:latest
 
 And launch your browser to localhost:8888
 
+#### Option 2.1: Using Docker with CUDA GPU
+
+```bash
+docker build -f Dockerfile.gpu . -t opus-mt-gpu
+nvidia-docker run -p 8888:8888 opus-mt-gpu:latest
+```
+
+And launch your browser to localhost:8888
+
 ### Configuration
 
 The server.py program accepts a configuration file in json format. By default it try to use `config.json` in the current directory. But you can give a custom one using `-c` flag.
