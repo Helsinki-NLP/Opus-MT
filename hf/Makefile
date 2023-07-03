@@ -3,7 +3,10 @@
 # recipes for converting OPUS-MT models to pyTorch/huggingface
 # and for uploading them to the huggingface model hub
 #
-## TODO: does this work?
+## TODO:
+##
+## * list all available languages, unreliable languages, insufficiently tested languages
+##   (using some heuristics)
 ## 
 ## * vocabularies in SPM files (joint or separate vocabs): e.g
 ## 	eng-fin/opusTCv20210807+nopar+ft95-jointvoc_transformer-tiny11-align_2022-01-27.zip
@@ -18,7 +21,46 @@
 ##   TODO: some kind of quality control before converting/publishing
 
 
-# MARIAN_MODEL_URLS =
+MARIAN_MODEL_URLS = \
+	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hbs/opus+bt-2021-04-20.zip
+
+## models released between 2022-07-23 - 2022-08-11
+
+# MARIAN_MODEL_URLS = \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/itc-itc/opusTCv20210807_transformer-big_2022-08-10.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/gmw-gmw/opusTCv20210807_transformer-big_2022-08-11.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/gmq-gmq/opusTCv20210807_transformer-big_2022-07-29.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/zls-itc/opusTCv20210807_transformer-big_2022-08-10.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/gmq-itc/opusTCv20210807_transformer-big_2022-08-09.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/itc-ara/opusTCv20210807_transformer-big_2022-08-09.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/ara-gmq/opusTCv20210807_transformer-big_2022-08-09.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/zle-itc/opusTCv20210807_transformer-big_2022-08-03.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/itc-heb/opusTCv20210807_transformer-big_2022-08-03.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/gmq-zlw/opusTCv20210807_transformer-big_2022-08-03.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/zho-jpn/opusTCv20210807-sepvoc_transformer-big_2022-07-28.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/itc-tur/opusTCv20210807_transformer-big_2022-07-28.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/gmq-heb/opusTCv20210807_transformer-big_2022-07-28.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/ara-itc/opusTCv20210807_transformer-big_2022-07-28.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/itc-bat/opusTCv20210807_transformer-big_2022-07-27.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/gmq-ara/opusTCv20210807_transformer-big_2022-07-27.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/zls-deu/opusTCv20210807_transformer-big_2022-07-26.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/gmq-tur/opusTCv20210807_transformer-big_2022-07-26.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/deu-spa/opusTCv20210807_transformer-big_2022-07-26.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/heb-itc/opusTCv20210807_transformer-big_2022-07-25.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/deu-gmq/opusTCv20210807_transformer-big_2022-07-25.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/heb-gmq/opusTCv20210807_transformer-big_2022-07-23.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/itc-eus/opusTCv20210807_transformer-big_2022-07-23.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/fin-zls/opusTCv20210807_transformer-big_2022-07-23.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/fas-itc/opusTCv20210807_transformer-big_2022-07-23.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/fas-gmq/opusTCv20210807_transformer-big_2022-07-23.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/eus-itc/opusTCv20210807_transformer-big_2022-07-23.zip
+
+
+# MARIAN_MODEL_URLS = \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-kor/opusTCv20210807-sepvoc_transformer-big_2022-07-28.zip \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/kor-eng/opusTCv20210807-sepvoc_transformer-big_2022-07-28.zip
+
+# MARIAN_MODEL_URLS = \
 #	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hun/opusTCv20210807+bt_transformer-big_2022-02-25.zip
 # 	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hun/opus+bt-2021-04-13.zip 
 #	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hun/opusTCv20210807+bt_transformer-big_2022-02-25.zip
@@ -81,41 +123,41 @@
 # https://object.pouta.csc.fi/Tatoeba-MT-models/zle-eng/opusTCv20210807+bt_transformer-big_2022-03-17.zip \
 # https://object.pouta.csc.fi/Tatoeba-MT-models/eng-zle/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
 
-MARIAN_MODEL_URLS = \
-https://object.pouta.csc.fi/Tatoeba-MT-models/eng-ara/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/eng-bul/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/eng-cat+oci+spa/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/eng-ces+slk/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/eng-ell/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/eng-est/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fra/opusTCv20210807+bt_transformer-big_2022-03-09.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/eng-gmq/opusTCv20210807+bt_transformer-big_2022-03-17.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hun/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/eng-ita/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/eng-lav/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/eng-lit/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/eng-por/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/eng-ron/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/eng-spa/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/eng-tur/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/ara-eng/opusTCv20210807+bt_transformer-big_2022-03-09.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/bul-eng/opusTCv20210807+bt_transformer-big_2022-03-09.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/cat+oci+spa-eng/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/cel-eng/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/ces+slk-eng/opusTCv20210807+bt_transformer-big_2022-03-17.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/ell-eng/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/est-eng/opusTCv20210807+bt_transformer-big_2022-03-09.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/fra-eng/opusTCv20210807+bt_transformer-big_2022-03-09.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/gmq-eng/opusTCv20210807+bt_transformer-big_2022-03-09.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/hbs-eng/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/heb-eng/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/hun-eng/opusTCv20210807+bt_transformer-big_2022-03-09.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/ita-eng/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/lav-eng/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/lit-eng/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/tur-eng/opusTCv20210807+bt_transformer-big_2022-03-17.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/zls-eng/opusTCv20210807+bt_transformer-big_2022-03-17.zip \
-https://object.pouta.csc.fi/Tatoeba-MT-models/zlw-eng/opusTCv20210807+bt_transformer-big_2022-03-17.zip
+# MARIAN_MODEL_URLS = \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-ara/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-bul/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-cat+oci+spa/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-ces+slk/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-ell/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-est/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fra/opusTCv20210807+bt_transformer-big_2022-03-09.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-gmq/opusTCv20210807+bt_transformer-big_2022-03-17.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hun/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-ita/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-lav/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-lit/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-por/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-ron/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-spa/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-tur/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/ara-eng/opusTCv20210807+bt_transformer-big_2022-03-09.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/bul-eng/opusTCv20210807+bt_transformer-big_2022-03-09.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/cat+oci+spa-eng/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/cel-eng/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/ces+slk-eng/opusTCv20210807+bt_transformer-big_2022-03-17.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/ell-eng/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/est-eng/opusTCv20210807+bt_transformer-big_2022-03-09.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/fra-eng/opusTCv20210807+bt_transformer-big_2022-03-09.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/gmq-eng/opusTCv20210807+bt_transformer-big_2022-03-09.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/hbs-eng/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/heb-eng/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/hun-eng/opusTCv20210807+bt_transformer-big_2022-03-09.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/ita-eng/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/lav-eng/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/lit-eng/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/tur-eng/opusTCv20210807+bt_transformer-big_2022-03-17.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/zls-eng/opusTCv20210807+bt_transformer-big_2022-03-17.zip \
+# https://object.pouta.csc.fi/Tatoeba-MT-models/zlw-eng/opusTCv20210807+bt_transformer-big_2022-03-17.zip
 
 
 SHELL := bash
@@ -159,9 +201,17 @@ ifneq (${wildcard ${MARIAN_MODEL}/README.md},)
 #  MODEL_SRCLANGS  = ${shell grep 'source language(s):' ${MARIAN_MODEL}/README.md | head -1 | cut -f2 -d: | xargs}
 #  MODEL_TRGLANGS  = ${shell grep 'target language(s):' ${MARIAN_MODEL}/README.md | head -1 | cut -f2 -d: | xargs}
   MODEL_TRGLABELS = $(sort ${shell grep 'valid language labels:' ${MARIAN_MODEL}/README.md | head -1 | cut -f2 -d: | xargs})
+  MODEL_VALID_TRGLABELS = ${MODEL_TRGLABELS}
   MODEL_LANGIDS2  = ${shell iso639 -2 -k ${sort ${MODEL_SRCLANGS} ${MODEL_TRGLANGS}}}
   MODEL_VOCAB_TXT = ${wildcard ${MARIAN_MODEL}/*.vocab}
   MODEL_VOCAB_YML = ${patsubst %,%.yml,${MODEL_VOCAB_TXT}}
+endif
+
+ifneq (${wildcard ${MARIAN_MODEL}/vocab.json},)
+  VOCAB_TRGLABELS = $(sort $(shell tr ':' "\n" < ${MARIAN_MODEL}/vocab.json | grep '>>.*<<' | cut -f2 -d, | tr '"' ' '))
+ifneq (${VOCAB_TRGLABELS},)
+  USE_LABELS = 1
+endif
 endif
 
 # ## replace target languages with the ones that are actually supported!
@@ -213,6 +263,14 @@ all:
 	  ${MAKE} MARIAN_MODEL_URL=$$m process; \
 	done
 
+## do not fetch again and just refresh the model card
+.PHONY: refresh-all
+refresh-all:
+	@for m in ${MARIAN_MODEL_URLS}; do \
+	  ${MAKE} MARIAN_MODEL_URL=$$m convert; \
+	  ${MAKE} MARIAN_MODEL_URL=$$m commit; \
+	done
+
 
 .PHONY: convert-all
 convert-all:
@@ -256,7 +314,9 @@ info:
 fetch: ${MARIAN_MODEL}
 
 .PHONY: convert
-convert: ${PYTORCH_MODEL}/README.md
+convert:
+	${MAKE} ${PYTORCH_MODEL}/benchmark_results.txt
+	${MAKE} ${PYTORCH_MODEL}/README.md
 
 .PHONY: commit
 commit: ${PYTORCH_MODEL}.committed
@@ -332,8 +392,10 @@ endif
 SCORES_FILE = ${MARIAN_MODEL_URL:.zip=.scores.txt}
 EVAL_FILE = ${MARIAN_MODEL_URL:.zip=.eval.zip}
 
+.PHONY: benchmarks
+benchmarks: ${PYTORCH_MODEL}/benchmark_results.txt ${PYTORCH_MODEL}/benchmark_translations.zip
 
-${PYTORCH_MODEL}/benchmark_results.txt:
+${PYTORCH_MODEL}/benchmark_results.txt: ${PYTORCH_MODEL}
 	-wget -q -O - ${SCORES_FILE} | cut -f1-4,6,7 > $@
 	if [ ! -s $@ ]; then \
 	  grep '^|' ${MARIAN_MODEL}/README.md | \
@@ -344,13 +406,6 @@ ${PYTORCH_MODEL}/benchmark_results.txt:
 	  cut -f1-6 > $@; \
 	fi
 
-${PYTORCH_MODEL}/benchmark_translations.zip:
-	-wget -q -O $@ ${EVAL_FILE}
-	if [ ! -e $@ ]; then \
-	  wget -q -O ${dir $@}${notdir ${TESTSET_OUTPUT_FILE}} ${TESTSET_OUTPUT_FILE}; \
-	  cd ${dir $@}; zip $@ ${notdir ${TESTSET_OUTPUT_FILE}}; \
-	  rm -f ${notdir ${TESTSET_OUTPUT_FILE}}; \
-	fi
 
 ## verify that there is something in the test set translations
 ## get an example and example output
@@ -377,13 +432,87 @@ endif
 
 ## create the model card
 
+FILTER_OUT    = $(foreach v,$(2),$(if $(findstring $(1),$(v)),,$(v)))
+FILTER        = $(foreach v,$(2),$(if $(findstring $(1),$(v)),$(v),))
+BASIC_LANGIDS = $(sort $(filter-out xx,$(shell echo '${SRCLANGID2} ${TRGLANGID2} ${MODEL_LANGIDS2}' | tr ' ' "\n" | cut -f1 -d_)))
+BCP47_LANGIDS = $(sort $(call FILTER_OUT,xx,$(call FILTER,_,${SRCLANGID2} ${TRGLANGID2} ${MODEL_LANGIDS2})))
+
+${PYTORCH_MODEL}/benchmark_translations.zip:
+	-wget -q -O $@ ${EVAL_FILE}
+	if [ ! -e $@ ]; then \
+	  wget -q -O ${dir $@}${notdir ${TESTSET_OUTPUT_FILE}} ${TESTSET_OUTPUT_FILE}; \
+	  cd ${dir $@}; zip $@ ${notdir ${TESTSET_OUTPUT_FILE}}; \
+	  rm -f ${notdir ${TESTSET_OUTPUT_FILE}}; \
+	fi
+
+
+## get information from the benchmark file
+## - language pairs that have some kind of benchmark
+## - source and target languages for which there are some benchmarks
+## - reliable language pairs (according to benchmarks and some thresholds)
+## - reliable source and target languages
+
+ifneq ($(wildcard ${PYTORCH_MODEL}/benchmark_results.txt),)
+  LANGPAIR_BENCHMARKS = $(sort $(shell cut -f1 ${PYTORCH_MODEL}/benchmark_results.txt))
+  SRCLANG_BENCHMARKS = $(sort $(shell echo '${LANGPAIR_BENCHMARKS}' | tr ' ' "\n" | cut -f1 -d-))
+  TRGLANG_BENCHMARKS = $(sort $(shell echo '${LANGPAIR_BENCHMARKS}' | tr ' ' "\n" | cut -f2 -d-))
+ifeq (${MODEL_VALID_TRGLABELS},)
+ifneq ($(words ${TRGLANG_BENCHMARKS}),1)
+  MODEL_VALID_TRGLABELS = ${patsubst %,>>%<<,${TRGLANG_BENCHMARKS}}
+endif
+endif
+  LANGPAIR_RELIABLE_BLEU = $(sort $(shell grep '	[2-9][0-9]\.[0-9]*	[1-9][0-9][0-9][0-9]*	[0-9][0-9]' ${PYTORCH_MODEL}/benchmark_results.txt | cut -f1))
+  LANGPAIR_RELIABLE_CHRF = $(sort $(shell grep '0\.[5-9][0-9]*	[0-9]*\.[0-9]*	[1-9][0-9][0-9][0-9]*	[0-9][0-9]' ${PYTORCH_MODEL}/benchmark_results.txt | cut -f1))
+  LANGPAIR_RELIABLE = $(sort ${LANGPAIR_RELIABLE_BLEU} ${LANGPAIR_RELIABLE_CHRF})
+  SRCLANG_RELIABLE = $(sort $(shell echo '${LANGPAIR_RELIABLE}' | tr ' ' "\n" | cut -f1 -d-))
+  TRGLANG_RELIABLE = $(sort $(shell echo '${LANGPAIR_RELIABLE}' | tr ' ' "\n" | cut -f2 -d-))
+  LANGID2_RELIABLE = $(sort $(shell iso639 -2 -k ${SRCLANG_RELIABLE} ${TRGLANG_RELIABLE}))
+  LANGID2_BASIC = $(sort $(filter-out xx,$(shell echo '${LANGID2_RELIABLE}' | tr ' ' "\n" | cut -f1 -d_)))
+  LANGID2_BCP47 = $(sort $(call FILTER_OUT,xx,$(call FILTER,_,${LANGID2_RELIABLE})))
+endif
+
+print-reliable-langs:
+	@echo "reliable BLEU scores:"
+	@echo "++++++++++++++++++++++++++++++++++++++++++"
+	@grep '	[2-9][0-9]\.[0-9]*	[1-9][0-9][0-9][0-9]*	[0-9][0-9]' ${PYTORCH_MODEL}/benchmark_results.txt
+	@echo "reliable CHR-F scores:"
+	@echo "++++++++++++++++++++++++++++++++++++++++++"
+	@grep '0\.[5-9][0-9]*	[0-9]*\.[0-9]*	[1-9][0-9][0-9][0-9]*	[0-9][0-9]' ${PYTORCH_MODEL}/benchmark_results.txt
+	@echo ${LANGPAIR_RELIABLE_BLEU}
+	@echo ${LANGPAIR_RELIABLE_CHRF}
+	@echo ${LANGPAIR_RELIABLE}
+	@echo ${SRCLANG_RELIABLE}
+	@echo ${TRGLANG_RELIABLE}
+	@echo ${LANGID2_RELIABLE}
+	@echo ${LANGID2_BASIC}
+	@echo ${LANGID2_BCP47}
+	@echo ${LANGPAIR_BENCHMARKS}
+	@echo ${SRCLANG_BENCHMARKS}
+	@echo ${TRGLANG_BENCHMARKS}
+
+.PHONY: readme
+readme: ${PYTORCH_MODEL}/README.md
+
 ${PYTORCH_MODEL}/README.md: ${PYTORCH_MODEL} ${PYTORCH_MODEL}/benchmark_results.txt ${PYTORCH_MODEL}/benchmark_translations.zip
 	@echo "..... create $@"
 	@echo '---'                 > $@
 	@echo 'language:'          >> $@
-	@for l in ${sort ${SRCLANGID2} ${TRGLANGID2} ${MODEL_LANGIDS2}}; do \
+#	@for l in ${BASIC_LANGIDS}; do
+	@for l in ${LANGID2_BASIC}; do \
 	  echo "- $$l"             >> $@; \
 	done
+ifneq (${LANGID2_BCP47},)
+	@echo 'language_bcp47:'    >> $@
+	@for l in ${LANGID2_BCP47}; do \
+	  echo "- $$l"             >> $@; \
+	done
+endif
+# ifneq (${BCP47_LANGIDS},)
+#	@echo 'language_bcp47:'    >> $@
+#	@for l in ${BCP47_LANGIDS}; do \
+#	  echo "- $$l"             >> $@; \
+#	done
+# endif
 #	@echo '- ${SRCLANGID2}'    >> $@
 #	@echo '- ${TRGLANGID2}'    >> $@
 	@echo ''                   >> $@
@@ -424,11 +553,26 @@ endif
 	@echo '- **Release**: ${RELEASE_DATE}'                       >> $@
 	@echo '- **License:** CC-BY-4.0'                             >> $@
 	@echo '- **Language(s):**  '                                 >> $@
-	@echo '  - Source Language(s): ${sort ${MODEL_SRCLANGS}}'    >> $@
-	@echo '  - Target Language(s): ${sort ${MODEL_TRGLANGS}}'    >> $@
-ifeq (${USE_LABELS},1)
-	@echo '  - Valid Target Language Labels: ${MODEL_TRGLABELS}' >> $@
+#	@echo '  - Source Language(s): ${sort ${MODEL_SRCLANGS}}'    >> $@
+#	@echo '  - Target Language(s): ${sort ${MODEL_TRGLANGS}}'    >> $@
+#	@echo '  - Source Language(s): ${sort ${SRCLANG_BENCHMARKS}}' >> $@
+#	@echo '  - Target Language(s): ${sort ${TRGLANG_BENCHMARKS}}' >> $@
+# 	@echo '  - Source Language(s): ${sort ${SRCLANG_RELIABLE}}'  >> $@
+# 	@echo '  - Target Language(s): ${sort ${TRGLANG_RELIABLE}}'  >> $@
+	@echo '  - Source Language(s): ${sort ${MODEL_SRCLANGS} ${SRCLANG_RELIABLE}}'  >> $@
+	@echo '  - Target Language(s): ${sort ${MODEL_TRGLANGS} ${TRGLANG_RELIABLE}}'  >> $@
+	@echo '  - Language Pair(s): ${sort ${LANGPAIR_RELIABLE}}'   >> $@
+ifneq ($(words ${VOCAB_TRGLABELS}),1)
+	@echo '  - Valid Target Language Labels: ${VOCAB_TRGLABELS}' >> $@
+else ifneq ($(words ${MODEL_VALID_TRGLABELS}),1)
+	@echo '  - Valid Target Language Labels: ${MODEL_VALID_TRGLABELS}' >> $@
 endif
+# ifneq ($(words ${MODEL_VALID_TRGLABELS}),1)
+#	@echo '  - Valid Target Language Labels: ${MODEL_VALID_TRGLABELS}' >> $@
+# endif
+# ifeq (${USE_LABELS},1)
+#	@echo '  - Valid Target Language Labels: ${MODEL_TRGLABELS}' >> $@
+# endif
 	@echo '- **Original Model**: [$(notdir ${MARIAN_MODEL_URL})](${MARIAN_MODEL_URL})' >> $@
 	@echo '- **Resources for more information:**'                >> $@
 	@echo '  - [OPUS-MT-train GitHub Repo](https://github.com/Helsinki-NLP/OPUS-MT-train)' >> $@

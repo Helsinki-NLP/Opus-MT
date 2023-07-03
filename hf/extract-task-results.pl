@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 my $MinBleuTatoeba = 20;
-my $MinBleu = 15;
+my $MinBleu = 10;
 
 my %results = ();
 while (<>){

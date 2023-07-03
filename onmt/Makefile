@@ -29,3 +29,15 @@ OpenNMT-py:
 	sudo pip install OpenNMT-py
 	git clone https://github.com/OpenNMT/OpenNMT-py.git
 
+
+
+## for the AmericasNLP 2023 model:
+
+## start the OpenNMT-py server
+americasnlp2023-onmt.log: americasnlp2023.json OpenNMT-py model_ml_step_194000.pt
+	nohup python3 OpenNMT-py/server.py --port 5010 -c $< >> $@ &
+
+## start the OPUS-MT wrapper
+americasnlp2023-opusMT.log: all_32k.model
+	nohup python3 opusMT-onmt-server2023.py -p 5011 -mtp 5010 \
+		-t aym bzd cni czn gn hch nah oto quy shp tar -s es --spm $< > $@ &

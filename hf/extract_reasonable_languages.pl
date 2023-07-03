@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 
 
+# my $MinNrSent    = 100;
 my $MinNrSent    = 20;
 my $MinBleuScore = 20;
 my $MinChrFScore = 0.4;
