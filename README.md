@@ -94,7 +94,7 @@ And launch your browser to localhost:8888
 
 ### Configuration
 
-The server.py program accepts a configuration file in json format. By default it try to use `config.json` in the current directory. But you can give a custom one using `-c` flag.
+The server.py program accepts a configuration file in json format. By default it try to use `services.json` in the current directory. But you can give a custom one using `-c` flag.
 
 An example configuration file looks like this:
 
