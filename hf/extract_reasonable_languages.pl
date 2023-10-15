@@ -35,6 +35,16 @@ while (<>){
     $trglangs{$trg}++ unless ($trg eq 'multi');
 }
 
+if (exists $srclangs{multi}){
+    $srclangs{multilingual} = $srclangs{multi};
+    delete $srclangs{multi};
+}
+if (exists $trglangs{multi}){
+    $trglangs{multilingual} = $trglangs{multi};
+    delete $trglangs{multi};
+}
+
+
 print join(' ',sort keys %srclangs),"\n";
 print join(' ',sort keys %trglangs),"\n";
 print "\n";

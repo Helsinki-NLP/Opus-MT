@@ -339,6 +339,11 @@ ${HOME}/.huggingface/token:
 
 ## create the repository item and upload the model
 
+## token-based authentification:
+#	-git clone https://tiedeman:`cat ${HOME}/.huggingface/token`@huggingface.co/Helsinki-NLP/${HF_NAME}
+## ssh-based authentification:
+#	-git clone git@hf.co:Helsinki-NLP/${HF_NAME}
+
 ifneq (${HF_NAME},)
 ${PYTORCH_MODEL}.committed: ${PYTORCH_MODEL} ${PYTORCH_MODEL}/README.md ${HOME}/.huggingface/token
 	-huggingface-cli repo create ${HF_NAME} --organization Helsinki-NLP --yes
