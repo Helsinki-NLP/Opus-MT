@@ -47,7 +47,7 @@ git clone https://github.com/Helsinki-NLP/Opus-MT.git
 
 ### Option 1: Manual setup
 
-Install Marian MT. Follow the documentation at https://marian-nmt.github.io/docs/
+Install Marian MT. Follow the documentation at https://marian-nmt.github.io/docs/ (don't forget to include the cmake option for compiling the server binary `-DCOMPILE_SERVER=ON`)
 After the installation, marian-server is expected to be present in path. If not, place it in `/usr/local/bin`
 
 Install pre-requisites.
