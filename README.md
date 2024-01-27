@@ -10,7 +10,6 @@ Tools and resources for open translation services
 * mostly trained with guided alignment based on [eflomal](https://github.com/robertostling/eflomal) wordalignments 
 * [pre-trained downloadable translation models](https://github.com/Helsinki-NLP/Opus-MT-train/tree/master/models) ([matrix view](http://opus.nlpl.eu/Opus-MT/)), CC-BY 4.0 license
 * [more freely available translation models](https://github.com/Helsinki-NLP/Tatoeba-Challenge/blob/master/results/tatoeba-results-all.md) from the [Tatoeba translation challenge](https://github.com/Helsinki-NLP/Tatoeba-Challenge), CC-BY 4.0 license
-* demo translation interface available from https://opusmt.wmflabs.org/
 * 543 live demo APIs of language variants available at [Tiyaro.ai](https://console.tiyaro.ai/explore?q=opus-mt&pub=Helsinki-NLP).  For example, an [English to German finetuned translator](https://console.tiyaro.ai/explore/Helsinki-NLP-opus-mt-en-de/demo)
 
 <p>
@@ -20,7 +19,7 @@ Tools and resources for open translation services
 
 This repository includes two setups:
 
-* Setup 1: a [Tornado](https://www.tornadoweb.org)-based web application providing a web UI and API to work with multiple language pairs (developed by [Santhosh Thottingal](https://github.com/santhoshtr) and his team at the Wikimedia Foundation); an example instance is available here: https://opusmt.wmflabs.org/
+* Setup 1: a [Tornado](https://www.tornadoweb.org)-based web application providing a web UI and API to work with multiple language pairs (developed by [Santhosh Thottingal](https://github.com/santhoshtr) and his team at the Wikimedia Foundation)
 * Setup 2: [a simple websocket service setup with some experimental API extensions](https://github.com/Helsinki-NLP/Opus-MT/tree/master/doc/WebSocketServer.md)
 
 There are also [scripts for training models](https://github.com/Helsinki-NLP/Opus-MT-train), but those are currently only useful in the computing environment used by the University of Helsinki and CSC as the IT service provider.
