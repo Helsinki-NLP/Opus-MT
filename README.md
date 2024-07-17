@@ -24,9 +24,22 @@ This repository includes two setups:
 
 There are also [scripts for training models](https://github.com/Helsinki-NLP/Opus-MT-train), but those are currently only useful in the computing environment used by the University of Helsinki and CSC as the IT service provider.
 
-Please cite the following paper if you use OPUS-MT software and models:
+Please cite the following papers if you use OPUS-MT software and models:
 
-```
+```bibtex
+@article{tiedemann2023democratizing,
+  title={Democratizing neural machine translation with {OPUS-MT}},
+  author={Tiedemann, J{\"o}rg and Aulamo, Mikko and Bakshandaeva, Daria and Boggia, Michele and Gr{\"o}nroos, Stig-Arne and Nieminen, Tommi and Raganato\
+, Alessandro and Scherrer, Yves and Vazquez, Raul and Virpioja, Sami},
+  journal={Language Resources and Evaluation},
+  number={58},
+  pages={713--755},
+  year={2023},
+  publisher={Springer Nature},
+  issn={1574-0218},
+  doi={10.1007/s10579-023-09704-w}
+}
+
 @InProceedings{TiedemannThottingal:EAMT2020,
   author = {J{\"o}rg Tiedemann and Santhosh Thottingal},
   title = {{OPUS-MT} — {B}uilding open translation services for the {W}orld},
