@@ -22,7 +22,13 @@
 
 
 MARIAN_MODEL_URLS = \
-	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hbs/opus+bt-2021-04-20.zip
+	https://object.pouta.csc.fi/Tatoeba-MT-models/ine-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-18.zip
+#	https://object.pouta.csc.fi/Tatoeba-MT-models/sla-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17.zip
+#	https://object.pouta.csc.fi/Tatoeba-MT-models/afa-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17.zip
+
+
+# MARIAN_MODEL_URLS = \
+# 	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hbs/opus+bt-2021-04-20.zip
 
 ## models released between 2022-07-23 - 2022-08-11
 
@@ -196,10 +202,20 @@ ifneq (${wildcard ${MARIAN_MODEL}/README.md},)
   MODEL_TRGVOCAB = ${shell grep -A2 'vocabs:' ${MARIAN_MODEL}/decoder.yml | tail -1 | sed 's/^ *\- *//' | xargs}
   MODEL_SRCSPM    = ${MARIAN_MODEL}/source.spm
   MODEL_TRGSPM    = ${MARIAN_MODEL}/target.spm
-  MODEL_SRCLANGS  = ${shell perl extract_reasonable_languages.pl ${MARIAN_MODEL}/README.md | head -1}
-  MODEL_TRGLANGS  = ${shell perl extract_reasonable_languages.pl ${MARIAN_MODEL}/README.md | head -2 | tail -1}
+##
+## extact languages with reasonable test sets and scores
+## PROBLEM: we don't always have scores
+## 
+#  MODEL_SRCLANGS  = ${shell perl extract_reasonable_languages.pl ${MARIAN_MODEL}/README.md | head -1}
+#  MODEL_TRGLANGS  = ${shell perl extract_reasonable_languages.pl ${MARIAN_MODEL}/README.md | head -2 | tail -1}
 #  MODEL_SRCLANGS  = ${shell grep 'source language(s):' ${MARIAN_MODEL}/README.md | head -1 | cut -f2 -d: | xargs}
 #  MODEL_TRGLANGS  = ${shell grep 'target language(s):' ${MARIAN_MODEL}/README.md | head -1 | cut -f2 -d: | xargs}
+
+##
+## just rely on the languages listed in the readme!
+##
+  MODEL_SRCLANGS  = ${shell grep 'raw source language(s):' ${MARIAN_MODEL}/README.md | head -1 | cut -f2 -d: | xargs}
+  MODEL_TRGLANGS  = ${shell grep 'raw target language(s):' ${MARIAN_MODEL}/README.md | head -1 | cut -f2 -d: | xargs}
   MODEL_TRGLABELS = $(sort ${shell grep 'valid language labels:' ${MARIAN_MODEL}/README.md | head -1 | cut -f2 -d: | xargs})
   MODEL_VALID_TRGLABELS = ${MODEL_TRGLABELS}
   MODEL_LANGIDS2  = ${shell iso639 -2 -k ${sort ${MODEL_SRCLANGS} ${MODEL_TRGLANGS}}}
@@ -214,11 +230,6 @@ ifneq (${VOCAB_TRGLABELS},)
 endif
 endif
 
-# ## replace target languages with the ones that are actually supported!
-# ifneq (${MODEL_TRGLABELS},)
-#   USE_LABELS = 1
-#   MODEL_TRGLANGS = $(subst >>,,$(subst <<,,${MODEL_TRGLABELS}))
-# endif
 
 ## multiple target languages always require labels
 ifeq (${MODEL_TRGLABELS},)
@@ -231,7 +242,7 @@ else
 endif
 
 
-BACKGROUND_READING = [OPUS-MT – Building open translation services for the World](https://aclanthology.org/2020.eamt-1.61/)
+BACKGROUND_READING = [Democratizing neural machine translation with OPUS-MT](https://doi.org/10.1007/s10579-023-09704-w) and [OPUS-MT – Building open translation services for the World](https://aclanthology.org/2020.eamt-1.61/)
 
 ## base name for huggingface
 ## tc = trained on tatoeba challenge data
@@ -240,7 +251,11 @@ ifeq ($(findstring Tatoeba-MT-models,${MARIAN_MODEL_URL}),)
   DATA_SOURCE   = https://opus.nlpl.eu/
   OPUSMT_README = https://github.com/Helsinki-NLP/OPUS-MT-train/tree/master/models/${LANGPAIR}/README.md
 else
+ifeq ($(findstring +jhubc,${MARIAN_MODEL_URL}),+jhubc)
+  HF_BASENAME = opus-mt-tc-bible
+else
   HF_BASENAME = opus-mt-tc
+endif
   DATA_SOURCE = https://github.com/Helsinki-NLP/Tatoeba-Challenge
   OPUSMT_README = https://github.com/Helsinki-NLP/Tatoeba-Challenge/tree/master/models/${LANGPAIR}/README.md
   BACKGROUND_READING += and [The Tatoeba Translation Challenge – Realistic Data Sets for Low Resource and Multilingual MT](https://aclanthology.org/2020.wmt-1.139/)
@@ -262,6 +277,11 @@ all:
 	@for m in ${MARIAN_MODEL_URLS}; do \
 	  ${MAKE} MARIAN_MODEL_URL=$$m process; \
 	done
+
+.PHONY: login
+login:
+	huggingface-cli login
+
 
 ## do not fetch again and just refresh the model card
 .PHONY: refresh-all
@@ -381,10 +401,7 @@ transformers:
 ${PYTORCH_MODEL}: ${MARIAN_MODEL} ${MODEL_VOCAB_YML} transformers
 	export PYTHONPATH=transformers/src:${PYTHONPATH} && \
 	python convert_to_pytorch.py --model-path $< --dest-path $@
-
-#	export PYTHONPATH=${HOME}/research/Tatoeba-Challenge/transformers/src:${PYTHONPATH} && \
-#	python3 convert_to_pytorch.py --model-path $< --dest-path $@
-
+	export PYTHONPATH= && python fix_pytorch_model.py $@
 
 
 ## files with benchmarks and test set translations
@@ -422,8 +439,6 @@ ifeq (${shell wget -q -O - ${TESTSET_TRANSLATIONS_FILE} | head -3 | wc -l | xarg
   TESTSET_OUTPUT_EXAMPLE  := ${subst ",\",${shell wget -q -O - ${TESTSET_TRANSLATIONS_FILE} | head -3 | tail -1}}
   TESTSET_INPUT2_EXAMPLE  := ${subst ",\",${shell wget -q -O - ${TESTSET_TRANSLATIONS_FILE} | tail -4 | head -1}}
   TESTSET_OUTPUT2_EXAMPLE := ${subst ",\",${shell wget -q -O - ${TESTSET_TRANSLATIONS_FILE} | tail -2 | head -1}}
-#  TESTSET_INPUT2_EXAMPLE = ${shell wget -q -O - ${TESTSET_TRANSLATIONS_FILE} | head -5 | tail -1}
-#  TESTSET_OUTPUT2_EXAMPLE = ${shell wget -q -O - ${TESTSET_TRANSLATIONS_FILE} | head -7 | tail -1}
 else
 ifeq (${USE_LABELS},1)
   TESTSET_INPUT_EXAMPLE  := ${firstword ${MODEL_TRGLABELS}} Replace this with text in an accepted source language.
@@ -439,8 +454,10 @@ endif
 
 FILTER_OUT    = $(foreach v,$(2),$(if $(findstring $(1),$(v)),,$(v)))
 FILTER        = $(foreach v,$(2),$(if $(findstring $(1),$(v)),$(v),))
-BASIC_LANGIDS = $(sort $(filter-out xx,$(shell echo '${SRCLANGID2} ${TRGLANGID2} ${MODEL_LANGIDS2}' | tr ' ' "\n" | cut -f1 -d_)))
-BCP47_LANGIDS = $(sort $(call FILTER_OUT,xx,$(call FILTER,_,${SRCLANGID2} ${TRGLANGID2} ${MODEL_LANGIDS2})))
+BASIC_LANGIDS = $(sort $(filter-out xx,$(shell echo '${MODEL_LANGIDS2}' | tr ' ' "\n" | cut -f1 -d_)))
+BCP47_LANGIDS = $(sort $(call FILTER_OUT,xx,$(call FILTER,_,${MODEL_LANGIDS2})))
+
+
 
 ${PYTORCH_MODEL}/benchmark_translations.zip:
 	-wget -q -O $@ ${EVAL_FILE}
@@ -476,6 +493,10 @@ endif
   LANGID2_BCP47 = $(sort $(call FILTER_OUT,xx,$(call FILTER,_,${LANGID2_RELIABLE})))
 endif
 
+ifeq (${LANGID2_BASIC},)
+  LANGID2_BASIC = $(sort $(shell iso639 -2 -k ${MODEL_TRGLANGS} ${MODEL_SRCLANGS}))
+endif
+
 print-reliable-langs:
 	@echo "reliable BLEU scores:"
 	@echo "++++++++++++++++++++++++++++++++++++++++++"
@@ -483,6 +504,9 @@ print-reliable-langs:
 	@echo "reliable CHR-F scores:"
 	@echo "++++++++++++++++++++++++++++++++++++++++++"
 	@grep '0\.[5-9][0-9]*	[0-9]*\.[0-9]*	[1-9][0-9][0-9][0-9]*	[0-9][0-9]' ${PYTORCH_MODEL}/benchmark_results.txt
+	@echo "model source languages: ${MODEL_SRCLANGS}"
+	@echo "model target languages: ${MODEL_TRGLANGS}"
+	@echo "basic langids: ${BASIC_LANGIDS}"
 	@echo ${LANGPAIR_RELIABLE_BLEU}
 	@echo ${LANGPAIR_RELIABLE_CHRF}
 	@echo ${LANGPAIR_RELIABLE}
@@ -495,15 +519,24 @@ print-reliable-langs:
 	@echo ${SRCLANG_BENCHMARKS}
 	@echo ${TRGLANG_BENCHMARKS}
 
+
+
 .PHONY: readme
 readme: ${PYTORCH_MODEL}/README.md
+
+URL_ENCODE = $(shell python -c 'from urllib.parse import quote; print(quote("$(1)"))')
+OPUS_MT_DASHBOARD_BASEURL = https://opus.nlpl.eu/dashboard/index.php?pkg=opusmt&test=all&scoreslang=all&chart=standard&model=
 
 ${PYTORCH_MODEL}/README.md: ${PYTORCH_MODEL} ${PYTORCH_MODEL}/benchmark_results.txt ${PYTORCH_MODEL}/benchmark_translations.zip
 	@echo "..... create $@"
 	@echo '---'                 > $@
+	@echo 'library_name: transformers' >> $@
 	@echo 'language:'          >> $@
-#	@for l in ${BASIC_LANGIDS}; do
-	@for l in ${LANGID2_BASIC}; do \
+## only list reasonable languages (LANGID2_BASIC)
+## PROBLEM: sometimes we don't have benchmarks
+#	@for l in ${LANGID2_BASIC}; do
+## --> run through all languages mentioned in the readme
+	@for l in ${BASIC_LANGIDS}; do \
 	  echo "- $$l"             >> $@; \
 	done
 ifneq (${LANGID2_BCP47},)
@@ -523,11 +556,11 @@ endif
 	@echo ''                   >> $@
 	@echo 'tags:'              >> $@
 	@echo '- translation'      >> $@
-ifeq (${HF_BASENAME},opus-mt-tc)
+ifeq ($(findstring opus-mt-tc,${HF_BASENAME}),opus-mt-tc)
 	@echo '- ${HF_BASENAME}'   >> $@
 endif
 	@echo ''                   >> $@
-	@echo 'license: cc-by-4.0' >> $@
+	@echo 'license: apache-2.0' >> $@
 	@echo 'model-index:'       >> $@
 	@echo '- name: ${HF_NAME}' >> $@
 	@echo '  results:'         >> $@
@@ -556,35 +589,34 @@ endif
 	@echo '- **Model Type:** Translation (${MODEL_TYPE})'        >> $@
 #	@echo '* model: ${MODEL_TYPE} (${HF_MODELTYPE})'             >> $@
 	@echo '- **Release**: ${RELEASE_DATE}'                       >> $@
-	@echo '- **License:** CC-BY-4.0'                             >> $@
+	@echo '- **License:** Apache-2.0'                            >> $@
 	@echo '- **Language(s):**  '                                 >> $@
-#	@echo '  - Source Language(s): ${sort ${MODEL_SRCLANGS}}'    >> $@
-#	@echo '  - Target Language(s): ${sort ${MODEL_TRGLANGS}}'    >> $@
-#	@echo '  - Source Language(s): ${sort ${SRCLANG_BENCHMARKS}}' >> $@
-#	@echo '  - Target Language(s): ${sort ${TRGLANG_BENCHMARKS}}' >> $@
-# 	@echo '  - Source Language(s): ${sort ${SRCLANG_RELIABLE}}'  >> $@
-# 	@echo '  - Target Language(s): ${sort ${TRGLANG_RELIABLE}}'  >> $@
 	@echo '  - Source Language(s): ${sort ${MODEL_SRCLANGS} ${SRCLANG_RELIABLE}}'  >> $@
 	@echo '  - Target Language(s): ${sort ${MODEL_TRGLANGS} ${TRGLANG_RELIABLE}}'  >> $@
-	@echo '  - Language Pair(s): ${sort ${LANGPAIR_RELIABLE}}'   >> $@
+#	@echo '  - Language Pair(s): ${sort ${LANGPAIR_RELIABLE}}'   >> $@
 ifneq ($(words ${VOCAB_TRGLABELS}),1)
+ifneq ($(words ${VOCAB_TRGLABELS}),0)
 	@echo '  - Valid Target Language Labels: ${VOCAB_TRGLABELS}' >> $@
+endif
 else ifneq ($(words ${MODEL_VALID_TRGLABELS}),1)
+ifneq ($(words ${MODEL_VALID_TRGLABELS}),0)
 	@echo '  - Valid Target Language Labels: ${MODEL_VALID_TRGLABELS}' >> $@
 endif
-# ifneq ($(words ${MODEL_VALID_TRGLABELS}),1)
-#	@echo '  - Valid Target Language Labels: ${MODEL_VALID_TRGLABELS}' >> $@
-# endif
-# ifeq (${USE_LABELS},1)
-#	@echo '  - Valid Target Language Labels: ${MODEL_TRGLABELS}' >> $@
-# endif
+endif
 	@echo '- **Original Model**: [$(notdir ${MARIAN_MODEL_URL})](${MARIAN_MODEL_URL})' >> $@
 	@echo '- **Resources for more information:**'                >> $@
+	@echo '  -  [OPUS-MT dashboard](${OPUS_MT_DASHBOARD_BASEURL}$(call URL_ENCODE,$(patsubst https://object.pouta.csc.fi/%.zip,%,${MARIAN_MODEL_URL})))' >>$@
 	@echo '  - [OPUS-MT-train GitHub Repo](https://github.com/Helsinki-NLP/OPUS-MT-train)' >> $@
-	@echo '  - More information about released models for this language pair: [OPUS-MT ${LANGPAIR} README](${OPUSMT_README})' >> $@
+#	@echo '  - More information about released models for this language pair: [OPUS-MT ${LANGPAIR} README](${OPUSMT_README})' >> $@
 	@echo "  - [More information about MarianNMT models in the transformers library](https://huggingface.co/docs/transformers/model_doc/marian)" >>$@
-ifeq (${HF_BASENAME},opus-mt-tc)
-	@echo '  - [Tatoeba Translation Challenge](https://github.com/Helsinki-NLP/Tatoeba-Challenge/' >> $@
+ifeq ($(findstring opus-mt-tc,${HF_BASENAME}),opus-mt-tc)
+	@echo '  - [Tatoeba Translation Challenge](https://github.com/Helsinki-NLP/Tatoeba-Challenge/)' >> $@
+endif
+ifeq ($(findstring opusTCv20230926,${MARIAN_MODEL_URL}),opusTCv20230926)
+	@echo '  - [HPLT bilingual data v1 (as part of the Tatoeba Translation Challenge dataset)](https://hplt-project.org/datasets/v1)' >> $@
+endif
+ifeq (${HF_BASENAME},opus-mt-tc-bible)
+	@echo '  - [A massively parallel Bible corpus](https://aclanthology.org/L14-1215/)' >> $@
 endif
 ifeq (${USE_LABELS},1)
 	@echo ''                                                        >> $@
@@ -651,6 +683,7 @@ endif
 	@echo ''                                                        >> $@
 	@echo '## Evaluation'                                           >> $@
 	@echo ''                                                        >> $@
+	@echo '* [Model scores at the OPUS-MT dashboard](${OPUS_MT_DASHBOARD_BASEURL}$(call URL_ENCODE,$(patsubst https://object.pouta.csc.fi/%.zip,%,${MARIAN_MODEL_URL})))' >>$@
 	@grep 'test set translations:' ${MARIAN_MODEL}/README.md        >> $@
 	@grep 'test set scores:' ${MARIAN_MODEL}/README.md              >> $@
 	@echo '* benchmark results: [benchmark_results.txt](benchmark_results.txt)' >> $@
@@ -673,7 +706,19 @@ endif
 	@echo ''                                                        >> $@
 	@echo '* Publications: ${BACKGROUND_READING} (Please, cite if you use this model.)' >> $@
 	@echo ''                                                        >> $@
-	@echo '```'                                                     >> $@
+	@echo '```bibtex'                                               >> $@
+	@echo '@article{tiedemann2023democratizing,'                    >> $@
+	@echo '  title={Democratizing neural machine translation with {OPUS-MT}},' >> $@
+	@echo '  author={Tiedemann, J{\"o}rg and Aulamo, Mikko and Bakshandaeva, Daria and Boggia, Michele and Gr{\"o}nroos, Stig-Arne and Nieminen, Tommi and Raganato, Alessandro and Scherrer, Yves and Vazquez, Raul and Virpioja, Sami},' >> $@
+	@echo '  journal={Language Resources and Evaluation},'          >> $@
+	@echo '  number={58},'                                          >> $@
+	@echo '  pages={713--755},'                                     >> $@
+	@echo '  year={2023},'                                          >> $@
+	@echo '  publisher={Springer Nature},'                          >> $@
+	@echo '  issn={1574-0218},'                                     >> $@
+	@echo '  doi={10.1007/s10579-023-09704-w}'                      >> $@
+	@echo '}'                                                       >> $@
+	@echo ''                                                        >> $@
 	@echo '@inproceedings{tiedemann-thottingal-2020-opus,'          >> $@
 	@echo '    title = "{OPUS}-{MT} {--} Building open translation services for the World",' >> $@
 	@echo '    author = {Tiedemann, J{\"o}rg  and Thottingal, Santhosh},' >> $@
@@ -685,7 +730,7 @@ endif
 	@echo '    url = "https://aclanthology.org/2020.eamt-1.61",'    >> $@
 	@echo '    pages = "479--480",'                                 >> $@
 	@echo '}'                                                       >> $@
-ifeq (${HF_BASENAME},opus-mt-tc)
+ifeq ($(findstring opus-mt-tc,${HF_BASENAME}),opus-mt-tc)
 	@echo ''                                                        >> $@
 	@echo '@inproceedings{tiedemann-2020-tatoeba,'                  >> $@
 	@echo '    title = "The Tatoeba Translation Challenge {--} Realistic Data Sets for Low Resource and Multilingual {MT}",' >> $@
@@ -703,7 +748,7 @@ endif
 	@echo ''                                                        >> $@
 	@echo '## Acknowledgements'                                     >> $@
 	@echo ''                                                        >> $@
-	@echo 'The work is supported by the [European Language Grid](https://www.european-language-grid.eu/) as [pilot project 2866](https://live.european-language-grid.eu/catalogue/#/resource/projects/2866), by the [FoTran project](https://www.helsinki.fi/en/researchgroups/natural-language-understanding-with-cross-lingual-grounding), funded by the European Research Council (ERC) under the European Union’s Horizon 2020 research and innovation programme (grant agreement No 771113), and the [MeMAD project](https://memad.eu/), funded by the European Union’s Horizon 2020 Research and Innovation Programme under grant agreement No 780069. We are also grateful for the generous computational resources and IT infrastructure provided by [CSC -- IT Center for Science](https://www.csc.fi/), Finland.' >> $@
+	@echo 'The work is supported by the [HPLT project](https://hplt-project.org/), funded by the European Union’s Horizon Europe research and innovation programme under grant agreement No 101070350. We are also grateful for the generous computational resources and IT infrastructure provided by [CSC -- IT Center for Science](https://www.csc.fi/), Finland, and the [EuroHPC supercomputer LUMI](https://www.lumi-supercomputer.eu/).' >> $@
 	@echo ''                                                        >> $@
 	@echo '## Model conversion info'                                >> $@
 	@echo ''                                                        >> $@
@@ -713,22 +758,3 @@ endif
 	@echo '* port machine: ${shell hostname}'                       >> $@
 
 
-
-
-
-## OLD: extract benchmark scores
-
-# ifeq (${shell wget -q -O - ${SCORES_FILE} | head -3 | wc -l | xargs},3)
-#	@echo '* additional benchmark results: [${notdir ${SCORES_FILE}}](${SCORES_FILE})' >> $@
-#	@echo '* additional benchmark output: [${notdir ${EVAL_FILE}}](${EVAL_FILE})'      >> $@
-# 	@echo ''                                                        >> $@
-# 	@echo '| langpair | testset | chr-F | BLEU  | #sent | #words |' >> $@
-# 	@echo '|----------|---------|-------|-------|-------|--------|' >> $@
-# 	@wget -q -O - ${SCORES_FILE} |\
-# 	cut -f1-4,6,7 | \
-# 	awk '{if (($$3 > 0.4 || $$4 > 20) && $$5 > 199) print}' |\
-# 	sed 's/	/ | /g;s/^/| /;s/$$/ |/'                                >> $@
-# else
-# 	@echo ''                                                        >> $@
-# 	@perl extract_reasonable_languages.pl ${MARIAN_MODEL}/README.md | grep '^|' >> $@
-# endif
