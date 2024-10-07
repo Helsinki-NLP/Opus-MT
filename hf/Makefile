@@ -20,8 +20,8 @@
 ##   TODO: find a good way to automatically select reasonable models
 ##   TODO: some kind of quality control before converting/publishing
 
-## minimum validation ppl score to be an acceptable model:
-MIN_PPL_SCORE = 7
+## maximum validation ppl score for an acceptable model:
+MAX_PPL_SCORE = 7
 
 MARIAN_MODELS = \
 	Tatoeba-MT-models/aav-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-29 \
@@ -468,23 +468,30 @@ fetch-and-convert:
 
 ## process a model (fetch, convert, commit)
 ## NEW: only do that if the validation perplexity is above a certain threshold!
+## NEW: only commit if we have at least one reliable eval result (see extract-task-results.pl)
 
 .PHONY: process
 process:
 	${MAKE} fetch
 	if [ `find ${MARIAN_MODEL}/ -name '*.valid[0-9].log' | wc -l` -gt 0 ]; then \
 	  p=`grep 'new best' ${MARIAN_MODEL}/*.valid[0-9].log | tail -1 | rev | cut -f2 -d: | rev`; \
-	  if (( $$(echo "$$p < ${MIN_PPL_SCORE}" | bc -l ) )); then \
+	  if (( $$(echo "$$p < ${MAX_PPL_SCORE}" | bc -l ) )); then \
 	    echo "ppl score is OK for ${MARIAN_MODEL} ($$p)"; \
 	    ${MAKE} convert; \
-	    ${MAKE} commit; \
+	    if [ `./extract-task-results.pl ${PYTORCH_MODEL}/benchmark_results.txt | wc -l` -gt 0 ]; then \
+	      ${MAKE} commit; \
+	    fi; \
 	  else \
 	    echo "ppl score for ${MARIAN_MODEL} is too low ($$p)"; \
 	  fi \
-	else \
-	  ${MAKE} convert; \
-	  ${MAKE} commit; \
 	fi
+
+## old: just convert and submit
+##
+#	${MAKE} convert
+#	${MAKE} commit
+
+
 
 
 .PHONY: info
