@@ -16,6 +16,10 @@
 ##
 
 
+SHELL := bash
+
+
+##-----------------------------------------------------------------------------------
 ## list all models that need to be converted
 ##   TODO: find a good way to automatically select reasonable models
 ##   TODO: some kind of quality control before converting/publishing
@@ -23,301 +27,23 @@
 ## maximum validation ppl score for an acceptable model:
 MAX_PPL_SCORE = 7
 
-MARIAN_MODELS = \
-	Tatoeba-MT-models/aav-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-29 \
-	Tatoeba-MT-models/aav-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/aav-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/aav-fra+ita+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/afa-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-29 \
-	Tatoeba-MT-models/afa-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/afa-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/afa-fra+ita+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/alv-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/alv-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/alv-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/alv-fra+ita+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/art-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/art-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/art-fra+ita+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/bat-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/bat-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/bat-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/ber-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-18 \
-	Tatoeba-MT-models/ber-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/bnt-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/bnt-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-18 \
-	Tatoeba-MT-models/bnt-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/bnt-fra+ita+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/cau-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/cau-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-18 \
-	Tatoeba-MT-models/cau-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/cdc-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/cdc-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/cel-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/cel-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/cus-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-aav/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-29 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-afa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-29 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-art/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-bat/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-bnt/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-cau/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-dra/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-fiu/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-gem/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-gmq/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-gmw/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-iir/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-inc/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-ine/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-itc/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-map/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-mkh/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-mul/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-phi/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-poz/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-pqe/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-pqw/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-roa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-sem/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-sit/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-sla/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-trk/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-urj/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/deu+eng+fra+por+spa-zhx/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/dmn-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/dra-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-18 \
-	Tatoeba-MT-models/dra-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/fiu-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/fiu-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/fiu-fra+ita+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/gem-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/gem-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/gem-fra+ita+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/gmq-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/gmq-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/gmw-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/gmw-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-18 \
-	Tatoeba-MT-models/gmw-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/gmw-fra+ita+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/iir-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/iir-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-18 \
-	Tatoeba-MT-models/iir-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/inc-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/inc-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-18 \
-	Tatoeba-MT-models/inc-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/ine-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/ine-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-18 \
-	Tatoeba-MT-models/ine-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/ira-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/itc-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/itc-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-18 \
-	Tatoeba-MT-models/itc-fra+ita+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/map-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-18 \
-	Tatoeba-MT-models/map-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/map-fra+ita+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/mkh-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/mkh-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-18 \
-	Tatoeba-MT-models/mkh-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/mkh-fra+ita+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/mul-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/mul-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-18 \
-	Tatoeba-MT-models/mul-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/mul-mul/opusTCv20230926+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/nic-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/nic-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-18 \
-	Tatoeba-MT-models/nic-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/nic-fra+ita+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/phi-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/phi-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-18 \
-	Tatoeba-MT-models/phi-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/poz-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/poz-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/poz-fra+ita+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/pqe-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/pqe-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/pqw-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/pqw-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/pqw-fra+ita+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/roa-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/roa-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/sai-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-18 \
-	Tatoeba-MT-models/sai-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/sem-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/sem-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-18 \
-	Tatoeba-MT-models/sem-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/sit-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/sit-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/sla-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/sla-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-18 \
-	Tatoeba-MT-models/sla-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/tai-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/tai-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/trk-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/tup-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-18 \
-	Tatoeba-MT-models/tup-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/urj-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/urj-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-18 \
-	Tatoeba-MT-models/urj-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/urj-fra+ita+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/xgn-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/xgn-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17 \
-	Tatoeba-MT-models/zhx-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-30 \
-	Tatoeba-MT-models/zhx-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17
-
-
-
-MARIAN_MODEL_URLS = $(patsubst %,https://object.pouta.csc.fi/%.zip,${MARIAN_MODELS})
-
-
-# MARIAN_MODEL_URLS = \
-#	https://object.pouta.csc.fi/Tatoeba-MT-models/ine-deu+eng+nld/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-18.zip
-#	https://object.pouta.csc.fi/Tatoeba-MT-models/sla-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17.zip
-#	https://object.pouta.csc.fi/Tatoeba-MT-models/afa-eng/opusTCv20230926max50+bt+jhubc_transformer-big_2024-08-17.zip
-
-
-# MARIAN_MODEL_URLS = \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hbs/opus+bt-2021-04-20.zip
-
-## models released between 2022-07-23 - 2022-08-11
-
-# MARIAN_MODEL_URLS = \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/itc-itc/opusTCv20210807_transformer-big_2022-08-10.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/gmw-gmw/opusTCv20210807_transformer-big_2022-08-11.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/gmq-gmq/opusTCv20210807_transformer-big_2022-07-29.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/zls-itc/opusTCv20210807_transformer-big_2022-08-10.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/gmq-itc/opusTCv20210807_transformer-big_2022-08-09.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/itc-ara/opusTCv20210807_transformer-big_2022-08-09.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/ara-gmq/opusTCv20210807_transformer-big_2022-08-09.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/zle-itc/opusTCv20210807_transformer-big_2022-08-03.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/itc-heb/opusTCv20210807_transformer-big_2022-08-03.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/gmq-zlw/opusTCv20210807_transformer-big_2022-08-03.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/zho-jpn/opusTCv20210807-sepvoc_transformer-big_2022-07-28.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/itc-tur/opusTCv20210807_transformer-big_2022-07-28.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/gmq-heb/opusTCv20210807_transformer-big_2022-07-28.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/ara-itc/opusTCv20210807_transformer-big_2022-07-28.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/itc-bat/opusTCv20210807_transformer-big_2022-07-27.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/gmq-ara/opusTCv20210807_transformer-big_2022-07-27.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/zls-deu/opusTCv20210807_transformer-big_2022-07-26.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/gmq-tur/opusTCv20210807_transformer-big_2022-07-26.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/deu-spa/opusTCv20210807_transformer-big_2022-07-26.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/heb-itc/opusTCv20210807_transformer-big_2022-07-25.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/deu-gmq/opusTCv20210807_transformer-big_2022-07-25.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/heb-gmq/opusTCv20210807_transformer-big_2022-07-23.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/itc-eus/opusTCv20210807_transformer-big_2022-07-23.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/fin-zls/opusTCv20210807_transformer-big_2022-07-23.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/fas-itc/opusTCv20210807_transformer-big_2022-07-23.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/fas-gmq/opusTCv20210807_transformer-big_2022-07-23.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/eus-itc/opusTCv20210807_transformer-big_2022-07-23.zip
-
-
-# MARIAN_MODEL_URLS = \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-kor/opusTCv20210807-sepvoc_transformer-big_2022-07-28.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/kor-eng/opusTCv20210807-sepvoc_transformer-big_2022-07-28.zip
-
-# MARIAN_MODEL_URLS = \
-#	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hun/opusTCv20210807+bt_transformer-big_2022-02-25.zip
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hun/opus+bt-2021-04-13.zip 
-#	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hun/opusTCv20210807+bt_transformer-big_2022-02-25.zip
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/gmw-gmw/opus-2021-02-23.zip \
-#	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fin/opusTCv20210807+bt-2021-09-01.zip
-#	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fin/opusTCv20210807+bt-2021-12-08.zip \
-#	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fin/opusTCv20210807+bt-2021-09-01.zip \
-#	https://object.pouta.csc.fi/Tatoeba-MT-models/gmw-eng/opus4m+btTCv20210807-2021-09-30.zip
+MARIAN_MODELS = Tatoeba-MT-models/aav-deu+eng+fra+por+spa/opusTCv20230926max50+bt+jhubc_transformer-big_2024-05-29
+# MARIAN_MODELS = ${shell cat opus-mt-releases-2024-10-10.txt}
+# MARIAN_MODELS = ${shell cat opus-mt-releases-2022-08-11.txt}
+# MARIAN_MODELS = ${shell cat opus-mt-releases-2022-03-23.txt}
+# MARIAN_MODELS = ${shell cat opus-mt-releases-2022-03-22.txt}
 
 ## broken yml file:
 # 	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-gmw/opus1m+bt-2021-04-10.zip
+##-----------------------------------------------------------------------------------
 
-
-## models for Ukrainian
-
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/fin-eng/opusTCv20210807+bt-2021-12-08.zip \
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fin/opusTCv20210807+bt_transformer-big_2022-03-09.zip
-# 	https://object.pouta.csc.fi/Tatoeba-MT-models/zle-eng/opusTCv20210807+bt_transformer-big_2022-03-17.zip \
-#	https://object.pouta.csc.fi/Tatoeba-MT-models/eng-zle/opusTCv20210807+bt_transformer-big_2022-03-13.zip
-
-
-# done for Ukrainian (2022-03-23)
-
-# https://object.pouta.csc.fi/Tatoeba-MT-models/ukr-fin/opusTCv20210807+pft+pbt_transformer-align_2022-03-17.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/ukr-ces+slk/opusTCv20210807+pft_transformer-align_2022-03-17.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/ukr-hun/opusTCv20210807+pft_transformer-align_2022-03-08.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/ukr-ron/opusTCv20210807+pft_transformer-align_2022-03-08.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/ukr-tur/opusTCv20210807+pft_transformer-align_2022-03-07.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/zle-bat/opusTCv20210807_transformer-align_2022-03-14.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/zle-deu/opusTCv20210807_transformer-big_2022-03-19.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/zle-eng/opusTCv20210807+bt_transformer-big_2022-03-17.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/zle-fra/opusTCv20210807_transformer-big_2022-03-23.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/zle-gmq/opusTCv20210807+pft_transformer-big_2022-03-14.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/zle-ita/opusTCv20210807_transformer-big_2022-03-19.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/zle-por/opusTCv20210807_transformer-big_2022-03-23.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/zle-spa/opusTCv20210807_transformer-big_2022-03-23.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/zle-zle/opusTCv20210807+bt_transformer-big_2022-03-07.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/zle-zls/opusTCv20210807+bt_transformer-big_2022-03-23.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/zle-zlw/opusTCv20210807+bt_transformer-big_2022-03-23.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/bat-zle/opusTCv20210807_transformer-align_2022-03-13.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/ces+slk-ukr/opusTCv20210807+pbt_transformer-align_2022-03-08.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/deu-zle/opusTCv20210807_transformer-big_2022-03-23.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-zle/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/fin-ukr/opusTCv20210807+pbt_transformer-align_2022-03-07.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/fra-zle/opusTCv20210807_transformer-big_2022-03-23.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/gmq-zle/opusTCv20210807+pbt_transformer-big_2022-03-23.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/hun-ukr/opusTCv20210807+pbt_transformer-align_2022-03-08.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/ita-zle/opusTCv20210807_transformer-big_2022-03-23.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/por-zle/opusTCv20210807_transformer-big_2022-03-23.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/ron-ukr/opusTCv20210807+pbt_transformer-align_2022-03-08.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/spa-zle/opusTCv20210807_transformer-big_2022-03-23.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/tur-ukr/opusTCv20210807+pbt_transformer-align_2022-03-07.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/zls-zle/opusTCv20210807+bt_transformer-big_2022-03-23.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/zlw-zle/opusTCv20210807+bt_transformer-big_2022-03-19.zip
-
-
-## done for English-xxx both directions (big transformer)
-
-# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fin/opusTCv20210807+bt_transformer-big_2022-03-09.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/zle-eng/opusTCv20210807+bt_transformer-big_2022-03-17.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-zle/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-
-# MARIAN_MODEL_URLS = \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-ara/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-bul/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-cat+oci+spa/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-ces+slk/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-ell/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-est/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fra/opusTCv20210807+bt_transformer-big_2022-03-09.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-gmq/opusTCv20210807+bt_transformer-big_2022-03-17.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-hun/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-ita/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-lav/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-lit/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-por/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-ron/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-spa/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/eng-tur/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/ara-eng/opusTCv20210807+bt_transformer-big_2022-03-09.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/bul-eng/opusTCv20210807+bt_transformer-big_2022-03-09.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/cat+oci+spa-eng/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/cel-eng/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/ces+slk-eng/opusTCv20210807+bt_transformer-big_2022-03-17.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/ell-eng/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/est-eng/opusTCv20210807+bt_transformer-big_2022-03-09.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/fra-eng/opusTCv20210807+bt_transformer-big_2022-03-09.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/gmq-eng/opusTCv20210807+bt_transformer-big_2022-03-09.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/hbs-eng/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/heb-eng/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/hun-eng/opusTCv20210807+bt_transformer-big_2022-03-09.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/ita-eng/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/lav-eng/opusTCv20210807+bt_transformer-big_2022-03-13.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/lit-eng/opusTCv20210807+bt_transformer-big_2022-02-25.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/tur-eng/opusTCv20210807+bt_transformer-big_2022-03-17.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/zls-eng/opusTCv20210807+bt_transformer-big_2022-03-17.zip \
-# https://object.pouta.csc.fi/Tatoeba-MT-models/zlw-eng/opusTCv20210807+bt_transformer-big_2022-03-17.zip
-
-
-SHELL := bash
-
+STORAGE_URL      := https://object.pouta.csc.fi
+MARIAN_MODEL_URLS = $(patsubst %,${STORAGE_URL}/%.zip,${MARIAN_MODELS})
 MARIAN_MODEL_URL ?= ${firstword ${MARIAN_MODEL_URLS}}
+
+
+
+
 
 ## extract language pair and release data from the URL
 LANGPAIR     = $(notdir ${patsubst %/,%,${dir ${MARIAN_MODEL_URL}}})
@@ -341,6 +67,22 @@ TRGLANGID3  := $(lastword $(subst -, ,${LANGPAIR3}))
 
 ## the name of the workdir with the original MarianNMT model
 MARIAN_MODEL     := marian-models/${basename ${notdir ${MARIAN_MODEL_URL}}}/${LANGPAIR2}
+
+
+OPUSMT_LEADERBOARD_RAW = https://raw.githubusercontent.com/Helsinki-NLP/OPUS-MT-leaderboard/refs/heads/master/models/
+
+## model package (Tatoeba-MT-models or OPUS-MT-models)
+MODEL_PACKAGE = $(firstword $(subst /, ,$(patsubst ${STORAGE_URL}/%.zip,%,${MARIAN_MODEL_URL})))
+
+MODEL_SPBLEU_SCORES = $(patsubst ${STORAGE_URL}/%.zip,${OPUSMT_LEADERBOARD_RAW}/%.spbleu-scores.txt,${MARIAN_MODEL_URL})
+MODEL_BLEU_SCORES   = $(patsubst ${STORAGE_URL}/%.zip,${OPUSMT_LEADERBOARD_RAW}/%.bleu-scores.txt,${MARIAN_MODEL_URL})
+MODEL_CHRF_SCORES   = $(patsubst ${STORAGE_URL}/%.zip,${OPUSMT_LEADERBOARD_RAW}/%.chrf-scores.txt,${MARIAN_MODEL_URL})
+
+new_benchmark_results.txt:
+	echo "./extract_results.py ${MODEL_BLEU_SCORES} ${MODEL_CHRF_SCORES} ${MODEL_SPBLEU_SCORES} > $@"
+
+
+
 
 ifneq (${wildcard ${MARIAN_MODEL}/README.md},)
   MODEL_TYPE = ${shell grep 'model:' ${MARIAN_MODEL}/README.md | head -1 | cut -f2 -d: | xargs}
@@ -366,7 +108,7 @@ ifneq (${wildcard ${MARIAN_MODEL}/README.md},)
   MODEL_SRCLANGS  = ${shell grep 'raw source language(s):' ${MARIAN_MODEL}/README.md | head -1 | cut -f2 -d: | xargs}
   MODEL_TRGLANGS  = ${shell grep 'raw target language(s):' ${MARIAN_MODEL}/README.md | head -1 | cut -f2 -d: | xargs}
   MODEL_TRGLABELS = $(sort ${shell grep 'valid language labels:' ${MARIAN_MODEL}/README.md | head -1 | cut -f2 -d: | xargs})
-  MODEL_VALID_TRGLABELS = ${MODEL_TRGLABELS}
+  MODEL_VALID_TRGLABELS = $(filter-out >>xxx<< >>xx<< >>multi<<,${MODEL_TRGLABELS})
   MODEL_LANGIDS2  = ${shell iso639 -2 -k ${sort ${MODEL_SRCLANGS} ${MODEL_TRGLANGS}}}
   MODEL_VOCAB_TXT = ${wildcard ${MARIAN_MODEL}/*.vocab}
   MODEL_VOCAB_YML = ${patsubst %,%.yml,${MODEL_VOCAB_TXT}}
@@ -468,7 +210,6 @@ fetch-and-convert:
 
 ## process a model (fetch, convert, commit)
 ## NEW: only do that if the validation perplexity is above a certain threshold!
-## NEW: only commit if we have at least one reliable eval result (see extract-task-results.pl)
 
 .PHONY: process
 process:
@@ -478,9 +219,7 @@ process:
 	  if (( $$(echo "$$p < ${MAX_PPL_SCORE}" | bc -l ) )); then \
 	    echo "ppl score is OK for ${MARIAN_MODEL} ($$p)"; \
 	    ${MAKE} convert; \
-	    if [ `./extract-task-results.pl ${PYTORCH_MODEL}/benchmark_results.txt | wc -l` -gt 0 ]; then \
-	      ${MAKE} commit; \
-	    fi; \
+	    ${MAKE} commit; \
 	  else \
 	    echo "ppl score for ${MARIAN_MODEL} is too low ($$p)"; \
 	  fi \
@@ -492,6 +231,29 @@ process:
 #	${MAKE} commit
 
 
+
+print-rejected:
+	@for m in ${MARIAN_MODEL_URLS}; do \
+	  ${MAKE} MARIAN_MODEL_URL=$$m check-rejection; \
+	done
+
+check-rejection:
+	@if [ `find ${MARIAN_MODEL}/ -name '*.valid[0-9].log' | wc -l` -gt 0 ]; then \
+	  p=`grep 'new best' ${MARIAN_MODEL}/*.valid[0-9].log | tail -1 | rev | cut -f2 -d: | rev`; \
+	  if (( $$(echo "$$p >= ${MAX_PPL_SCORE}" | bc -l ) )); then \
+	    echo "ppl score for ${MARIAN_MODEL} is too low ($$p)"; \
+	  fi \
+	fi
+	@if [ -e ${HF_NAME}/benchmark_results.txt ]; then \
+	  rsync ${HF_NAME}/benchmark_results.txt ${PYTORCH_MODEL}/benchmark_results.txt; \
+	else \
+	  ${MAKE} ${PYTORCH_MODEL}/benchmark_results.txt; \
+	fi
+	@if [ -e ${PYTORCH_MODEL}/benchmark_results.txt ]; then \
+	  if [ ! -s ${PYTORCH_MODEL}/benchmark_results.txt ]; then \
+	    echo "no reliable benchmark score found for ${MARIAN_MODEL}"; \
+	  fi \
+	fi
 
 
 .PHONY: info
@@ -513,12 +275,24 @@ info:
 fetch: ${MARIAN_MODEL}
 
 .PHONY: convert
-convert:
-	${MAKE} ${PYTORCH_MODEL}/benchmark_results.txt
-	${MAKE} ${PYTORCH_MODEL}/README.md
+convert: ${PYTORCH_MODEL}/benchmark_results.txt
+	if [ -e $< ]; then \
+	  if [ -s $< ]; then \
+	    ${MAKE} ${PYTORCH_MODEL}/README.md
+	  else \
+	    echo "no reliable benchmark score found for ${MARIAN_MODEL}"; \
+	  fi \
+	fi
+
+
+
+## NEW: only commit if we have at least one reliable eval result (see extract-task-results.pl)
 
 .PHONY: commit
-commit: ${PYTORCH_MODEL}.committed
+commit: ${PYTORCH_MODEL}/benchmark_results.txt
+	if [ -s $< ]; then \
+	  ${MAKE} ${PYTORCH_MODEL}.committed; \
+	fi
 
 
 ## in case we need to convert vocab files to yaml
@@ -544,7 +318,8 @@ ${HOME}/.huggingface/token:
 #	-git clone git@hf.co:Helsinki-NLP/${HF_NAME}
 
 ifneq (${HF_NAME},)
-${PYTORCH_MODEL}.committed: ${PYTORCH_MODEL} ${PYTORCH_MODEL}/README.md ${HOME}/.huggingface/token
+${PYTORCH_MODEL}.committed:
+	${MAKE} ${PYTORCH_MODEL}/README.md ${HOME}/.huggingface/token
 	-huggingface-cli repo create ${HF_NAME} --organization Helsinki-NLP --yes
 	-git clone https://tiedeman:`cat ${HOME}/.huggingface/token`@huggingface.co/Helsinki-NLP/${HF_NAME}
 	cd ${HF_NAME} && git lfs install
@@ -553,10 +328,12 @@ ${PYTORCH_MODEL}.committed: ${PYTORCH_MODEL} ${PYTORCH_MODEL}/README.md ${HOME}/
 	cd ${HF_NAME} && git config --global user.name "Joerg Tiedemann"
 	mv ${PYTORCH_MODEL}/* ${HF_NAME}/
 	rsync ${HF_NAME}/README.md ${PYTORCH_MODEL}/README.md
+	rsync ${HF_NAME}/benchmark_results.txt ${PYTORCH_MODEL}/benchmark_results.txt
 	cd ${HF_NAME} && git add .
 	cd ${HF_NAME} && git commit -m "Initial commit"
 	cd ${HF_NAME} && git push
 	touch $@
+	rm -fr ${HF_NAME}
 endif
 
 
@@ -596,9 +373,10 @@ EVAL_FILE = ${MARIAN_MODEL_URL:.zip=.eval.zip}
 .PHONY: benchmarks
 benchmarks: ${PYTORCH_MODEL}/benchmark_results.txt ${PYTORCH_MODEL}/benchmark_translations.zip
 
-${PYTORCH_MODEL}/benchmark_results.txt: ${PYTORCH_MODEL}
-	-wget -q -O - ${SCORES_FILE} | cut -f1-4,6,7 > $@
-	if [ ! -s $@ ]; then \
+${PYTORCH_MODEL}/benchmark_results.txt: ${MARIAN_MODEL}
+	@mkdir -p $(dir $@)
+	-@wget -q -O - ${SCORES_FILE} | cut -f1-4,6,7 > $@
+	@if [ ! -s $@ ]; then \
 	  grep '^|' ${MARIAN_MODEL}/README.md | \
 	  tail -n +3  | tr "\t" ' ' | tr '|' "\t" | sed 's/ //g' | cut -f2- | \
 	  sed 's/^\([^	]*\)\.\([^	]*\)	/\2	\1	/' |\
