@@ -11,11 +11,6 @@ Tools and resources for open translation services
 * [pre-trained downloadable translation models](https://github.com/Helsinki-NLP/Opus-MT-train/tree/master/models) ([matrix view](http://opus.nlpl.eu/Opus-MT/)), CC-BY 4.0 license
 * [more freely available translation models](https://github.com/Helsinki-NLP/Tatoeba-Challenge/blob/master/results/tatoeba-results-all.md) from the [Tatoeba translation challenge](https://github.com/Helsinki-NLP/Tatoeba-Challenge), CC-BY 4.0 license
 
-<p>
-<a href="https://console.tiyaro.ai/explore?q=opus-mt&pub=Helsinki-NLP"> <img src="https://tiyaro-public-docs.s3.us-west-2.amazonaws.com/assets/try_on_tiyaro_badge.svg"></a>
-</p>
-
-
 This repository includes two setups:
 
 * Setup 1: a [Tornado](https://www.tornadoweb.org)-based web application providing a web UI and API to work with multiple language pairs (developed by [Santhosh Thottingal](https://github.com/santhoshtr) and his team at the Wikimedia Foundation)
