@@ -10,7 +10,6 @@ Tools and resources for open translation services
 * mostly trained with guided alignment based on [eflomal](https://github.com/robertostling/eflomal) wordalignments 
 * [pre-trained downloadable translation models](https://github.com/Helsinki-NLP/Opus-MT-train/tree/master/models) ([matrix view](http://opus.nlpl.eu/Opus-MT/)), CC-BY 4.0 license
 * [more freely available translation models](https://github.com/Helsinki-NLP/Tatoeba-Challenge/blob/master/results/tatoeba-results-all.md) from the [Tatoeba translation challenge](https://github.com/Helsinki-NLP/Tatoeba-Challenge), CC-BY 4.0 license
-* 543 live demo APIs of language variants available at [Tiyaro.ai](https://console.tiyaro.ai/explore?q=opus-mt&pub=Helsinki-NLP).  For example, an [English to German finetuned translator](https://console.tiyaro.ai/explore/Helsinki-NLP-opus-mt-en-de/demo)
 
 <p>
 <a href="https://console.tiyaro.ai/explore?q=opus-mt&pub=Helsinki-NLP"> <img src="https://tiyaro-public-docs.s3.us-west-2.amazonaws.com/assets/try_on_tiyaro_badge.svg"></a>
